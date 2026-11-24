@@ -456,3 +456,40 @@ body{background:var(--color-bg)}
 .f-sech i{display:none}
 .f-sech span{margin-left:auto}
 .f-info,.f-lock .f-actbar{background:var(--color-surface)}
+
+/* 지도 핀 v4 · 칩 핀 (B안): 아이콘+거리 알약, 꼬리 끝이 위치를 가리켜요 */
+.chip-pin button{position:absolute;left:0;top:0;width:auto;height:auto;transform:translate(-50%,calc(-100% - 6px));display:flex;align-items:center;gap:5px;height:32px;padding:0 11px 0 4px;border-radius:16px;background:var(--color-surface);box-shadow:0 0 0 1px var(--color-line),0 3px 8px rgba(90,64,48,.16);font-size:13px;font-weight:700;color:var(--color-text);white-space:nowrap;filter:none;transition:transform var(--dur-base) var(--ease-spring)}
+.chip-pin button:not(:has(b)){padding-right:4px}
+.chip-pin .ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--f-lilac)}
+.chip-pin .ic svg{display:block}
+.chip-pin b{font-weight:700}
+.chip-pin .tail{position:absolute;left:50%;bottom:-6px;width:10px;height:7px;margin-left:-5px;background:inherit;clip-path:polygon(0 0,100% 0,50% 100%)}
+.chip-pin.is-available button{background:var(--f-amber-thumb);box-shadow:0 0 0 1.5px #E9CA88,0 3px 8px rgba(138,97,0,.2);color:var(--f-amber)}
+.chip-pin.is-available .ic{background:#fff}
+.chip-pin.is-mine button{background:#FF6B57;color:#fff;box-shadow:0 3px 8px rgba(233,84,63,.3)}
+.chip-pin.is-mine .ic{background:rgba(255,255,255,.3)}
+.chip-pin.is-discovered .ic{background:#FBE3E8}
+.chip-pin.active button{height:38px;font-size:15px;padding-right:14px;background:#302B3C;color:#fff;box-shadow:0 4px 12px rgba(48,43,60,.35);transform:translate(-50%,calc(-100% - 6px)) scale(1.02)}
+.chip-pin.active .ic{width:28px;height:28px;background:#fff}
+.chip-pin.is-available .mg-pin{animation:none}
+.chip-pin.is-available button{animation:chipPulse 2.4s ease-in-out infinite}
+@keyframes chipPulse{50%{box-shadow:0 0 0 1.5px #E9CA88,0 0 0 6px rgba(233,202,136,.3),0 3px 8px rgba(138,97,0,.2)}}
+:root[data-theme="night"] .chip-pin.is-available button{background:#3A3550;box-shadow:0 0 0 1.5px #E9CA88;color:#E9CA88}
+:root[data-theme="night"] .chip-pin.is-available .ic{background:#2C3053}
+:root[data-theme="night"] .chip-pin.active button{background:var(--color-primary);color:var(--color-on-primary)}
+:root[data-theme="night"] .chip-pin.is-discovered .ic{background:#3F2234}
+.me-label,.map-host .me-label{right:auto;left:0;top:14px;transform:translateX(-50%)}
+.chip-pin.active button,.chip-pin button{left:0;top:0;width:auto}
+/* 칩 핀 · 상태를 색만으로 구분하지 않도록 자물쇠/열림 아이콘을 거리 앞에 둬요 */
+.chip-pin b{display:inline-flex;align-items:center;gap:3px}
+.chip-pin b svg{width:12px;height:12px;flex:none}
+.chip-pin .ic{background:var(--f-lilac)}
+.chip-pin.is-available .ic{background:#FFF9EC}
+.chip-pin.is-mine .ic{background:rgba(255,255,255,.9)}
+:root{--pin-mine:#FF6B57}
+:root[data-theme="night"]{--pin-mine:#8F91E6}
+:root[data-theme="night"] .chip-pin.is-mine button{background:#B6B7F2;color:#20213B}
+:root[data-theme="night"] .chip-pin .ic{background:#EEEAF3}
+:root[data-theme="night"] .chip-pin.is-available .ic{background:#FFF9EC}
+:root[data-theme="night"] .chip-pin.is-discovered .ic{background:#FBE3E8}
+:root[data-theme="night"] .chip-pin.active button{background:#F5F3FA;color:#20213B;box-shadow:0 4px 14px rgba(0,0,0,.45)}

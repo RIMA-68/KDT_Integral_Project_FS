@@ -95,7 +95,18 @@
     discovered: `${SHADOW}<path d="${PIN_BODY}" fill="var(--pin-fill,#FFFCF7)" stroke-width="2" stroke-linejoin="round" stroke="var(--state-discovered,#C9566F)"/><g transform="translate(8 4.45) scale(1)">${pinFlower(24).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g>`,
     mine: `${SHADOW}<path d="${PIN_BODY}" fill="var(--pin-fill,#FFFCF7)" stroke-width="2" stroke-linejoin="round" stroke="#FF6B57"/><path d="M20 9C24 12 25 17 23.5 20.5C22 23 18 23 16.5 20.5C15 17 16 12 20 9Z" fill="#FF6B57"/><circle cx="31" cy="8" r="6.5" fill="#FF6B57"/><circle cx="31" cy="6.4" r="1.7" fill="white"/><path d="M27.8 11C28.4 9 33.6 9 34.2 11" stroke-width="1.3" stroke-linecap="round" stroke="white"/>`
   };
-  const seedPin = (state, w = 40) => `<svg class="mg-pin is-${state}" width="${w}" height="${w * 1.1}" viewBox="0 0 40 44" fill="none" aria-hidden="true">${PINS[state] || PINS.dormant}</svg>`;
+  // 지도 핀 v4 · 칩 핀 + 씨앗 구슬 (2026-11-24 리마 확정): 구슬 → 씨앗 → 개화 → 자수 메타포를 작은 핀에서도 유지.
+  // 잠김 = 씨앗 구슬, 열 수 있음 = 씨앗 구슬 + 작은 반짝임, 내 기억 = 코랄(밤 아이리스) 씨앗 구슬, 발견함 = 단순화한 Frosted Facet 꽃.
+  const PIN_ORB = { dormant: ["#B5ADD0", "#A79FC6"], available: ["#E2B866", "#D19A45"], mine: ["var(--pin-mine,#FF6B57)", "var(--pin-mine,#FF6B57)"] };
+  const pinStar = (x, y, r, c) => { const k = r * .24; return `<path d="M${x} ${y - r}Q${x + k} ${y - k} ${x + r} ${y}Q${x + k} ${y + k} ${x} ${y + r}Q${x - k} ${y + k} ${x - r} ${y}Q${x - k} ${y - k} ${x} ${y - r}Z" fill="${c}"/>`; };
+  const seedPin = (state, w = 18) => {
+    if (state === "discovered") return pinFlower(w).replace("<svg ", `<svg class="mg-pin is-${state}" `);
+    const [ring, seedC] = PIN_ORB[state] || PIN_ORB.dormant;
+    const spark = state === "available" ? pinStar(18.6, 3.4, 3.2, "#E9A93A") + '<circle cx="15.2" cy="1.6" r=".9" fill="#E9A93A"/>' : "";
+    return `<svg class="mg-pin is-${state}" width="${w}" height="${w}" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="11" cy="11.5" r="8.6" fill="#FFFFFF" stroke="${ring}" stroke-width="1.4"/><path d="M11 6.4C13.9 8.4 14.7 11.6 13.7 14.1C12.8 16 9.2 16 8.3 14.1C7.3 11.6 8.1 8.4 11 6.4Z" fill="${seedC}"/><path d="M10.1 8.9C9.5 10.6 9.5 12.4 10 13.7" stroke="#fff" stroke-opacity=".8" stroke-width="1" stroke-linecap="round"/><path d="M5.6 9.6C6.1 8.2 7.1 7.2 8.3 6.6" stroke="${ring}" stroke-opacity=".45" stroke-width="1.1" stroke-linecap="round"/>${spark}</svg>`;
+  };
+
+
 
   /* ---------- 정원 자수 (꽃 도안 + 짧은 줄기·잎) ---------- */
   const CELLS = [[6, 5, "center"], [5, 6, "center"], [6, 6, "center"], [7, 6, "center"], [6, 7, "center"], [5, 0, "petalL"], [7, 0, "petal"], [4, 1, "petalL"], [5, 1, "petalL"], [7, 1, "petal"], [8, 1, "petal"], [4, 2, "petalL"], [5, 2, "petalL"], [6, 2, "petalL"], [7, 2, "petal"], [8, 2, "petal"], [5, 3, "petalL"], [6, 3, "petal"], [7, 3, "petal"], [6, 4, "petal"], [12, 3, "petalL"], [12, 5, "petal"], [11, 2, "petalL"], [11, 3, "petalL"], [11, 5, "petal"], [11, 6, "petal"], [10, 2, "petalL"], [10, 3, "petalL"], [10, 4, "petalL"], [10, 5, "petal"], [10, 6, "petal"], [9, 3, "petalL"], [9, 4, "petal"], [9, 5, "petal"], [8, 4, "petal"], [0, 3, "petal"], [0, 5, "petalL"], [1, 2, "petal"], [1, 3, "petal"], [1, 5, "petalL"], [1, 6, "petalL"], [2, 2, "petal"], [2, 3, "petal"], [2, 4, "petal"], [2, 5, "petalL"], [2, 6, "petalL"], [3, 3, "petal"], [3, 4, "petalL"], [3, 5, "petalL"], [4, 4, "petalL"], [10, 11, "petalL"], [4, 11, "petalL"], [8, 11, "petal"], [2, 11, "petal"], [11, 10, "petalL"], [5, 10, "petalL"], [10, 10, "petalL"], [4, 10, "petalL"], [8, 10, "petal"], [2, 10, "petal"], [7, 10, "petal"], [1, 10, "petal"], [11, 9, "petalL"], [5, 9, "petalL"], [10, 9, "petalL"], [4, 9, "petalL"], [9, 9, "petalL"], [3, 9, "petalL"], [8, 9, "petal"], [2, 9, "petal"], [7, 9, "petal"], [1, 9, "petal"], [10, 8, "petalL"], [4, 8, "petalL"], [9, 8, "petal"], [3, 8, "petal"], [8, 8, "petal"], [2, 8, "petal"], [9, 7, "petal"], [3, 7, "petal"], [4, 7, "back"], [8, 7, "back"], [6, 9, "back"]];

@@ -165,7 +165,7 @@
       const name = m.mine ? "내가 심은 기억" : discovered(m) ? m.title : canOpen(m) ? "지금 열 수 있는 기억" : "아직 발견하지 않은 기억";
       return {
         id: m.id, lat: m.lat, lng: m.lng, z: sel ? 5 : st === "available" ? 4 : 2,
-        html: `<div class="pin is-${st}${sel ? " active" : ""}">${label ? `<span class="pin-dist">${m.mine ? "" : st === "dormant" ? I.lock : st === "available" ? I.unlock : ""}${label}</span>` : ""}<button data-act="pin" data-id="${m.id}" aria-label="${esc(name)}${label ? ", " + label : ""}">${BR.seedPin(sel && !m.mine ? "selected" : st, sel ? 50 : 40)}</button></div>`
+        html: `<div class="pin chip-pin is-${st}${sel ? " active" : ""}"><button data-act="pin" data-id="${m.id}" aria-label="${esc(name)}${label ? ", " + label : ""}"><span class="ic">${BR.seedPin(st, sel ? 22 : 18)}</span>${label || st === "discovered" ? `<b>${m.mine || st === "discovered" ? "" : st === "available" ? I.unlock : I.lock}${label || "발견함"}</b>` : ""}<i class="tail"></i></button></div>`
       };
     });
   }
