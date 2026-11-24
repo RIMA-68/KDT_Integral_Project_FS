@@ -42,6 +42,7 @@
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const img = id => !id ? "assets/img/char-lavender.webp" : /^(https?:|data:|blob:)/.test(id) ? id : id === "me" ? (S.portrait || "assets/img/char-lavender.webp") : `assets/img/${id}.webp`;
   const pos = () => GEO.state === "ok" ? GEO.pos : null;
+  const member = () => !S.set.requireLogin || API.member();   // 심기·처음 열기는 로그인한 사람만(서버도 같은 기준)
   const locOk = () => !!pos();
   const accOk = () => locOk() && pos().acc <= S.set.maxAcc;
   const distOf = m => (pos() && m && m.lat != null) ? Math.round(GEO.distance(pos(), m)) : null;
@@ -246,6 +247,30 @@
       <button class="btn btn-primary btn-block" data-act="loc-retry">다시 확인하기</button><button class="btn btn-ghost" data-act="reload">새로고침</button>`);
   }
 
+  /* ---------------- 로그인 (카카오) ---------------- */
+  const KAKAO_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#000" d="M12 3.5c-5 0-9 3.1-9 7 0 2.5 1.7 4.7 4.2 6l-1 3.7c-.1.3.3.6.6.4l4.4-2.9c.3 0 .5.1.8.1 5 0 9-3.1 9-7s-4-7.3-9-7.3Z"/></svg>';
+  const kakaoBtn = (label) => `<button class="btn btn-kakao btn-block" data-act="login">${KAKAO_ICON}${label || "카카오로 시작하기"}</button>`;
+  const LOGIN_WHY = {
+    plant: ["기억을 심으려면 로그인이 필요해요", "심은 기억은 내 계정에 저장돼서, 휴대폰을 바꿔도 내 정원에서 다시 볼 수 있어요."],
+    open: ["처음 열려면 로그인이 필요해요", "발견한 기억은 내 정원에 담겨요. 로그인하면 어느 기기에서든 다시 볼 수 있어요."],
+    account: ["로그인하고 내 정원 지키기", "지금은 이 기기에만 연결된 임시 정원이에요. 로그인하면 지금까지의 기록이 계정에 그대로 이어져요."]
+  };
+  function loginSheet(kind) {
+    const [h, p] = LOGIN_WHY[kind] || LOGIN_WHY.account;
+    openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>${h}</h3><p class="av-note" style="margin:0">${p}</p></div>
+      ${kakaoBtn()}<button class="btn btn-ghost" data-act="close">${kind === "account" ? "닫기" : "둘러보기 계속하기"}</button>
+      <p class="reassure">지도와 근처 기억 둘러보기는 로그인 없이도 할 수 있어요.</p>`);
+  }
+  function viewLoginGate() {
+    const [h, p] = LOGIN_WHY.plant;
+    return `<section class="screen" aria-label="로그인 필요">${flowHead(1)}<div class="center-state login-gate"><img src="${img("cat")}" alt="" style="width:132px"><h2>${h}</h2><p>${p}</p>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:320px;margin-top:8px">${kakaoBtn()}<a class="btn btn-ghost" href="#/">지도 둘러보기</a></div></div></section>`;
+  }
+  function doLogin() {
+    toast("카카오 로그인 화면으로 이동해요");
+    API.loginKakao().catch(e => { console.error(e); toast(e.code === "linking_disabled" ? "서버 설정이 필요해요: Supabase에서 manual linking을 켜 주세요" : "로그인을 시작하지 못했어요. 다시 시도해 주세요"); });
+  }
+
   /* ---------------- HOME / MAP ---------------- */
   function viewHome() {
     const ds = dataState();
@@ -410,6 +435,7 @@
   // M11 최초 발견: 서버가 거리·정확도를 확인한 뒤에만 내용을 받아요 → 씨앗이 꽃으로 → 정원 자수 +1
   function discover(id) {
     if (S.busy) return;
+    if (!member()) { loginSheet("open"); return; }
     S.busy = true; render();
     API.open(id, pos()).then(r => {
       S.busy = false;
@@ -418,6 +444,7 @@
       else if (r.status === "too_far") toast(`아직 조금 멀어요 · ${r.distance_m}m (반경 ${r.radius_m}m)`);
       else if (r.status === "low_accuracy") toast("위치 정확도가 낮아서 열 수 없어요. 잠시 뒤 다시 시도해 주세요");
       else if (r.status === "need_location") toast("현재 위치를 확인한 뒤에 열 수 있어요");
+      else if (r.status === "login_required") { render(); loginSheet("open"); return; }
       else if (r.status === "gone" || r.status === "unavailable") { S.status[id] = r.status; toast("이 기억은 지금 열 수 없어요"); }
       render();
     }).catch(e => { console.error(e); S.busy = false; render(); toast("기억을 열지 못했어요. 연결을 확인해 주세요"); });
@@ -539,7 +566,7 @@
       S.garden = null; S.plantErr = null;
       S.draft = { photo: null, blob: null, text: "", vis: "all", place: "", hint: "", noPhoto: false };
       location.hash = "#/plant/done";
-    }).catch(e => { console.error(e); S.plantErr = e.code || "net"; location.hash = "#/plant/fail"; });
+    }).catch(e => { console.error(e); if (e.code === "login_required") { location.hash = "#/plant/3"; loginSheet("plant"); return; } S.plantErr = e.code || "net"; location.hash = "#/plant/fail"; });
   }
 
   /* ---------------- GARDEN (M19 · M20 · M21 · M22) ---------------- */
@@ -840,7 +867,7 @@
     else if (r.name === "welcome") html = viewWelcome(r.arg);
     else if (r.name === "m") html = viewMemory(r.arg);
     else if (r.name === "s") html = viewShare(r.arg);
-    else if (r.name === "plant") html = viewPlant(r.arg || "1");
+    else if (r.name === "plant") html = S.boot === "ok" && !member() && !["done", "doing"].includes(r.arg) ? viewLoginGate() : viewPlant(r.arg || "1");
     else if (r.name === "garden") html = viewGarden();
     else if (r.name === "avatar") html = viewAvatar();
     else html = viewHome();
@@ -947,7 +974,12 @@
           .catch(err => { console.error(err); closeModal(); toast("기억을 지우지 못했어요"); });
         break;
       }
-      case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button><button class="btn btn-ghost" data-act="close">취소</button>`); break;
+      case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button>
+        ${DEMO ? "" : API.member() ? `<div class="account-row"><span>${KAKAO_ICON}카카오 계정으로 로그인됨</span><button data-act="logout">로그아웃</button></div>` : `<div class="account-row anon"><span>임시 정원이에요 · 이 기기에서만 볼 수 있어요</span><button data-act="login-open">로그인</button></div>`}`); break;
+      case "login": doLogin(); break;
+      case "login-open": loginSheet("account"); break;
+      case "login-switch": API.switchToKakao().catch(() => toast("로그인을 시작하지 못했어요")); break;
+      case "logout": API.logout().then(() => { try { localStorage.removeItem("mg:avatar"); localStorage.removeItem("mg:look"); localStorage.removeItem("mg:portrait"); } catch (_) { } location.hash = "#/"; location.reload(); }); break;
       case "nick-save": {
         const v = ((document.getElementById("nickInput") || {}).value || "").trim(); if (!v) { toast("한 글자 이상 써 주세요"); break; }
         API.updateProfile({ nickname: v }).then(() => { S.profile.nickname = v; closeModal(); render(); toast("이름을 바꿨어요"); }).catch(() => toast("이름을 바꾸지 못했어요"));
@@ -1056,13 +1088,22 @@
   async function boot() {
     S.boot = "loading"; render();
     try {
-      await API.init();
+      const info = await API.init();
       const [set, prof] = await Promise.all([API.settings(), API.profile().catch(() => null)]);
       S.set = set; if (prof) S.profile = prof;
-      S.boot = "ok";
+      S.boot = "ok"; S.loginError = info && info.loginError; S.justLoggedIn = info && info.justLoggedIn;
+      // 카카오로 처음 로그인했으면 기본 닉네임 대신 카카오 이름을 써요(정원에서 바꿀 수 있어요)
+      const kname = API.member() && API.memberName();
+      if (kname && /^정원사 \d{4}$/.test(S.profile.nickname)) { const n = String(kname).slice(0, 12); API.updateProfile({ nickname: n }).then(() => { S.profile.nickname = n; softRender(true); }).catch(() => { }); }
     } catch (e) { console.error("[boot]", e); S.boot = "error"; S.bootErr = e.code || "net"; }
     render();
     if (S.boot !== "ok") return;
+    if (S.loginError) {
+      const le = S.loginError; S.loginError = null;
+      if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">그 계정으로 로그인하면 원래 정원을 볼 수 있어요. 이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
+        <button class="btn btn-kakao btn-block" data-act="login-switch">${KAKAO_ICON}그 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">취소</button>`);
+      else toast(/cancel|denied/i.test(le.message) ? "로그인을 취소했어요" : "로그인하지 못했어요. 다시 시도해 주세요");
+    } else if (S.justLoggedIn) toast("카카오 계정으로 로그인했어요");
     // 위치: 이미 허용했거나 이전에 쓰겠다고 한 경우에만 바로 시작(묻지 않고 켜지 않아요)
     if (S.onboarded && GEO.state === "idle") {
       const perm = await GEO.permission();

@@ -21,7 +21,8 @@ create table if not exists public.app_config (
 insert into public.app_config (key, value, note) values
   ('unlock_radius_m', '50',  '타인 기억을 처음 열 수 있는 반경(m). 디자인 기준값 · 확정 아님'),
   ('max_accuracy_m',  '60',  '위치 오차가 이보다 크면 열기·심기를 막아요(m). 열람 반경과 별개'),
-  ('nearby_km',       '3',   '지도에 핀을 불러오는 범위(km)')
+  ('nearby_km',       '3',   '지도에 핀을 불러오는 범위(km)'),
+  ('require_login',   '1',   '1이면 기억 심기·처음 열기에 로그인(익명 아님)이 필요해요. 0이면 익명도 가능')
 on conflict (key) do nothing;
 alter table public.app_config enable row level security;
 drop policy if exists "config readable" on public.app_config;
@@ -30,6 +31,14 @@ create policy "config readable" on public.app_config for select to anon, authent
 create or replace function public.cfg_num(k text, fallback double precision)
 returns double precision language sql stable security definer set search_path = public as $$
   select coalesce((select (value #>> '{}')::double precision from public.app_config where key = k), fallback)
+$$;
+
+-- 로그인(카카오 등)한 사용자인가? 익명 로그인은 둘러보기만.
+create or replace function public.is_member()
+returns boolean language sql stable security definer set search_path = public as $$
+  select auth.uid() is not null
+     and (public.cfg_num('require_login', 1) = 0
+          or coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false)
 $$;
 
 -- ---------- 프로필 ----------
@@ -192,7 +201,8 @@ returns jsonb language sql stable security definer set search_path = public as $
   select jsonb_build_object(
     'unlock_radius_m', public.cfg_num('unlock_radius_m', 50),
     'max_accuracy_m',  public.cfg_num('max_accuracy_m', 60),
-    'nearby_km',       public.cfg_num('nearby_km', 3))
+    'nearby_km',       public.cfg_num('nearby_km', 3),
+    'require_login',   public.cfg_num('require_login', 1) = 1)
 $$;
 
 -- 지도 핀: 내 기억 + 근처 타인 공개 기억.
@@ -288,6 +298,7 @@ begin
     return jsonb_build_object('status', 'discovered', 'memory', public._memory_json(p_id));
   end if;
   if m.visibility <> 'public' then return jsonb_build_object('status', 'unavailable'); end if;
+  if not public.is_member() then return jsonb_build_object('status', 'login_required'); end if;
   if p_lat is null or p_lng is null then return jsonb_build_object('status', 'need_location'); end if;
   if p_accuracy is null or p_accuracy > max_acc then
     return jsonb_build_object('status', 'low_accuracy', 'max_accuracy_m', max_acc);
@@ -331,6 +342,7 @@ declare
   recent int;
 begin
   if me is null then raise exception 'auth required' using errcode = '42501'; end if;
+  if not public.is_member() then raise exception 'login required' using errcode = '42501'; end if;
   if p_lat is null or p_lng is null then raise exception 'location required' using errcode = '22023'; end if;
   if p_accuracy is null or p_accuracy > max_acc then raise exception 'low accuracy' using errcode = '22023'; end if;
   if p_photo_path is not null and split_part(p_photo_path, '/', 1) <> me::text then
@@ -360,6 +372,7 @@ grant execute on function public.my_garden() to authenticated;
 grant execute on function public.plant_memory(text, text, text, text, text, double precision, double precision, double precision, text) to authenticated;
 grant execute on function public.can_view_memory(uuid) to authenticated;
 grant execute on function public.app_settings() to anon, authenticated;
+grant execute on function public.is_member() to authenticated;
 
 -- ---------- 사진 저장소 ----------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

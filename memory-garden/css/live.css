@@ -41,3 +41,13 @@
 /* 데모 패널 */
 .demo-panel .demo-mode{font-family:var(--font-display);font-size:11px;color:var(--color-accent)}
 .demo-panel.live [data-demo-only]{display:none}
+
+/* 카카오 로그인 (카카오 디자인 가이드: 노란 바탕 #FEE500 · 검은 심볼 · 85% 검정 글자) */
+.btn-kakao{background:#FEE500;color:rgba(0,0,0,.85);gap:8px}
+.btn-kakao:active{background:#F2D900}
+.login-sheet{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:4px 4px 8px}
+.login-sheet img{width:96px;filter:drop-shadow(0 6px 8px rgba(74,54,36,.15))}
+.login-gate p{max-width:300px}
+.account-row{display:flex;align-items:center;gap:10px;margin-top:6px;padding:12px 14px;border-radius:var(--r-md);background:var(--color-surface);box-shadow:inset 0 0 0 1.5px var(--color-line);font-size:13px;color:var(--color-text-sub)}
+.account-row span{display:flex;align-items:center;gap:6px;flex:1}
+.account-row button{flex:none;height:34px;padding:0 12px;border-radius:10px;background:var(--color-text);color:#fff;font-size:12.5px;font-weight:700}

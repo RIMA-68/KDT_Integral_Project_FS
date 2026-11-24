@@ -8,7 +8,7 @@
   "use strict";
   const CFG = window.MG_CONFIG || {};
   const G = window.MG_GEO;
-  const DEFAULTS = { radius: +CFG.unlockRadiusM || 50, maxAcc: +CFG.maxAccuracyM || 60, nearbyKm: 3 };
+  const DEFAULTS = { radius: +CFG.unlockRadiusM || 50, maxAcc: +CFG.maxAccuracyM || 60, nearbyKm: 3, requireLogin: true };
 
   class ApiError extends Error { constructor(code, msg) { super(msg || code); this.code = code; } }
 
@@ -20,9 +20,19 @@
   /* Supabase                                                              */
   /* =================================================================== */
   function SupabaseApi() {
-    const sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: "mg-auth" } });
+    // 카카오 로그인 후 돌아오면(?code=...) supabase-js가 세션으로 바꿔요(PKCE).
+    const urlErr = (() => { const q = new URLSearchParams(location.search + "&" + location.hash.replace(/^#/, "").replace(/^\/[^?]*\??/, "")); const d = q.get("error_description") || q.get("error"); return d ? { code: q.get("error_code") || q.get("error") || "", message: d } : null; })();
+    const hadCode = /[?&]code=/.test(location.search);
+    const sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce", storageKey: "mg-auth" } });
     const signed = new Map();   // photo_path → { url, exp }
-    let uid = null;
+    let uid = null, user = null;
+    const back = () => location.origin + location.pathname;
+    function cleanUrl() {
+      // 로그인 뒤 주소창의 ?code= · 오류 문구를 지우고, 로그인 전에 보던 화면으로 돌아가요
+      let h = location.hash; try { const saved = sessionStorage.getItem("mg:afterLogin"); if (saved) { h = saved; sessionStorage.removeItem("mg:afterLogin"); } } catch (_) { }
+      if (location.search || /error|access_token/.test(location.hash)) history.replaceState(null, "", back() + (h && !/error|access_token/.test(h) ? h : "#/"));
+      else if (h !== location.hash) history.replaceState(null, "", back() + h);
+    }
 
     const call = async (fn, args) => {
       const { data, error } = await sb.rpc(fn, args || {});
@@ -53,11 +63,31 @@
           if (error) throw new ApiError(/anonymous/i.test(error.message) ? "anon_disabled" : "auth", error.message);
           session = data.session;
         }
-        uid = session.user.id;
-        return { uid };
+        uid = session.user.id; user = session.user;
+        sb.auth.onAuthStateChange((_e, s) => { if (s && s.user) { uid = s.user.id; user = s.user; } });
+        cleanUrl();
+        return { uid, loginError: urlErr, justLoggedIn: hadCode && user.is_anonymous === false };
       },
+      // 로그인(익명 아님)했는가 — 심기·처음 열기는 서버도 같은 기준으로 막아요
+      member() { return !!user && user.is_anonymous === false; },
+      memberName() { const m = (user && user.user_metadata) || {}; return m.nickname || m.name || m.full_name || m.preferred_username || m.user_name || null; },
+      // 익명으로 쓰던 기록을 그대로 카카오 계정에 이어 붙여요. 카카오 화면으로 이동했다가 돌아와요.
+      async loginKakao() {
+        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
+        const opts = { provider: "kakao", options: { redirectTo: back() } };
+        const { error } = user && user.is_anonymous ? await sb.auth.linkIdentity(opts) : await sb.auth.signInWithOAuth(opts);
+        if (error) throw new ApiError(/manual linking/i.test(error.message) ? "linking_disabled" : "login", error.message);
+      },
+      // 이 카카오 계정에 이미 다른 정원이 있을 때: 그 계정으로 로그인(이 기기의 익명 기록은 옮겨지지 않아요)
+      async switchToKakao() {
+        await sb.auth.signOut({ scope: "local" });
+        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
+        const { error } = await sb.auth.signInWithOAuth({ provider: "kakao", options: { redirectTo: back() } });
+        if (error) throw new ApiError("login", error.message);
+      },
+      async logout() { await sb.auth.signOut({ scope: "local" }); },
       async settings() {
-        try { const s = await call("app_settings"); return { radius: +s.unlock_radius_m || DEFAULTS.radius, maxAcc: +s.max_accuracy_m || DEFAULTS.maxAcc, nearbyKm: +s.nearby_km || 3 }; }
+        try { const s = await call("app_settings"); return { radius: +s.unlock_radius_m || DEFAULTS.radius, maxAcc: +s.max_accuracy_m || DEFAULTS.maxAcc, nearbyKm: +s.nearby_km || 3, requireLogin: s.require_login !== false }; }
         catch (_) { return DEFAULTS; }
       },
       async profile() {
@@ -120,6 +150,7 @@
           if (path) sb.storage.from("memory-photos").remove([path]).catch(() => { });
           if (/low accuracy/.test(e.message)) e.code = "low_accuracy";
           if (/too many/.test(e.message)) e.code = "too_many";
+          if (/login required/.test(e.message)) e.code = "login_required";
           throw e;
         }
       },
@@ -178,6 +209,9 @@
     return {
       mode: "demo",
       async init() { return { uid: "demo" }; },
+      member() { return true; },          // 데모 모드는 로그인 없이 모두 체험
+      memberName() { return null; },
+      async loginKakao() { }, async switchToKakao() { }, async logout() { },
       async settings() { return S; },
       async profile() { return db.profile; },
       async updateProfile(p) { Object.assign(db.profile, p); persist(); },
