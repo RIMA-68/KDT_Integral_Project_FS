@@ -1,0 +1,43 @@
+/* 기억 정원 · 실서비스 연결용 추가 스타일 (실제 지도 · 입력 필드 · 위치 안내) */
+.home{background:var(--map-land)}
+.map{transition:bottom var(--dur-base) var(--ease-out)}
+.map-host{position:absolute;inset:0}
+.map-host .leaflet-container,.map-host{background:var(--map-land);font:inherit}
+.mg-ov{background:none;border:0}
+.map-host .pin,.map-host .me{position:absolute;left:0;top:0}
+.map-host .pin button{cursor:pointer}
+.map-host .me-label{right:16px}
+.leaflet-control-attribution{font-size:10px;background:rgba(255,255,255,.75)!important}
+/* 밤 테마: 지도 타일만 어둡게(핀·내 위치는 그대로) */
+[data-theme="night"] .map-host .leaflet-tile-pane,
+[data-theme="night"] .map-host img[src*="daumcdn.net/map"]{filter:invert(.9) hue-rotate(195deg) saturate(.55) brightness(.88)}
+[data-theme="night"] .home{background:#1d1f38}
+.map-fallback{z-index:1}
+
+/* 입력 필드 (기억 심기 3단계 · 닉네임) */
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:13px;font-weight:700;color:var(--color-text-sub)}
+.field>span em{font-style:normal;font-weight:500;color:var(--color-text-faint);margin-left:4px}
+.field input{height:48px;padding:0 14px;border-radius:var(--r-md);background:var(--color-surface);box-shadow:inset 0 0 0 1.5px var(--color-line);font-size:16px;color:var(--color-text);border:0;outline:none}
+.field input:focus{box-shadow:inset 0 0 0 2px var(--color-primary)}
+.field input::placeholder{color:var(--color-text-faint)}
+
+/* 위치 권한 도움말 */
+.help-steps{font-size:14px;line-height:1.55;color:var(--color-text-sub);display:flex;flex-direction:column;gap:6px}
+.help-steps b{color:var(--color-text);margin-top:4px}
+.help-steps ol{padding-left:20px;display:flex;flex-direction:column;gap:3px}
+.help-steps em{font-style:normal;font-weight:700;color:var(--color-text)}
+
+/* 내 기억 지우기 */
+.del-link{display:flex;align-items:center;justify-content:center;gap:6px;margin:22px auto 4px;height:44px;padding:0 14px;font-size:13.5px;font-weight:600;color:var(--color-danger)}
+.del-link svg{width:16px;height:16px}
+.btn-danger{background:var(--color-danger);color:#fff}
+
+/* 정원 이름 바꾸기 */
+.nick{display:inline-flex;align-items:center;gap:6px;font:inherit;color:inherit;text-align:left}
+.nick-ed{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--color-surface);box-shadow:var(--shadow-1);color:var(--color-text-sub)}
+.nick-ed svg{width:11px;height:11px}
+
+/* 데모 패널 */
+.demo-panel .demo-mode{font-family:var(--font-display);font-size:11px;color:var(--color-accent)}
+.demo-panel.live [data-demo-only]{display:none}

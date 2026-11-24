@@ -1,0 +1,6 @@
+# 환경별 공개 설정은 빌드 때 만들어요(tools/write-config.mjs)
+js/config.js
+# 로컬 환경 변수 — 절대 올리지 않아요
+.env
+.env.*
+!.env.example

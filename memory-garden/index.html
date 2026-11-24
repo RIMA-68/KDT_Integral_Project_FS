@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#FBF6EE">
 <title>기억 정원</title>
 <meta name="description" content="장소에 사진과 이야기를 심고, 걸어가서 다른 사람의 기억을 발견하는 위치 기반 기록 서비스">
+<link rel="preconnect" href="https://dapi.kakao.com">
 <meta property="og:type" content="website">
 <meta property="og:title" content="기억 정원">
 <meta property="og:description" content="장소에 남긴 기억을 가까이 가서 발견해요">
@@ -21,12 +22,14 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/v3.css">
+<link rel="stylesheet" href="css/live.css">
 </head>
 <body>
 <div class="stage">
   <aside class="demo-panel" id="demo" aria-label="데모 컨트롤">
     <h1><img src="assets/img/cat.webp" alt="">기억 정원</h1>
-    <p>모바일 웹 프로토타입이에요. 휴대폰으로 열면 이 패널 없이 앱 화면만 보여요.</p>
+    <p>휴대폰으로 열면 이 패널 없이 앱 화면만 보여요.</p>
+    <p class="demo-mode" id="demoMode"></p>
     <div class="demo-group">
       <h2>화면 테마</h2>
       <div class="demo-row">
@@ -41,24 +44,24 @@
       <div class="demo-row">
         <button class="demo-chip" data-go="#/welcome">온보딩</button>
         <button class="demo-chip" data-go="#/">지도 홈</button>
-        <button class="demo-chip" data-go="#/m/sunset">열린 기억</button>
-        <button class="demo-chip" data-go="#/m/alley">잠긴 기억</button>
-        <button class="demo-chip" data-go="#/m/toast">열 수 있는 기억</button>
+        <button class="demo-chip" data-demo-only data-go="#/m/sunset">열린 기억</button>
+        <button class="demo-chip" data-demo-only data-go="#/m/alley">잠긴 기억</button>
+        <button class="demo-chip" data-demo-only data-go="#/m/toast">열 수 있는 기억</button>
         <button class="demo-chip" data-go="#/plant/1">기억 심기</button>
         <button class="demo-chip" data-go="#/garden">내 정원</button>
         <button class="demo-chip" data-go="#/avatar">캐릭터 꾸미기</button>
-        <button class="demo-chip" data-go="#/s/alley">공유 링크</button>
+        <button class="demo-chip" data-demo-only data-go="#/s/alley">공유 링크</button>
       </div>
     </div>
-    <div class="demo-group">
-      <h2>위치 권한</h2>
+    <div class="demo-group" data-demo-only>
+      <h2>위치 (데모 위치로 바꿔 보기)</h2>
       <div class="demo-row">
         <button class="demo-chip" data-loc="ok">허용</button>
         <button class="demo-chip" data-loc="denied">거부</button>
         <button class="demo-chip" data-loc="low">정확도 낮음</button>
       </div>
     </div>
-    <div class="demo-group">
+    <div class="demo-group" data-demo-only>
       <h2>정책 상태</h2>
       <div class="demo-row"><button class="demo-chip" data-revoke="1">작성자가 '다리 위 편지'를 비공개로</button></div>
     </div>
@@ -79,7 +82,12 @@
   <main id="app" class="app" aria-live="polite"></main>
 </div>
 <noscript><p style="padding:24px">기억 정원은 자바스크립트가 필요해요.</p></noscript>
+<script src="js/config.js"></script>
+<script src="vendor/supabase/supabase.js"></script>
 <script src="js/data.js"></script>
+<script src="js/geo.js"></script>
+<script src="js/map.js"></script>
+<script src="js/api.js"></script>
 <script src="js/brand.js"></script>
 <script src="js/app.js"></script>
 
