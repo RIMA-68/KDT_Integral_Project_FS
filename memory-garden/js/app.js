@@ -29,7 +29,7 @@
     status: {},                                           // id → mine|discovered|locked|gone|unavailable|error|loading
     garden: null, gardenState: "idle",
     forced: null,                                         // 데모 패널에서 강제한 데이터 상태
-    filter: "all", sheetFull: false, selected: null, gardenTab: "mine",
+    filter: "all", sheetMode: "peek", selected: null, gardenTab: "mine",
     theme: store.get("theme", "system"),
     found: null, region: null, regionAt: null,
     avatar: store.get("avatar", "char-lavender"),
@@ -37,6 +37,8 @@
     draft: { photo: null, blob: null, text: "", vis: "all", place: "", hint: "", noPhoto: false },
     lastPlanted: null, plantErr: null, busy: false, nav: 0
   };
+  const FRESH_MS = 10 * 60 * 1000;   // 사진은 찍은 지 10분 안의 것만
+  const SHEET_MIN = 76;   // 접힌 시트 높이: 손잡이 + "근처의 기억" 제목 줄
 
   /* ---------------- helpers ---------------- */
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -321,12 +323,16 @@
     const sel = S.selected && byId(S.selected);
     const peek = (ds === "empty" || ds === "error") ? 340 : 280;   // Figma: 시트 위끝 y480 (빈·오류 y420)
     const base = "var(--tab-h) + var(--safe-bottom)";
-    const sheetH = S.sheetFull ? "72%" : `calc(${base} + ${peek}px)`;
-    const mapBottom = sel ? `calc(${base})` : sheetH;
-    const floatBottom = sel ? `calc(${base} + 152px)` : S.sheetFull ? "calc(72% - 4px)" : `calc(${base} + ${peek - 4}px)`;
-    const locateBottom = sel ? `calc(${base} + 156px)` : S.sheetFull ? "calc(72% + 14px)" : `calc(${base} + ${peek + 14}px)`;
+    // 시트 3단계: full(72%) · peek(중간) · min(제목만, 지도 전체 보기). 손잡이를 끌거나 눌러서 바꿔요.
+    const mode = S.sheetMode;
+    const sheetTop = mode === "full" ? "72%" : `calc(${base} + ${mode === "min" ? SHEET_MIN : peek}px)`;
+    const sheetH = sheetTop;
+    const mapBottom = sel ? `calc(${base})` : mode === "min" ? `calc(${base} + ${SHEET_MIN - 24}px)` : sheetH;
+    // 루미 말풍선·내 위치 버튼은 시트 위끝보다 12px 위에 떠서 시트와 겹치지 않아요
+    const floatBottom = sel ? `calc(${base} + 152px)` : `calc(${sheetTop} + 12px)`;
+    const locateBottom = sel ? `calc(${base} + 156px)` : `calc(${sheetTop} + 12px)`;
     const bannerTop = "calc(var(--safe-top) + 72px)";
-    const mini = sel || S.lumiHidden;
+    const mini = sel || S.lumiHidden || S.sheetMode === "min";   // 시트를 내리면 루미도 작은 아이콘으로 접혀 지도를 가리지 않아요
     const chip = (f, label, n) => `<button class="chip" data-act="filter" data-f="${f}" aria-pressed="${S.filter === f}">${S.filter === f ? I.check : ""}${label} <span class="n">${n}</span></button>`;
 
     return `<section class="screen home" aria-label="지도 홈">
@@ -340,8 +346,8 @@
       ${mini ? `<button class="f-bubble-min" style="bottom:${floatBottom}" data-act="lumi-show" aria-label="루미의 안내 보기"><img src="${img("cat")}" alt=""><i></i></button>`
         : `<div class="f-bubble" style="bottom:${floatBottom}" role="status"><span class="f-lumi-c l40"><img src="${img("cat")}" alt="수집가 루미"></span><p><span class="spk">LUMI</span><span class="msg">${catLine}</span></p><button class="f-x" data-act="lumi-hide" aria-label="안내 닫기">${I.close}</button></div>`}
       <button class="f-locate" style="bottom:${locateBottom}" data-act="recenter" aria-label="내 위치로">${I.target}</button>
-      ${sel ? peekHTML(sel) : `<section class="sheet f-sheet" style="height:${sheetH}" aria-label="근처의 기억">
-        <div class="sheet-handle" data-act="sheet" role="button" aria-label="목록 ${S.sheetFull ? "접기" : "펼치기"}" tabindex="0"></div>
+      ${sel ? peekHTML(sel) : `<section class="sheet f-sheet is-${mode}" style="height:${sheetH}" aria-label="근처의 기억" data-peek="${peek}">
+        <div class="sheet-handle" data-act="sheet" role="button" aria-label="${mode === "full" ? "목록 줄이기" : mode === "min" ? "목록 펼치기" : "목록 크게 보기"} (위아래로 끌어서 조절)" tabindex="0"></div>
         <div class="sheet-head"><div class="sheet-title"><h2>근처의 기억</h2><span class="count">${ds === "ok" ? all.length : ds === "empty" ? 0 : ""}</span><span class="sub">${note}</span></div>
           ${ds === "ok" ? `<div class="chips" role="group" aria-label="필터">${chip("all", "전체", all.length)}${chip("open", "열 수 있어요", availN)}${chip("locked", "잠김", lockedN)}</div>` : ""}
         </div>
@@ -517,9 +523,9 @@
   function viewPlant(step) {
     const dr = S.draft;
     if (step === "1") return `<section class="screen" aria-label="기억 심기 1단계">${flowHead(1)}<div class="flow-body f-flow">
-      <h1 class="flow-title">이 자리의 순간을<br>한 장 골라 주세요<small>사진은 기억을 열었을 때 가장 먼저 보여요.</small></h1>
-      <label class="drop f-drop ${dr.photo ? "has-img" : ""}">${dr.photo ? `<img src="${dr.photo}" alt="고른 사진"><span class="change">${I.clock}사진 바꾸기</span>` : `<span class="plus">${I.camera}</span><b>사진 찍기 · 앨범에서 고르기</b><span class="s">한 장만 고를 수 있어요</span>`}
-        <input type="file" accept="image/*" data-act="file" aria-label="사진 고르기"></label>
+      <h1 class="flow-title">지금 이 자리를<br>한 장 찍어 주세요<small>꾸민 사진보다 지금 이 순간 그대로가 좋아요. 앨범 사진은 올릴 수 없어요.</small></h1>
+      <label class="drop f-drop ${dr.photo ? "has-img" : ""}">${dr.photo ? `<img src="${dr.photo}" alt="찍은 사진"><span class="change">${I.camera}다시 찍기</span>` : `<span class="plus">${I.camera}</span><b>카메라로 찍기</b><span class="s">그 자리에서 찍은 한 장만 남길 수 있어요</span>`}
+        <input type="file" accept="image/*" capture="environment" data-act="file" aria-label="카메라로 사진 찍기"></label>
       ${DEMO ? `<p class="samples-label">예시 사진으로 체험하기</p>
       <div class="samples f-samples">${D.samplePhotos.map(p => `<button data-act="sample" data-src="${p}" aria-label="예시 사진" aria-pressed="${dr.photo === p}"><img src="${p}" alt="">${dr.photo === p ? `<i>${I.check}</i>` : ""}</button>`).join("")}</div>` : ""}
       </div><div class="flow-foot"><button class="btn btn-primary btn-block" data-act="go" data-to="#/plant/2" ${dr.photo || dr.noPhoto ? "" : "disabled"}>다음</button>
@@ -956,11 +962,11 @@
     const a = t.dataset.act, id = t.dataset.id;
     if (a.startsWith("av-") && avClick(a, t)) return;
     switch (a) {
-      case "pin": { lastPinTap = Date.now(); S.selected = id; S.sheetFull = false; render(); const m = byId(id); if (m) focusOn(m); break; }
+      case "pin": { lastPinTap = Date.now(); S.selected = id; if (S.sheetMode === "full") S.sheetMode = "peek"; render(); const m = byId(id); if (m) focusOn(m); break; }
       case "unselect": S.selected = null; render(); break;
       case "open": S.selected = null; location.hash = "#/m/" + id; break;
       case "back": e.preventDefault(); goBack(t.getAttribute("href")); break;
-      case "sheet": S.sheetFull = !S.sheetFull; render(); break;
+      case "sheet": if (sheetDragged) { sheetDragged = false; break; } S.sheetMode = S.sheetMode === "min" ? "peek" : S.sheetMode === "peek" ? "full" : "peek"; render(); break;
       case "filter": S.filter = t.dataset.f; render(); break;
       case "recenter": recenter(); break;
       case "retry": S.forced = null; S.nearState = "loading"; render(); refreshNear(); break;
@@ -1028,7 +1034,7 @@
       }
       case "close": closeModal(); break;
       case "focus": {
-        const m = byId(id); S.selected = id; S.sheetFull = false;
+        const m = byId(id); S.selected = id; if (S.sheetMode === "full") S.sheetMode = "peek";
         if (!S.onboarded) { S.onboarded = true; store.set("onboarded", true); }
         if (m && !S.near.some(x => x.id === id)) { S.near.push(m); }
         if (m) { if (MAP) S.mapFocus = null; focusOn(m); if (!locOk() && (!S.nearAt || GEO.distance(S.nearAt, m) > 400)) fetchNear(m); }
@@ -1061,13 +1067,57 @@
   });
   $app.addEventListener("change", e => {
     if (e.target.dataset.act === "file" && e.target.files[0]) {
-      const f = e.target.files[0];
-      if (!/^image\//.test(f.type) && !/\.(heic|heif)$/i.test(f.name)) { toast("사진 파일만 고를 수 있어요"); return; }
+      const f = e.target.files[0]; e.target.value = "";
+      if (!/^image\//.test(f.type) && !/\.(heic|heif)$/i.test(f.name)) { toast("사진 파일만 올릴 수 있어요"); return; }
+      // 그 자리에서 찍은 사진만: 카메라로 막 찍은 파일은 만든 시각이 지금이에요. 10분보다 오래된 파일(앨범 사진)은 받지 않아요.
+      if (f.lastModified && Date.now() - f.lastModified > FRESH_MS) { toast("지금 이 자리에서 찍은 사진만 남길 수 있어요. 카메라로 다시 찍어 주세요"); return; }
       downscale(f).then(r => { S.draft.photo = r.url; S.draft.blob = r.blob; S.draft.noPhoto = false; render(); })
         .catch(() => toast("이 사진은 읽지 못했어요. 다른 사진(JPG·PNG)을 골라 주세요"));
     }
   });
-  $app.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.dataset.act === "sheet") { S.sheetFull = !S.sheetFull; render(); } });
+  $app.addEventListener("keydown", e => {
+    if (e.target.dataset.act !== "sheet") return;
+    const order = ["min", "peek", "full"], i = order.indexOf(S.sheetMode);
+    if (e.key === "ArrowUp" && i < 2) { e.preventDefault(); S.sheetMode = order[i + 1]; render(); }
+    else if (e.key === "ArrowDown" && i > 0) { e.preventDefault(); S.sheetMode = order[i - 1]; render(); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); S.sheetMode = S.sheetMode === "min" ? "peek" : S.sheetMode === "peek" ? "full" : "peek"; render(); }
+    if (/^Arrow|Enter| /.test(e.key)) requestAnimationFrame(() => document.querySelector(".f-sheet .sheet-handle")?.focus());
+  });
+
+  // 시트 끌기: 손잡이나 제목 줄을 위아래로 끌면 가장 가까운 높이(min·peek·full)로 붙어요. 빠르게 튕기면 그 방향으로 한 단계.
+  let sheetDragged = false;
+  $app.addEventListener("pointerdown", e => {
+    const sheet = e.target.closest(".f-sheet");
+    if (!sheet || !e.target.closest(".sheet-handle, .sheet-title") || e.target.closest("button")) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    const startY = e.clientY, startH = sheet.getBoundingClientRect().height, t0 = performance.now();
+    const screenH = sheet.parentElement.getBoundingClientRect().height;
+    const baseH = parseFloat(getComputedStyle(sheet).paddingBottom) || 0;   // 탭 바 높이만큼의 아래 여백
+    const peekPx = +sheet.dataset.peek || 280;
+    const snaps = { min: baseH + SHEET_MIN, peek: baseH + peekPx, full: screenH * 0.72 };
+    const floats = [...document.querySelectorAll(".home .f-bubble, .home .f-bubble-min, .home .f-locate")];
+    let moved = false, lastY = startY, lastT = t0, vy = 0;
+    const move = ev => {
+      const dy = ev.clientY - startY;
+      if (!moved && Math.abs(dy) < 6) return;
+      if (!moved) { moved = true; sheet.style.transition = "none"; floats.forEach(f => f.style.transition = "none"); }
+      const h = Math.max(snaps.min - 12, Math.min(snaps.full + 12, startH - dy));
+      sheet.style.height = h + "px";
+      floats.forEach(f => f.style.bottom = (h + 12) + "px");
+      const now = performance.now(); vy = (ev.clientY - lastY) / Math.max(1, now - lastT); lastY = ev.clientY; lastT = now;
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      if (!moved) return;
+      sheetDragged = true; setTimeout(() => { sheetDragged = false; }, 350);
+      const h = sheet.getBoundingClientRect().height, order = ["min", "peek", "full"];
+      let pick = order.reduce((a, k) => Math.abs(snaps[k] - h) < Math.abs(snaps[a] - h) ? k : a, "peek");
+      if (pick === S.sheetMode && Math.abs(vy) > 0.5) { const i = order.indexOf(S.sheetMode); pick = order[Math.max(0, Math.min(2, i + (vy > 0 ? -1 : 1)))]; }
+      sheet.style.transition = ""; floats.forEach(f => f.style.transition = "");
+      S.sheetMode = pick; render();
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  });
 
   // 사진은 올리기 전에 긴 변 1280px JPEG로 줄여요(데이터·저장 공간 절약, 촬영 위치 등 EXIF 메타데이터도 함께 사라져요)
   function downscale(file) {

@@ -120,12 +120,13 @@
     locked: { petal: "#C9BFA9", petalL: "#DCD3C0", back: "#C9BFA9", center: "#BFB39A", stem: "#C9BFA9", leaf: "#D3CAB6", leafL: "#DCD3C0" }
   };
   function stitch(s = 120, pal = "bloom", withStem = true) {
-    const cols = PAL[pal] || PAL.bloom, cell = 200 / 13, rows = withStem ? 15 : 13;
+    if (!PAL[pal]) pal = "bloom";
+    const cols = PAL[pal], cell = 200 / 13, rows = withStem ? 15 : 13;
     const cells = withStem ? CELLS.filter(c => c[1] <= 8).concat(STEM.map(c => [c[0], c[1] - 1, c[2]])) : CELLS;
     let i = "";
     for (const [x, y, k] of cells) {
       const X = x * cell, Y = y * cell, d = cell * 0.2;
-      i += `<path d="M${(X + d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + cell - d).toFixed(1)} ${(Y + cell - d).toFixed(1)} M${(X + cell - d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + d).toFixed(1)} ${(Y + cell - d).toFixed(1)}" stroke="${cols[k]}" stroke-width="${(cell * 0.26).toFixed(1)}" stroke-linecap="round"/>`;
+      i += `<path d="M${(X + d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + cell - d).toFixed(1)} ${(Y + cell - d).toFixed(1)} M${(X + cell - d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + d).toFixed(1)} ${(Y + cell - d).toFixed(1)}" style="stroke:var(--st-${pal}-${k},${cols[k]})" stroke="${cols[k]}" stroke-width="${(cell * 0.26).toFixed(1)}" stroke-linecap="round"/>`;
     }
     const h = Math.round(s * (rows - 1) / 13);
     return `<svg class="mg-stitch" width="${s}" height="${h}" viewBox="0 0 200 ${((rows - 1) * cell).toFixed(1)}" fill="none" aria-hidden="true">${i}</svg>`;

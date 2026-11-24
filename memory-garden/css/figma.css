@@ -493,3 +493,28 @@ body{background:var(--color-bg)}
 :root[data-theme="night"] .chip-pin.is-available .ic{background:#FFF9EC}
 :root[data-theme="night"] .chip-pin.is-discovered .ic{background:#FBE3E8}
 :root[data-theme="night"] .chip-pin.active button{background:#F5F3FA;color:#20213B;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+
+/* 근처의 기억 시트 3단계 — min: 제목 줄만 남기고 지도 전체 보기 */
+.f-sheet .sheet-handle,.f-sheet .sheet-title{touch-action:none;user-select:none;-webkit-user-select:none}
+.f-sheet .sheet-title{cursor:grab}
+.f-sheet.is-min .chips,.f-sheet.is-min .sheet-body{display:none}
+.f-sheet.is-min .sheet-head{padding-bottom:16px}
+.f-sheet .sheet-handle:focus-visible{outline:2px solid var(--f-accent);outline-offset:-4px;border-radius:12px}
+
+/* ---------- 밤 테마: 나의 정원 자수 (Night Garden 천 + 밝은 실) ---------- */
+:root[data-theme="night"]{
+  --f-cloth:#22264A; --f-cloth-line:rgba(182,183,242,.55); --f-cloth-dot:rgba(182,183,242,.10);
+  /* 낮 실 색을 밤 배경에서 빛나는 톤으로: 꽃잎은 로즈·스카이·아이리스, 가운데는 골드, 줄기·잎은 밝은 세이지 */
+  --st-bloom-petal:#F1A9BE; --st-bloom-petalL:#F8D2DD; --st-bloom-back:#9C9EEC; --st-bloom-center:#E9CA88; --st-bloom-stem:#86B596; --st-bloom-leaf:#A6CDB1; --st-bloom-leafL:#C8E2CF;
+  --st-blue-petal:#8EC1F0;  --st-blue-petalL:#C4DFF8;  --st-blue-back:#9C9EEC;  --st-blue-center:#E9CA88;  --st-blue-stem:#86B596;  --st-blue-leaf:#A6CDB1;  --st-blue-leafL:#C8E2CF;
+  --st-lav-petal:#AEB0F4;   --st-lav-petalL:#D6D7FB;   --st-lav-back:#F1A9BE;   --st-lav-center:#E9CA88;   --st-lav-stem:#86B596;   --st-lav-leaf:#A6CDB1;   --st-lav-leafL:#C8E2CF;
+  /* 사라진 기억 흔적·근처 잠긴 도안: 밤 천 위에서 보이는 흐린 실 */
+  --st-trace-petal:#5A6089; --st-trace-petalL:#6B7196; --st-trace-back:#5A6089; --st-trace-center:#525878; --st-trace-stem:#5A6089; --st-trace-leaf:#626890; --st-trace-leafL:#6B7196;
+  --st-locked-petal:#7B7FA6; --st-locked-petalL:#9296BA; --st-locked-back:#7B7FA6; --st-locked-center:#8A8064; --st-locked-stem:#7B7FA6; --st-locked-leaf:#858AAE; --st-locked-leafL:#9296BA;
+}
+:root[data-theme="night"] .f-cloth{box-shadow:inset 0 1px 6px rgba(0,0,0,.45),0 0 0 1px rgba(182,183,242,.14);background-image:radial-gradient(var(--f-cloth-dot) 1px,transparent 1.3px);background-size:7px 7px}
+:root[data-theme="night"] .f-cloth::before{border-color:var(--f-cloth-line)}
+:root[data-theme="night"] .f-cloth-in .st:not(.trace) .mg-stitch{filter:drop-shadow(0 0 3px rgba(182,183,242,.28))}
+:root[data-theme="night"] .f-cloth-empty b{color:var(--color-text)}
+:root[data-theme="night"] .f-cloth-empty span{color:var(--color-text-sub)}
+:root[data-theme="night"] .f-pat.can .mg-stitch{--st-locked-petal:#C9AE72;--st-locked-petalL:#E2C88E;--st-locked-back:#C9AE72;--st-locked-center:#E9CA88;--st-locked-stem:#A9935F;--st-locked-leaf:#B9A06A;--st-locked-leafL:#D2B97F}
