@@ -332,7 +332,9 @@
     const floatBottom = sel ? `calc(${base} + 152px)` : `calc(${sheetTop} + 12px)`;
     const locateBottom = sel ? `calc(${base} + 156px)` : `calc(${sheetTop} + 12px)`;
     const bannerTop = "calc(var(--safe-top) + 72px)";
-    const mini = sel || S.lumiHidden || S.sheetMode === "min";   // 시트를 내리면 루미도 작은 아이콘으로 접혀 지도를 가리지 않아요
+    // 시트를 내리면 루미도 작은 아이콘으로 접혀 지도를 가리지 않아요. 아이콘을 누르면 접힌 채로도 힌트 말풍선이 열려요.
+    if (S.sheetMode !== "min") S.lumiPeek = false;
+    const mini = sel || S.lumiHidden || (S.sheetMode === "min" && !S.lumiPeek);
     const chip = (f, label, n) => `<button class="chip" data-act="filter" data-f="${f}" aria-pressed="${S.filter === f}">${S.filter === f ? I.check : ""}${label} <span class="n">${n}</span></button>`;
 
     return `<section class="screen home" aria-label="지도 홈">
@@ -1049,8 +1051,8 @@
       case "after-plant": if (S.lastPlanted) focusOn(S.lastPlanted); break;
       case "gtab": S.gardenTab = t.dataset.t; render(); break;
       case "avatar": location.hash = "#/avatar"; break;
-      case "lumi-hide": S.lumiHidden = true; render(); break;
-      case "lumi-show": S.lumiHidden = false; S.selected = null; render(); break;
+      case "lumi-hide": S.lumiHidden = true; S.lumiPeek = false; render(); break;
+      case "lumi-show": S.lumiHidden = false; S.lumiPeek = true; S.selected = null; render(); break;
       case "allow": S.onboarded = true; store.set("onboarded", true); startLocation(); location.hash = "#/"; break;
       case "deny": S.onboarded = true; store.set("onboarded", true); S.locWanted = false; store.set("locWanted", false); location.hash = "#/"; break;
     }
