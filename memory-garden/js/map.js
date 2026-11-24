@@ -12,7 +12,7 @@
   });
   const loadCss = href => { if (document.querySelector(`link[href="${href}"]`)) return; const l = document.createElement("link"); l.rel = "stylesheet"; l.href = href; document.head.appendChild(l); };
   const el = html => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; };
-  const RADIUS_STYLE = { color: "#5DA8F5", fill: "rgba(93,168,245,1)", fillOpacity: .12, opacity: .7 };
+  const RADIUS_STYLE = { color: "#3D7FD9", fill: "rgba(61,127,217,1)", fillOpacity: .12, opacity: 1 };   // Figma · Map Me
 
   /* ---------------- Kakao ---------------- */
   async function kakaoAdapter(host, opts) {
@@ -29,7 +29,7 @@
     if (opts.onMove) K.event.addListener(map, "dragend", () => opts.onMove());
     const pins = new Map();
     let me = null, rCircle = null, aCircle = null;
-    const circle = (r, dashed) => new K.Circle({ radius: r, strokeWeight: 1.5, strokeColor: RADIUS_STYLE.color, strokeOpacity: RADIUS_STYLE.opacity, strokeStyle: dashed ? "dash" : "solid", fillColor: RADIUS_STYLE.fill, fillOpacity: dashed ? .06 : RADIUS_STYLE.fillOpacity });
+    const circle = (r, dashed) => new K.Circle({ radius: r, strokeWeight: 1.5, strokeColor: RADIUS_STYLE.color, strokeOpacity: RADIUS_STYLE.opacity, strokeStyle: dashed ? "dash" : "shortdash", fillColor: RADIUS_STYLE.fill, fillOpacity: dashed ? .06 : RADIUS_STYLE.fillOpacity });
     const geocoder = K.services ? new K.services.Geocoder() : null;
     return {
       kind: "kakao", map,
@@ -86,7 +86,7 @@
     const icon = html => L.divIcon({ className: "mg-ov", html, iconSize: [0, 0], iconAnchor: [0, 0] });
     const pins = new Map();
     let me = null, rCircle = null, aCircle = null;
-    const cOpt = dashed => ({ radius: 1, color: RADIUS_STYLE.color, weight: 1.5, opacity: RADIUS_STYLE.opacity, dashArray: dashed ? "6 6" : "5 5", fillColor: RADIUS_STYLE.color, fillOpacity: dashed ? .06 : RADIUS_STYLE.fillOpacity, interactive: false });
+    const cOpt = dashed => ({ radius: 1, color: RADIUS_STYLE.color, weight: 1.5, opacity: RADIUS_STYLE.opacity, dashArray: dashed ? "6 6" : "3.6 3.6", fillColor: RADIUS_STYLE.color, fillOpacity: dashed ? .06 : RADIUS_STYLE.fillOpacity, interactive: false });
     return {
       kind: "leaflet", map,
       setMe(pos, html, radius, lowAcc) {

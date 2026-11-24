@@ -121,7 +121,21 @@
     wifi: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 9a14 14 0 0 1 18 0M6.5 12.5a9 9 0 0 1 11 0M10 16a4 4 0 0 1 4 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/><path d="M4 4l16 16"/></svg>'
   };
 
+  I.check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  I.unlock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 6.8-1.2"/></svg>';
+  I.nav = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 19 20l-7-4-7 4 7-17Z"/></svg>';
+  I.locOff = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 3.6A7 7 0 0 1 19 9c0 2.3-1.3 5-2.9 7.3M13.8 19.9c-1 1.2-1.8 2.1-1.8 2.1S5 14.4 5 9c0-1 .2-1.9.6-2.8"/><path d="M3 3l18 18"/></svg>';
   I.trash = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/></svg>';
+
+  /* ---------------- Figma MG3·9 공통 조각 (배경·궤도·언덕) ---------------- */
+  const AMB = h => `<div class="f-amb" style="height:${h}px" aria-hidden="true"></div>`;
+  const HILLS = top => `<img class="f-hills" src="assets/brand/hills.svg" alt="" aria-hidden="true" style="top:${top}px">`;
+  const ORBIT = (x, y, w) => `<img class="f-orbit" src="assets/brand/orbit.svg" alt="" aria-hidden="true" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">`;
+  const AT = (x, y, w, html, cls) => `<span class="f-at ${cls || ""}" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">${html}</span>`;
+  const LUMI = (x, y, w) => `<img class="f-lumi" src="${img("cat")}" alt="" style="left:${x}px;top:${y}px;width:${w}px">`;
+  const stamp = m => { const t = dateParts(m); return `<span class="f-stamp" aria-label="${t.full} ${t.hm}"><i>${t.y}</i><b>${t.md}</b><em>${t.wd} · ${t.hm}</em></span>`; };
+  const badge = (cls, ic, txt) => `<span class="f-badge ${cls}">${ic || ""}${txt}</span>`;
+  const stateBlock = (tone, ic, h, p, btn) => `<div class="f-state" ${tone === "err" ? 'role="alert"' : ""}><span class="f-sic ${tone}">${ic}</span><h3>${h}</h3><p>${p}</p>${btn || ""}</div>`;
 
   /* ---------------- real map (persistent) ---------------- */
   // 지도는 화면을 다시 그릴 때마다 새로 만들지 않고, 한 번 만든 걸 자리만 옮겨 붙여요.
@@ -141,7 +155,7 @@
       syncMap(); updateRegion();
     }).catch(e => { console.error(e); mapLoading = false; mapFailed = true; if ((route() || {}).name === "home") render(); });
   }
-  const meHTML = () => `<div class="me ${accOk() ? "" : "low"}"><div class="me-dot"></div><span class="me-label">나</span></div>`;
+  const meHTML = () => `<div class="me ${accOk() ? "" : "low"}"><span class="me-label">나</span><div class="me-dot"></div></div>`;
   function pinItems() {
     if (dataState() !== "ok" && dataState() !== "empty") return [];
     // 씨앗 핀 v3: 잠김 · 열 수 있음 · 선택 · 발견 · 내가 심음 ('?' 핀 없음, 위치를 모르면 거리만 숨김)
@@ -151,7 +165,7 @@
       const name = m.mine ? "내가 심은 기억" : discovered(m) ? m.title : canOpen(m) ? "지금 열 수 있는 기억" : "아직 발견하지 않은 기억";
       return {
         id: m.id, lat: m.lat, lng: m.lng, z: sel ? 5 : st === "available" ? 4 : 2,
-        html: `<div class="pin is-${st}${sel ? " active" : ""}">${label ? `<span class="pin-dist">${st === "dormant" ? I.lock : ""}${label}</span>` : ""}<button data-act="pin" data-id="${m.id}" aria-label="${esc(name)}${label ? ", " + label : ""}">${BR.seedPin(sel && !m.mine ? "selected" : st, sel ? 50 : 40)}</button></div>`
+        html: `<div class="pin is-${st}${sel ? " active" : ""}">${label ? `<span class="pin-dist">${m.mine ? "" : st === "dormant" ? I.lock : st === "available" ? I.unlock : ""}${label}</span>` : ""}<button data-act="pin" data-id="${m.id}" aria-label="${esc(name)}${label ? ", " + label : ""}">${BR.seedPin(sel && !m.mine ? "selected" : st, sel ? 50 : 40)}</button></div>`
       };
     });
   }
@@ -213,31 +227,31 @@
     const st = seedState(m), d = distOf(m), locKnown = d != null;
     if (st === "dormant" || st === "available") {
       const can = st === "available";
-      return `<button class="mcard undisc ${can ? "can" : "locked"}" data-act="open" data-id="${m.id}">
-        <span class="thumb seed-thumb">${BR.seed(can ? "available" : "dormant", 64)}</span>
-        <span class="info"><span class="ttl">아직 발견하지 않은 기억</span>
-          <span class="tagline"><span class="tag ${can ? "tag-avail" : "tag-locked"}">${I.lock}${can ? "열 수 있어요" : "잠김"}${locKnown ? " · " + fmtDist(d) : ""}</span></span>
-          <span class="meta">${esc(m.place)}${m.hint ? " · 힌트 있음" : ""}</span></span></button>`;
+      const status = can ? `${I.unlock}열 수 있어요${locKnown ? " · " + fmtDist(d) : ""}`
+        : !locOk() ? `${I.lock}잠김 · 거리 확인 필요` : !accOk() ? `${I.crosshair}거리 확인 중` : `${I.lock}잠김 · ${fmtDist(d)}`;
+      return `<button class="mcard f-mcard" data-act="open" data-id="${m.id}">
+        <span class="f-thumb ${can ? "amber" : "lilac"}">${BR.seed(can ? "available" : "dormant", 68)}</span>
+        <span class="f-mtxt"><b>아직 발견하지 않은 기억</b><span class="f-status ${can ? "amber" : "lilac"}">${status}</span>
+          <span class="f-meta">${esc(m.place)} · ${m.hint ? "힌트 있음" : "힌트 없음"}</span></span></button>`;
     }
-    const tag = m.mine ? `<span class="tag tag-mine">내 기억</span>` : `<span class="tag tag-disc">${BR.pinFlower(14)}발견함</span>`;
-    return `<button class="mcard" data-act="open" data-id="${m.id}">
-      <span class="thumb">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : BR.seed("planted", 64)}</span>
-      <span class="info"><span class="ttl">${esc(m.title)}</span>
-        <span class="meta"><img src="${esc(img(m.author && m.author.avatar))}" alt="">${esc(m.author ? m.author.name : "")} · ${esc(m.place)}</span></span>
-      <span class="dist"><b>${locKnown ? (d < 15 && m.mine ? "여기" : fmtDist(d)) : ""}</b>${tag}</span></button>`;
+    const tag = m.mine ? badge("soft", "", "내 기억") : badge("rose", BR.pinFlower(14), "발견함");
+    return `<button class="mcard f-mcard" data-act="open" data-id="${m.id}">
+      <span class="f-thumb photo">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : BR.seed("planted", 68)}</span>
+      <span class="f-mtxt"><b>${esc(m.title)}</b>${tag}
+        <span class="f-meta">${esc(m.place)}${locKnown ? " · " + (d < 15 && m.mine ? "여기" : fmtDist(d)) : ""}</span></span></button>`;
   }
   // 위치 상태별 안내(오류 ≠ 빈 화면). 위도·경도는 어디에도 보여 주지 않아요.
   function locBanner(top) {
     const st = GEO.state, at = `style="top:${top}"`;
-    const b = (cls, ic, title, sub, act, btn) => `<div class="banner ${cls}" ${at} role="${cls ? "status" : "alert"}"><span class="ic">${ic}</span><div><b>${title}</b><span>${sub}</span></div>${btn ? `<button data-act="${act}">${btn}</button>` : ""}</div>`;
-    if (st === "ok") return accOk() ? "" : b("info", I.crosshair, `위치 정확도가 낮아요 · 오차 ±${pos().acc}m`, "정확해질 때까지 기억을 열거나 심을 수 없어요. 이미 발견한 기억은 볼 수 있어요", "loc-retry", "다시 확인");
-    if (st === "asking") return b("info", I.crosshair, "현재 위치를 확인하는 중이에요", "브라우저가 위치 권한을 물으면 ‘허용’을 눌러 주세요", "", "");
-    if (st === "denied") return b("", I.alert, "위치 권한이 꺼져 있어요", "둘러보기만 할 수 있어요. 설정에서 허용하면 기억을 열고 심을 수 있어요", "loc-help", "방법 보기");
-    if (st === "timeout") return b("", I.alert, "위치 확인이 오래 걸리고 있어요", "하늘이 트인 곳이나 창가에서 다시 시도해 주세요", "loc-retry", "다시 확인");
-    if (st === "unavailable") return b("", I.alert, "현재 위치를 찾지 못했어요", "휴대폰의 위치(GPS)와 Wi-Fi를 켜고 다시 시도해 주세요", "loc-retry", "다시 확인");
-    if (st === "insecure") return b("", I.alert, "https 주소에서만 위치를 쓸 수 있어요", "보안 연결(https)로 다시 열어 주세요", "", "");
-    if (st === "unsupported") return b("", I.alert, "이 브라우저는 위치 확인을 지원하지 않아요", "최신 Chrome·Safari에서 열어 주세요. 둘러보기만 할 수 있어요", "", "");
-    return b("", I.alert, "위치가 꺼져 있어요", "둘러보기만 할 수 있어요. 기억을 열고 심으려면 위치가 필요해요", "loc-retry", "위치 켜기");
+    const b = (ic, title, sub, act, btn) => `<div class="banner f-banner" ${at} role="status"><span class="ic">${ic}</span><div><b>${title}</b><span>${sub}</span></div>${btn ? `<button data-act="${act}">${btn}</button>` : ""}</div>`;
+    if (st === "ok") return accOk() ? "" : b(I.locOff, "위치 확인 중이에요", `아직 열 수 있는지 몰라요 · 오차 ±${pos().acc}m`, "loc-retry", "다시 확인");
+    if (st === "asking") return b(I.crosshair, "위치 확인 중이에요", "위치 권한을 물으면 ‘허용’을 눌러 주세요", "", "");
+    if (st === "denied") return b(I.locOff, "위치를 확인할 수 없어요", "둘러보기만 할 수 있어요", "loc-help", "방법 보기");
+    if (st === "timeout") return b(I.locOff, "위치 확인이 늦어지고 있어요", "창가나 바깥에서 다시 시도해 주세요", "loc-retry", "다시 확인");
+    if (st === "unavailable") return b(I.locOff, "현재 위치를 찾지 못했어요", "GPS와 Wi-Fi를 켜 주세요", "loc-retry", "다시 확인");
+    if (st === "insecure") return b(I.locOff, "https에서만 위치를 써요", "보안 주소(https)로 열어 주세요", "", "");
+    if (st === "unsupported") return b(I.locOff, "위치를 쓸 수 없는 브라우저예요", "둘러보기만 할 수 있어요", "", "");
+    return b(I.locOff, "위치를 확인할 수 없어요", "둘러보기만 할 수 있어요", "loc-retry", "다시 확인");
   }
   function locHelp() {
     openModal(`<h3>위치 권한 켜는 방법</h3>
@@ -287,46 +301,49 @@
     const list = all.filter(m => S.filter === "all" || (S.filter === "open" ? canOpen(m) : !isOpen(m))).sort(sortD);
     const openN = all.filter(isOpen).length, lockedN = all.length - openN, availN = all.filter(canOpen).length;
     const nearest = all.filter(m => !m.mine).sort(sortD)[0];
+    const R = S.set.radius;
 
     let body;
-    if (ds === "loading") body = [1, 2, 3].map(() => `<div class="mcard sk-card"><span class="thumb sk"></span><span class="info"><span class="sk" style="height:16px;width:70%"></span><span class="sk" style="height:12px;width:45%"></span></span><span class="sk" style="width:44px;height:20px"></span></div>`).join("");
-    else if (ds === "error") body = `<div class="state" role="alert"><span class="icon">${I.wifi}</span><h3>기억을 불러오지 못했어요</h3><p>근처에 기억이 없다는 뜻은 아니에요. 연결을 확인하고 다시 시도해 주세요.</p><div class="actions"><button class="btn btn-primary" data-act="retry">다시 시도</button></div></div>`;
-    else if (ds === "empty") body = `<div class="state"><span class="icon icon-soft">${I.garden}</span><h3>이 근처엔 아직 심어진 기억이 없어요</h3><p>여기에 첫 번째 기억을 심으면, 다음에 오는 누군가가 발견할 거예요.</p><div class="actions"><a class="btn btn-primary" href="#/plant/1">첫 기억 심기</a></div></div>`;
-    else body = list.length ? list.map(memoryCard).join("") : `<div class="state"><h3>${S.filter === "open" ? "지금 열 수 있는 기억이 없어요" : "잠긴 기억이 없어요"}</h3><p>필터를 바꿔 보세요.</p></div>`;
+    if (ds === "loading") body = [1, 2, 3].map(() => `<div class="f-skel" aria-hidden="true"><span class="t"></span><span class="l"><i></i><i></i></span><span class="r"></span></div>`).join("");
+    else if (ds === "error") body = stateBlock("err", I.wifi, "기억을 불러오지 못했어요", "근처에 기억이 없다는 뜻은 아니에요. 연결을 확인하고 다시 시도해 주세요.", `<button class="btn btn-outline f-sbtn" data-act="retry">다시 시도</button>`);
+    else if (ds === "empty") body = stateBlock("soft", I.garden, "이 근처엔 아직 심어진 기억이 없어요", "여기에 첫 번째 기억을 심으면, 다음에 오는 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`);
+    else body = list.length ? list.map(memoryCard).join("") : stateBlock("soft", I.lock, S.filter === "open" ? "지금 열 수 있는 기억이 없어요" : "잠긴 기억이 없어요", "필터를 바꿔 보세요.", "");
 
     let catLine;
-    if (!locOk()) catLine = GEO.state === "asking" ? "지금 어디 있는지 찾는 중이야…" : "위치를 몰라서 길 안내를 못 하고 있어. 둘러보기만 할 수 있어!";
+    if (!locOk()) catLine = GEO.state === "asking" ? "지금 어디 있는지 찾는 중이야…" : "위치를 알 수 없어서 거리는 몰라. 둘러보기는 할 수 있어!";
     else if (ds === "loading") catLine = "근처 기억을 찾는 중이야…";
-    else if (ds === "error") catLine = "앗, 신호가 약한가 봐. 다시 찾아볼게!";
+    else if (ds === "error") catLine = "신호가 약한가 봐. 다시 찾아볼게!";
     else if (ds === "empty" || !nearest) catLine = "여긴 아직 아무도 기억을 안 남겼어. 네가 처음이야!";
-    else if (!accOk()) catLine = "위치가 조금 흔들리고 있어. 하늘이 트인 곳으로 가 볼래?";
-    else catLine = availN ? `바로 근처에 열 수 있는 기억이 <b>${availN}개</b> 있어!` : `근처에 기억 <b>${all.length}개</b>! 가장 가까운 건 <b>${fmtDist(distOf(nearest))}</b> 앞이야.`;
+    else if (!accOk()) catLine = "하늘이 트인 곳에서 잠시 기다리면 더 정확해져!";
+    else catLine = `가장 가까운 기억은 ${fmtDist(distOf(nearest))} 앞이야. 다가가 볼래?`;
+    const note = !locOk() ? "위치를 켜면 거리가 보여요" : !accOk() ? "오차가 줄면 거리가 보여요" : `반경 ${R}m 안에서 열려요`;
 
     const sel = S.selected && byId(S.selected);
-    const peek = (ds === "empty" || ds === "error") ? 300 : 262; // 상태 안내가 탭바에 가리지 않도록
+    const peek = (ds === "empty" || ds === "error") ? 340 : 280;   // Figma: 시트 위끝 y480 (빈·오류 y420)
     const base = "var(--tab-h) + var(--safe-bottom)";
     const sheetH = S.sheetFull ? "72%" : `calc(${base} + ${peek}px)`;
-    const mapBottom = sel ? `calc(${base})` : sheetH;   // 지도 저작권 표시가 시트에 가리지 않게
-    const floatBottom = S.sheetFull ? "calc(72% + 12px)" : `calc(${base} + ${peek + 12}px)`;
-    const bannerTop = "calc(var(--safe-top) + 70px)";
+    const mapBottom = sel ? `calc(${base})` : sheetH;
+    const floatBottom = sel ? `calc(${base} + 152px)` : S.sheetFull ? "calc(72% - 4px)" : `calc(${base} + ${peek - 4}px)`;
+    const locateBottom = sel ? `calc(${base} + 156px)` : S.sheetFull ? "calc(72% + 14px)" : `calc(${base} + ${peek + 14}px)`;
+    const bannerTop = "calc(var(--safe-top) + 72px)";
+    const mini = sel || S.lumiHidden;
+    const chip = (f, label, n) => `<button class="chip" data-act="filter" data-f="${f}" aria-pressed="${S.filter === f}">${S.filter === f ? I.check : ""}${label} <span class="n">${n}</span></button>`;
 
     return `<section class="screen home" aria-label="지도 홈">
-      <div class="map" id="map" style="bottom:${mapBottom}">${mapFailed ? `<div class="map-fallback"><div class="state"><span class="icon">${I.map}</span><h3>지도를 불러오지 못했어요</h3><p>목록에서 근처 기억을 볼 수 있어요.</p><div class="actions"><button class="btn btn-soft" data-act="map-retry">지도 다시 불러오기</button></div></div></div>` : ""}</div>
-      <header class="topbar">
-        <a class="brand" href="#/" aria-label="기억 정원 홈"><img src="${img("cat")}" alt=""><b>기억 정원</b></a>
+      <div class="map" id="map" style="bottom:${mapBottom}">${mapFailed ? `<div class="map-fallback">${stateBlock("soft", I.map, "지도를 불러오지 못했어요", "목록에서 근처 기억을 볼 수 있어요.", `<button class="btn btn-outline f-sbtn" data-act="map-retry">다시 불러오기</button>`)}</div>` : ""}</div>
+      <header class="topbar f-top">
+        <a class="f-logo" href="#/" aria-label="기억 정원 홈"><span class="f-lumi-c"><img src="${img("cat")}" alt=""></span><b>기억 정원</b></a>
         <span class="spacer"></span>
-        <button class="loc-chip ${locOk() ? "" : "off"}" data-act="loc"><span class="dot"></span>${locOk() ? esc(S.region || "내 위치") : GEO.state === "asking" ? "위치 확인 중" : "위치 꺼짐"}</button>
+        <button class="f-locchip ${locOk() ? "" : "off"}" data-act="loc"><span class="dot"></span>${locOk() ? esc(S.region || "내 위치") : GEO.state === "asking" ? "위치 확인 중" : "위치 꺼짐"}</button>
       </header>
       ${locBanner(bannerTop)}
-      ${sel ? "" : `<div class="cat-helper" style="bottom:${floatBottom}"><img src="${img("cat")}" alt="수집가 루미"><p class="bubble"><span class="name">LUMI · 기록수집가</span>${catLine}</p></div>`}
-      ${sel ? "" : `<button class="icon-btn recenter" style="bottom:calc(${floatBottom.replace(/^calc\(|\)$/g, "")} + 30px)" data-act="recenter" aria-label="내 위치로">${I.target}</button>`}
-      ${sel ? peekHTML(sel) : `<section class="sheet" style="height:${sheetH}" aria-label="근처의 기억">
+      ${mini ? `<button class="f-bubble-min" style="bottom:${floatBottom}" data-act="lumi-show" aria-label="루미의 안내 보기"><img src="${img("cat")}" alt=""><i></i></button>`
+        : `<div class="f-bubble" style="bottom:${floatBottom}" role="status"><span class="f-lumi-c l40"><img src="${img("cat")}" alt="수집가 루미"></span><p><span class="spk">LUMI</span><span class="msg">${catLine}</span></p><button class="f-x" data-act="lumi-hide" aria-label="안내 닫기">${I.close}</button></div>`}
+      <button class="f-locate" style="bottom:${locateBottom}" data-act="recenter" aria-label="내 위치로">${I.target}</button>
+      ${sel ? peekHTML(sel) : `<section class="sheet f-sheet" style="height:${sheetH}" aria-label="근처의 기억">
         <div class="sheet-handle" data-act="sheet" role="button" aria-label="목록 ${S.sheetFull ? "접기" : "펼치기"}" tabindex="0"></div>
-        <div class="sheet-head"><div class="sheet-title"><h2>근처의 기억</h2>${ds === "ok" ? `<span class="count">${all.length}</span>` : ""}<span class="sub">반경 ${S.set.radius}m 안에서 열려요</span></div>
-          ${ds === "ok" ? `<div class="chips" role="group" aria-label="필터">
-            <button class="chip" data-act="filter" data-f="all" aria-pressed="${S.filter === "all"}">전체 <span class="n">${all.length}</span></button>
-            <button class="chip" data-act="filter" data-f="open" aria-pressed="${S.filter === "open"}">열 수 있어요 <span class="n">${availN}</span></button>
-            <button class="chip" data-act="filter" data-f="locked" aria-pressed="${S.filter === "locked"}">잠김 <span class="n">${lockedN}</span></button></div>` : ""}
+        <div class="sheet-head"><div class="sheet-title"><h2>근처의 기억</h2><span class="count">${ds === "ok" ? all.length : ds === "empty" ? 0 : ""}</span><span class="sub">${note}</span></div>
+          ${ds === "ok" ? `<div class="chips" role="group" aria-label="필터">${chip("all", "전체", all.length)}${chip("open", "열 수 있어요", availN)}${chip("locked", "잠김", lockedN)}</div>` : ""}
         </div>
         <div class="sheet-body" id="sheetBody" aria-busy="${ds === "loading"}">${body}</div></section>`}
       ${tabbar("map")}
@@ -336,14 +353,13 @@
     const st = seedState(m), d = distOf(m), undisc = st === "dormant" || st === "available";
     const locTxt = d != null ? `${fmtDist(d)} · 걸어서 ${walkMin(d)}분` : "거리 확인 불가";
     const btn = !undisc ? `<button class="btn btn-primary" data-act="open" data-id="${m.id}">${m.mine ? "내 기억 보기" : "다시 보기"}</button>`
-      : st === "available" ? `<button class="btn btn-primary" data-act="open" data-id="${m.id}">기억 열기</button>`
-      : `<button class="btn btn-soft" data-act="open" data-id="${m.id}">${d != null && accOk() ? `${fmtDist(Math.max(1, d - S.set.radius))} 더 가까이` : "자세히"}</button>`;
-    return `<div class="peek ${undisc ? "locked" : ""}" role="dialog" aria-label="기억 미리보기">
-      <button class="close" data-act="unselect" aria-label="닫기">${I.close}</button>
-      <span class="thumb ${undisc ? "seed-thumb" : ""}">${undisc ? BR.seed(st, 84) : m.photo ? `<img src="${esc(m.photo)}" alt="">` : BR.seed("planted", 84)}</span>
-      <div class="info"><span class="ttl">${undisc ? "아직 발견하지 않은 기억" : esc(m.title)}</span>
-        <span class="meta" style="font-size:13px;color:var(--color-text-sub)">${esc(m.place)}${undisc && m.hint ? " · 힌트 있음" : ""}</span>
-        <div class="row">${btn}<span class="pix" style="font-size:12px;color:var(--color-text-faint)">${m.mine ? "" : locTxt}</span></div></div></div>`;
+      : st === "available" ? `<button class="btn btn-primary" data-act="open" data-id="${m.id}">열어보기</button>`
+      : `<button class="btn btn-outline" data-act="open" data-id="${m.id}">자세히 보기</button>`;
+    return `<div class="peek f-peek" role="dialog" aria-label="기억 미리보기">
+      <span class="f-seedtile ${st === "dormant" ? "lilac" : "amber"}">${undisc ? BR.seed(st, 86) : m.photo ? `<img src="${esc(m.photo)}" alt="">` : BR.seed("planted", 86)}</span>
+      <div class="f-pk"><b>${undisc ? "아직 발견하지 않은 기억" : esc(m.title)}</b><span class="f-meta">${esc(m.place)}${undisc && m.hint ? " · 힌트 있음" : ""}</span>
+        <div class="f-row">${btn}<span class="f-meta">${m.mine ? "" : locTxt}</span></div></div>
+      <button class="f-x" data-act="unselect" aria-label="닫기">${I.close}</button></div>`;
   }
 
   /* ---------------- MEMORY DETAIL ---------------- */
@@ -374,24 +390,24 @@
     const replies = m.replies || [];
     const hearts = m.hearts || 0;
     const vis = m.vis || "all";
-    const tags = `<span class="tag tag-soft">${I.users}${visLabel(vis)}</span>${!mine && m.firstDist != null ? `<span class="tag tag-disc-line">${I.lock}${m.firstDist}m 거리에서 처음 열람</span>` : ""}`;
+    const tags = `${badge("soft", vis === "me" ? I.lock : I.users, visLabel(vis))}${!mine && m.firstDist != null ? badge("coral", I.unlock, `${m.firstDist}m 거리에서 처음 열었어요`) : ""}`;
     return `<section class="screen" aria-label="${mine ? "내 기억 상세" : "기억 열람"}">
       <div class="detail-photo">${m.photo ? `<img src="${esc(m.photo)}" alt="${esc(m.title)} 사진">` : `<div class="nophoto">${BR.seed("planted", 180)}</div>`}
         <div class="detail-top"><a class="icon-btn" href="${mine || discovered(m) ? "#/garden" : "#/"}" data-act="back" aria-label="뒤로">${I.back}</a><button class="icon-btn" data-act="share" data-id="${m.id}" aria-label="공유">${I.share}</button></div></div>
       <div class="detail-sheet"><div class="detail-body">
-        <div class="when-row">${dateBlock(m)}<div class="when-info"><span class="place">${I.pin}${esc(m.place)}</span><div class="tags">${tags}</div></div></div>
+        <div class="when-row">${stamp(m)}<div class="when-info"><span class="place">${I.pin}${esc(m.place)}</span><div class="tags">${tags}</div></div></div>
         <div class="author"><span class="avatar"><img src="${esc(img(mine ? (S.avatar === "me" ? "me" : S.avatar) : m.author.avatar))}" alt=""></span><div><b>${mine ? "내가 심은 기억" : esc(m.author.name)}</b><span>${(t => t === "방금" ? "방금 심음" : esc(t) + "에 심음")(relTime(m.date, m.when))}</span></div></div>
-        ${mine ? `<button class="vis-card" data-act="vis-open" data-id="${m.id}"><span class="ic">${vis === "me" ? I.lock : I.users}</span><span><small>공개 범위</small><b>${visLabel(vis)}</b></span><span class="chg">변경 ${I.fwd}</span></button>
-          <p class="fine">${vis === "me" ? "나만 볼 수 있어요. 다른 사람은 이 자리에 와도 발견할 수 없어요." : "이 장소 가까이 온 사람만 발견할 수 있어요. 나는 공개 범위와 상관없이 언제든 볼 수 있어요."}</p>` : ""}
+        ${mine ? `<button class="vis-card f-vis" data-act="vis-open" data-id="${m.id}"><span class="ic">${vis === "me" ? I.lock : I.users}</span><span><small>공개 범위</small><b>${visLabel(vis)}</b></span><span class="chg">변경${I.fwd}</span></button>
+          <p class="fine">${vis === "me" ? "다른 사람에게는 보이지 않아요. 나는 공개 범위와 상관없이 언제든 볼 수 있어요." : "이 장소 가까이 온 사람이 발견할 수 있어요. 나는 공개 범위와 상관없이 언제든 볼 수 있어요."}</p>` : ""}
         <h1 class="mem-title">${esc(m.title)}</h1>
         <p class="story">${esc(m.story)}</p>
         ${mine && m.hint ? `<div class="hint-card"><span class="ic">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
         <div class="divider"></div>
-        <div class="replies"><h3>답장 <span class="pix">${replies.length}</span></h3>
-          ${replies.length ? replies.map(r => `<div class="reply"><span class="avatar"><img src="${esc(img(r.avatar))}" alt=""></span><div><p><b>${esc(r.name)}</b> ${esc(r.text)}</p><span>${esc(relTime(r.date, r.when))}</span></div></div>`).join("") : `<p style="font-size:14px;color:var(--color-text-faint)">${mine ? "아직 받은 답장이 없어요." : "아직 답장이 없어요. 이 자리에 온 첫 사람이 되어 볼래요?"}</p>`}
+        <div class="replies"><h3>답장 <span class="n">${replies.length}</span></h3>
+          ${replies.length ? replies.map(r => `<div class="reply f-reply"><span class="avatar"><img src="${esc(img(r.avatar))}" alt=""></span><div><div class="rh"><b>${esc(r.name)}</b><span>${esc(relTime(r.date, r.when))}</span></div><p>${esc(r.text)}</p></div></div>`).join("") : `<p style="font-size:14px;color:var(--color-text-faint)">${mine ? "아직 받은 답장이 없어요." : "아직 답장이 없어요. 이 자리에 온 첫 사람이 되어 볼래요?"}</p>`}
         </div>
         ${mine ? `<button class="del-link" data-act="del-open" data-id="${m.id}">${I.trash}이 기억 지우기</button>` : ""}</div>
-        <div class="detail-bar"><button class="heart-btn" data-act="like" data-id="${m.id}" aria-pressed="${liked}" aria-label="마음 ${hearts}">${I.heart}<span>${hearts}</span></button>
+        <div class="detail-bar f-actbar"><button class="heart-btn" data-act="like" data-id="${m.id}" aria-pressed="${liked}" aria-label="마음 ${hearts}">${I.heart}<span>${hearts}</span></button>
           <button class="btn btn-primary" data-act="reply" data-id="${m.id}">답장 남기기</button></div></div>
     </section>`;
   }
@@ -399,27 +415,27 @@
   function viewLocked(m) {
     const d = distOf(m), lOk = locOk(), can = canOpen(m), aOk = accOk(), R = S.set.radius;
     let big, sub, chip = "";
-    if (!lOk) { big = `<span class="lock-dist small">위치 확인 필요</span>`; sub = GEO.state === "asking" ? "지금 위치를 확인하고 있어요" : "지금 어디에 있는지 알아야 열 수 있어요"; }
-    else if (!aOk) { big = `<span class="lock-dist" id="lockDist">${fmtDist(d)}</span>`; sub = "위치 정확도가 낮아서 지금은 열 수 없어요"; chip = `<span class="compass">${I.crosshair}오차 ±${pos().acc}m</span>`; }
-    else if (can) { big = `<span class="lock-dist" id="lockDist">${fmtDist(d)}</span>`; sub = "열람 반경 안이에요. 지금 열 수 있어요"; chip = `<span class="compass">${I.arrow.replace("<svg", '<svg style="transform:rotate(0deg)"')}바로 이 근처</span>`; }
-    else { const dir = dirOf(m); big = `<span class="lock-dist" id="lockDist">${fmtDist(d)}</span>`; sub = `약 ${R}m 안으로 가면 열 수 있어요`; chip = `<span class="compass"><svg viewBox="0 0 24 24" style="transform:rotate(${dir.deg}deg)" fill="currentColor"><path d="M12 3 19 20l-7-4-7 4 7-17Z"/></svg>${dir.name} · 걸어서 ${walkMin(d)}분</span>`; }
-    const pct = d ? Math.min(100, Math.round(R / d * 100)) : 0;
-    return `<section class="screen" aria-label="${can ? "열 수 있는 기억" : "잠긴 기억"}">
-      <div class="lock-sky"><header class="lock-head"><a class="icon-btn" href="#/" data-act="back" aria-label="뒤로">${I.back}</a><h1>${can ? "열 수 있는 기억" : "잠긴 기억"}</h1><span style="width:44px"></span></header>
-        <div class="lock-orb ${can ? "can" : ""}"><span class="ring"></span>${BR.seed(can ? "available" : "dormant", 190)}</div>
-        <div class="lock-center">${big}<p id="lockSub">${sub}</p>${chip}</div></div>
-      <div class="detail-sheet lock-sheet"><div class="detail-body">
-        ${m.hint ? `<div class="hint-card"><span class="ic">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
-        <div class="undisc-row"><div><b>아직 발견하지 않은 기억</b><span>${esc(m.place)}</span></div><span class="tag ${can ? "tag-avail" : "tag-locked"}">${I.lock}${can ? "열 수 있어요" : "잠김"}</span></div>
-        <p class="fine">처음 한 번은 그 장소에서 열 수 있어요. 열고 나면 내 정원에서 어디서든 다시 볼 수 있어요.</p>
-        ${lOk ? `<p class="fine acc">${I.crosshair}내 위치 오차 ±${pos().acc}m · 열람 반경 약 ${R}m</p>` : ""}
-        ${lOk && !can && aOk ? `<div class="walk"><div class="walk-top"><span>열람 반경까지</span><span class="pix" id="walkPct">${pct}%</span></div><div class="progress-walk"><i id="walkBar" style="width:${pct}%"></i></div></div>` : ""}
-      </div>
-      <div class="detail-bar">${!lOk ? `<button class="btn btn-soft" data-act="focus" data-id="${m.id}" style="flex:none">지도</button><button class="btn btn-primary" data-act="${GEO.state === "denied" ? "loc-help" : "loc-retry"}">${GEO.state === "denied" ? "위치 권한 켜는 방법" : "위치 다시 확인하기"}</button>`
-        : !aOk ? `<button class="btn btn-soft" data-act="focus" data-id="${m.id}" style="flex:none">지도</button><button class="btn btn-primary" data-act="loc-retry">위치 다시 확인하기</button>`
-        : can ? `<button class="btn btn-soft" data-act="focus" data-id="${m.id}" style="flex:none">지도</button><button class="btn btn-primary" data-act="discover" data-id="${m.id}" ${S.busy ? "disabled" : ""}>${I.lock.replace("<svg", '<svg width="18" height="18"')}${S.busy ? "여는 중…" : "기억 열기"}</button>`
-        : DEMO ? `<button class="btn btn-soft" data-act="focus" data-id="${m.id}" style="flex:none">지도</button><button class="btn btn-primary" data-act="walk" data-id="${m.id}" id="walkBtn">가까이 걸어가기 <span class="pix" style="font-size:10px;opacity:.8">DEMO</span></button>`
-        : `<button class="btn btn-primary btn-block" data-act="focus" data-id="${m.id}">지도에서 위치 보기</button>`}</div></div>
+    if (!lOk) { big = `<span class="f-dist small">위치 확인 필요</span>`; sub = GEO.state === "asking" ? "지금 위치를 확인하고 있어요" : "지금 어디에 있는지 알아야 열 수 있어요"; }
+    else if (!aOk) { big = `<span class="f-dist" id="lockDist">${fmtDist(d)}</span>`; sub = "위치 정확도가 낮아서 지금은 열 수 없어요"; chip = `<span class="f-dir">${I.crosshair}오차 ±${pos().acc}m</span>`; }
+    else if (can) { big = `<span class="f-dist" id="lockDist">${fmtDist(d)}</span>`; sub = "열람 반경 안이에요. 지금 열 수 있어요"; chip = `<span class="f-dir">${I.nav}바로 이 근처</span>`; }
+    else { const dir = dirOf(m); big = `<span class="f-dist" id="lockDist">${fmtDist(d)}</span>`; sub = `약 ${R}m 안으로 가면 열 수 있어요`; chip = `<span class="f-dir">${I.nav.replace("<svg", `<svg style="transform:rotate(${dir.deg}deg)"`)}${dir.name} · 걸어서 ${walkMin(d)}분</span>`; }
+    const label = can ? "열 수 있는 기억" : "잠긴 기억";
+    return `<section class="screen f-lock" aria-label="${label}"><div class="f-scroll">
+      <div class="f-stage" style="height:440px">${AMB(470)}
+        <a class="f-glass" style="left:20px;top:16px" href="#/" data-act="back" aria-label="뒤로">${I.back}</a><h1 class="f-scrlabel">${label}</h1>
+        ${ORBIT(70, 58, 250)}${AT(103, 90, 184, BR.seed(can ? "available" : "dormant", 184))}
+        <div class="f-lockc">${big}<p id="lockSub">${sub}</p>${chip}</div></div>
+      <div class="f-info">
+        ${m.hint ? `<div class="f-hint"><span class="tag">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
+        <div class="f-urow"><div><b>아직 발견하지 않은 기억</b><span>${esc(m.place)}</span></div>${can ? badge("coral", I.unlock, "열 수 있어요") : badge("lilac", I.lock, "잠김")}</div>
+        <p class="f-rule">처음 한 번은 그 장소에서 열 수 있어요. 열고 나면 내 정원에서 어디서든 다시 볼 수 있어요.</p>
+        ${lOk ? `<p class="f-acc">${I.crosshair}내 위치 오차 ±${pos().acc}m · 열람 반경 약 ${R}m</p>` : ""}
+      </div></div>
+      <div class="f-actbar">${!lOk ? `<button class="btn btn-outline" data-act="focus" data-id="${m.id}">지도</button><button class="btn btn-primary" data-act="${GEO.state === "denied" ? "loc-help" : "loc-retry"}">${GEO.state === "denied" ? "위치 권한 켜는 방법" : "위치 다시 확인하기"}</button>`
+        : !aOk ? `<button class="btn btn-outline" data-act="focus" data-id="${m.id}">지도</button><button class="btn btn-primary" data-act="loc-retry">위치 다시 확인하기</button>`
+        : can ? `<button class="btn btn-outline" data-act="focus" data-id="${m.id}">지도</button><button class="btn btn-primary" data-act="discover" data-id="${m.id}" ${S.busy ? "disabled" : ""}>${I.unlock}${S.busy ? "여는 중…" : "기억 열기"}</button>`
+        : DEMO ? `<button class="btn btn-outline" data-act="focus" data-id="${m.id}">지도</button><button class="btn btn-primary" data-act="walk" data-id="${m.id}" id="walkBtn">가까이 걸어가기</button>`
+        : `<button class="btn btn-outline" data-act="focus" data-id="${m.id}">지도</button><button class="btn btn-primary" data-act="focus" data-id="${m.id}">가까이 걸어가기</button>`}</div>
     </section>`;
   }
   // 데모 전용: 위치를 기억 쪽으로 옮겨 보는 연출
@@ -459,11 +475,10 @@
   }
   function viewFound(m) {
     const t = dateParts(m);
-    let petals = ""; for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, r = 130 + (i % 3) * 30; petals += `<i class="petal" style="left:50%;top:34%;--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r}px;animation-delay:${.5 + (i % 4) * .06}s"></i>`; }
-    return `<section class="screen found" aria-label="기억 발견"><button class="skip" data-act="found-done" data-id="${m.id}">건너뛰기</button>${petals}
-      <div class="found-stage">${BR.photoOrb(m.photo, 200, true)}<img class="found-cat" src="${img("cat")}" alt=""></div>
-      <div class="found-copy"><span class="kick">MEMORY FOUND</span><h1>새로운 기억이 피어났어요</h1><p class="t">「${esc(m.title)}」</p><p class="d">${t.full} · ${esc(m.place)}</p>
-        <span class="tag tag-ok">✓ 모은 기억에 담겼어요 · 정원 자수 +1</span></div>
+    return `<section class="screen f-found" aria-label="기억 발견">${AMB(844)}<button class="f-skip" data-act="found-done" data-id="${m.id}">건너뛰기</button>
+      <div class="f-scroll"><div class="f-stage" style="height:430px">${ORBIT(38, 96, 315)}${AT(65, 112, 260, BR.photoOrb(m.photo, 260, true), "pop")}${LUMI(227, 326, 105)}</div>
+      <div class="f-copy"><span class="f-kick">MEMORY FOUND</span><h1>새로운 기억이 피어났어요</h1><p class="t">「${esc(m.title)}」</p><p class="d">${t.full} · ${esc(m.place)}</p>
+        ${badge("ok", I.check, "모은 기억에 담겼어요 · 정원 자수 +1")}</div></div>
       <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="found-done" data-id="${m.id}">기억 열어보기</button></div></section>`;
   }
 
@@ -471,90 +486,89 @@
   // 링크로는 현장 제한을 우회할 수 없어요. 서버(memory_detail)도 미발견자에게는 장소명·존재·힌트만 줘요.
   function viewShare(id) {
     const st = S.status[id];
-    const head = `<header class="share-head"><a class="brand" href="#/"><img src="${img("cat")}" alt=""><b>기억 정원</b></a></header>`;
-    if (S.boot !== "ok" || !st || st === "loading") { if (S.boot === "ok" && st !== "loading") loadDetail(id); return `<section class="screen share" aria-label="공유 링크" aria-busy="true">${head}<div class="share-body"><div class="share-orb">${BR.seed("dormant", 200)}</div><p class="sub">기억을 확인하는 중…</p></div></section>`; }
+    const shell = (orb, body, foot) => `<section class="screen f-share" aria-label="공유 링크">${AMB(480)}<div class="f-scroll">
+      <div class="f-stage" style="height:300px"><a class="f-brandbar" href="#/"><img src="${img("cat")}" alt=""><b>기억 정원</b></a>${AT(100, 86, 190, orb)}</div>
+      <div class="f-sbody">${body}</div></div><div class="f-sfoot">${foot}</div></section>`;
+    const shared = badge("soft", I.share, "공유받은 기억");
+    if (S.boot !== "ok" || !st || st === "loading") { if (S.boot === "ok" && st !== "loading") loadDetail(id); return shell(BR.seed("dormant", 190), `${shared}<h1>기억을 확인하는 중…</h1>`, ""); }
     if (st === "error") return errorScreen(id);
     const m = byId(id);
-    if (!m || st === "gone" || st === "unavailable") return `<section class="screen share" aria-label="공유 링크">${head}<div class="share-body">
-      <div class="share-orb">${BR.seed("dormant", 200)}</div><span class="chip-plain">${I.share}공유받은 기억</span><h1>현재 열람할 수 없는 기억이에요</h1>
-      <p class="sub">작성자가 기억을 지웠거나 비공개로 바꿨어요.</p></div>
-      <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/">기억 정원 둘러보기</a></div></section>`;
-    if (m.mine) return `<section class="screen share" aria-label="공유 링크">${head}<div class="share-body">
-      <div class="share-orb">${BR.photoOrb(m.photo, 190)}</div><span class="chip-plain">${I.share}내가 공유한 기억</span><h1>${esc(m.title)}</h1><p class="sub">${I.pin}${esc(m.place)} · ${visLabel(m.vis)}</p>
-      <div class="note">${I.info}<span>받은 사람은 이 장소 가까이 와야 처음 열 수 있어요. 링크로는 사진과 이야기를 볼 수 없어요.</span></div></div>
-      <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/m/${m.id}">내 기억 보기</a></div></section>`;
-    if (discovered(m)) return `<section class="screen share" aria-label="공유 링크">${head}<div class="share-body">
-      <div class="share-orb">${BR.photoOrb(m.photo, 190)}</div><span class="chip-plain">${BR.pinFlower(14)}이미 발견한 기억</span><h1>${esc(m.title)}</h1><p class="sub">${I.pin}${esc(m.place)}</p>
-      <div class="note ok">${I.info}<span>내 정원에 담긴 기억이라 어디서든 다시 볼 수 있어요.</span></div></div>
-      <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/m/${m.id}">다시 보기</a></div></section>`;
-    return `<section class="screen share" aria-label="공유 링크">${head}<div class="share-body">
-      <div class="share-orb">${BR.seed("dormant", 210)}</div><span class="chip-plain">${I.pin}공유받은 기억</span>
-      <h1>이 장소에 아직 발견하지 않은<br>기억이 하나 있어요</h1><p class="sub place">${I.pin}${esc(m.place)}</p>
-      ${m.hint ? `<div class="hint-card"><span class="ic">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
-      <div class="note">${I.lock}<span>이 기억은 그 장소 가까이 가야 처음 열 수 있어요. 링크로는 사진과 이야기를 볼 수 없어요.</span></div></div>
-      <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="focus" data-id="${m.id}">지도에서 위치 보기</button><a class="btn btn-ghost" href="#/">기억 정원 둘러보기</a></div></section>`;
+    if (!m || st === "gone" || st === "unavailable") return shell(BR.seed("dormant", 190), `${shared}<h1>현재 열람할 수 없는 기억이에요</h1>
+      <div class="f-note sunk">${I.info}<span>기억이 지워졌거나 더 이상 공개되지 않아요. 사진과 이야기는 볼 수 없어요.</span></div>`,
+      `<a class="btn btn-primary btn-block" href="#/">지도에서 다른 기억 찾기</a>`);
+    if (m.mine) return shell(BR.photoOrb(m.photo, 190), `${badge("soft", I.share, "내가 공유한 기억")}<h1>${esc(m.title)}</h1><p class="f-place">${I.pin}${esc(m.place)} · ${visLabel(m.vis)}</p>
+      <div class="f-note sky">${I.info}<span>받은 사람은 이 장소 가까이 와야 처음 열 수 있어요. 링크로는 사진과 이야기를 볼 수 없어요.</span></div>`,
+      `<a class="btn btn-primary btn-block" href="#/m/${m.id}">내 기억 보기</a>`);
+    if (discovered(m)) return shell(BR.photoOrb(m.photo, 190), `${badge("rose", BR.pinFlower(14), "이미 발견한 기억")}<h1>${esc(m.title)}</h1><p class="f-place">${I.pin}${esc(m.place)}</p>
+      <div class="f-note ok">${I.check}<span>내 정원에 담긴 기억이라 어디서든 다시 볼 수 있어요.</span></div>`,
+      `<a class="btn btn-primary btn-block" href="#/m/${m.id}">다시 보기</a>`);
+    return shell(BR.seed("dormant", 190), `${shared}<h1>이 장소에 아직 발견하지 않은<br>기억이 하나 있어요</h1><p class="f-place">${I.pin}${esc(m.place)}</p>
+      ${m.hint ? `<div class="f-hint"><span class="tag">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
+      <div class="f-note sky">${I.lock}<span>이 기억은 그 장소 가까이 가야 처음 열 수 있어요. 링크로는 사진과 이야기를 볼 수 없어요.</span></div>`,
+      `<button class="btn btn-primary btn-block" data-act="focus" data-id="${m.id}">지도에서 위치 보기</button><a class="btn btn-ghost" href="#/">기억 정원 둘러보기</a>`);
   }
 
   /* ---------------- PLANT FLOW ---------------- */
   function flowHead(n) {
-    return `<header class="flow-head"><a class="icon-btn" href="${n === 1 ? "#/" : "#/plant/" + (n - 1)}" aria-label="${n === 1 ? "닫기" : "이전"}">${n === 1 ? I.close : I.back}</a>
-      <div class="steps" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div><span class="stepn">${n}/3</span></header>`;
+    return `<header class="flow-head f-flowhead"><a class="icon-btn" href="${n === 1 ? "#/" : "#/plant/" + (n - 1)}" aria-label="${n === 1 ? "닫기" : "이전"}">${n === 1 ? I.close : I.back}</a><span class="stepn">${n}/3</span></header>
+      <div class="f-steps" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>`;
   }
   const placeGuess = () => S.region || "";
   function viewPlant(step) {
     const dr = S.draft;
-    if (step === "1") return `<section class="screen" aria-label="기억 심기 1단계">${flowHead(1)}<div class="flow-body">
+    if (step === "1") return `<section class="screen" aria-label="기억 심기 1단계">${flowHead(1)}<div class="flow-body f-flow">
       <h1 class="flow-title">이 자리의 순간을<br>한 장 골라 주세요<small>사진은 기억을 열었을 때 가장 먼저 보여요.</small></h1>
-      <label class="drop ${dr.photo ? "has-img" : ""}">${dr.photo ? `<img src="${dr.photo}" alt="고른 사진"><span class="change">사진 바꾸기</span>` : `<span class="plus">${I.camera}</span><b>사진 찍기 · 앨범에서 고르기</b><span style="font-size:13px">한 장만 고를 수 있어요</span>`}
+      <label class="drop f-drop ${dr.photo ? "has-img" : ""}">${dr.photo ? `<img src="${dr.photo}" alt="고른 사진"><span class="change">${I.clock}사진 바꾸기</span>` : `<span class="plus">${I.camera}</span><b>사진 찍기 · 앨범에서 고르기</b><span class="s">한 장만 고를 수 있어요</span>`}
         <input type="file" accept="image/*" data-act="file" aria-label="사진 고르기"></label>
-      ${DEMO ? `<p class="samples-label">예시 사진으로 체험해 보기</p>
-      <div class="samples">${D.samplePhotos.map(p => `<button data-act="sample" data-src="${p}" aria-label="예시 사진"><img src="${p}" alt=""></button>`).join("")}</div>` : ""}
+      ${DEMO ? `<p class="samples-label">예시 사진으로 체험하기</p>
+      <div class="samples f-samples">${D.samplePhotos.map(p => `<button data-act="sample" data-src="${p}" aria-label="예시 사진" aria-pressed="${dr.photo === p}"><img src="${p}" alt="">${dr.photo === p ? `<i>${I.check}</i>` : ""}</button>`).join("")}</div>` : ""}
       </div><div class="flow-foot"><button class="btn btn-primary btn-block" data-act="go" data-to="#/plant/2" ${dr.photo || dr.noPhoto ? "" : "disabled"}>다음</button>
       <button class="btn btn-ghost" data-act="nophoto">사진 없이 글만 남길게요</button></div></section>`;
     if (step === "2") {
       const n = dr.text.length;
-      return `<section class="screen" aria-label="기억 심기 2단계">${flowHead(2)}<div class="flow-body">
+      return `<section class="screen" aria-label="기억 심기 2단계">${flowHead(2)}<div class="flow-body f-flow">
       <h1 class="flow-title">여기서 어떤 일이<br>있었나요?<small>짧아도 괜찮아요. 120자까지 쓸 수 있어요.</small></h1>
-      <div class="compose"><div class="mini">${dr.photo ? `<img src="${dr.photo}" alt="">` : ""}<span>${I.pin.replace("<svg", '<svg width="14" height="14" style="color:var(--color-primary);vertical-align:-2px"')} ${esc(dr.place || placeGuess() || "지금 있는 곳")}</span></div>
+      <div class="compose f-compose"><span class="f-cplace">${I.pin}${esc(dr.place || placeGuess() || "지금 있는 곳")}</span>
         <textarea id="story" maxlength="120" placeholder="이 자리에서 있었던 일을 짧게 남겨 주세요" aria-label="이야기">${esc(dr.text)}</textarea>
         <span class="cnt ${n > 110 ? "warn" : ""}" id="cnt">${n}/120</span></div>
-      <div class="prompts">${D.prompts.map(p => `<button class="chip" data-act="prompt" data-p="${esc(p)}">${esc(p)}…</button>`).join("")}</div>
+      <div class="prompts f-prompts">${D.prompts.map(p => `<button class="chip" data-act="prompt" data-p="${esc(p)}">${esc(p)}…</button>`).join("")}</div>
       </div><div class="flow-foot"><button class="btn btn-primary btn-block" id="next2" data-act="go" data-to="#/plant/3" ${dr.text.trim().length >= 2 ? "" : "disabled"}>다음</button></div></section>`;
     }
     if (step === "3") {
       const lOk = locOk(), aOk = accOk();
       if (!dr.place && placeGuess()) dr.place = placeGuess();
       const ready = aOk && dr.place.trim().length >= 1;
-      return `<section class="screen" aria-label="기억 심기 3단계">${flowHead(3)}<div class="flow-body">
-      <h1 class="flow-title">누가 이 기억을<br>열 수 있을까요?<small>공개해도 이 자리 가까이 온 사람만 처음 열 수 있어요.</small></h1>
-      ${aOk ? `<div class="loc-card"><span class="mapmini"></span><div><b>지금 서 있는 자리에 심어요</b><span>위치 오차 ±${pos().acc}m · 좌표는 화면에 보이지 않아요</span></div></div>`
-        : lOk ? `<div class="loc-card err" role="alert"><span class="mapmini" style="filter:grayscale(1)"></span><div><b>위치 정확도가 낮아요 · ±${pos().acc}m</b><span>오차가 ${S.set.maxAcc}m 안으로 줄면 심을 수 있어요</span></div><button class="btn btn-soft" style="height:38px;font-size:13px;padding:0 12px;margin-left:auto" data-act="loc-retry">다시 확인</button></div>`
-        : `<div class="loc-card err" role="alert"><span class="mapmini" style="filter:grayscale(1)"></span><div><b>현재 위치를 확인할 수 없어요</b><span>기억은 지금 서 있는 자리에만 심을 수 있어요</span></div><button class="btn btn-soft" style="height:38px;font-size:13px;padding:0 12px;margin-left:auto" data-act="${GEO.state === "denied" ? "loc-help" : "loc-retry"}">${GEO.state === "denied" ? "방법 보기" : "다시 확인"}</button></div>`}
+      const opt = (v, ic, t, d) => `<button class="option f-opt" data-act="vis" data-v="${v}" aria-pressed="${dr.vis === v}"><span class="oi">${ic}</span><div><b>${t}</b><span>${d}</span></div><span class="radio">${dr.vis === v ? I.check : ""}</span></button>`;
+      return `<section class="screen" aria-label="기억 심기 3단계">${flowHead(3)}<div class="flow-body f-flow">
+      <h1 class="flow-title">누구와 이 기억을<br>나눌까요?<small>내가 남긴 기억은 공개 범위와 상관없이 내 정원에서 언제든 다시 볼 수 있어요.</small></h1>
+      ${aOk ? `<div class="f-plantplace"><span class="ic">${I.pin}</span><div><b>${esc(dr.place || "지금 있는 곳")}</b><span>지금 여기에 심어요 · 내 위치 오차 ±${pos().acc}m</span></div></div>`
+        : `<div class="f-plantplace err" role="alert"><span class="ic">${I.locOff}</span><div><b>${lOk ? `위치 정확도가 낮아요 · ±${pos().acc}m` : "현재 위치를 확인할 수 없어요"}</b><span>${lOk ? `오차가 ${S.set.maxAcc}m 안으로 줄면 심을 수 있어요` : "기억은 지금 서 있는 자리에만 심을 수 있어요"}</span></div><button class="btn btn-soft" data-act="${!lOk && GEO.state === "denied" ? "loc-help" : "loc-retry"}">${!lOk && GEO.state === "denied" ? "방법 보기" : "다시 확인"}</button></div>`}
+      <div class="f-opts" role="radiogroup" aria-label="공개 범위">${opt("all", I.users, "모두에게", "이 장소에 가까이 온 누구나 발견할 수 있어요")}${opt("me", I.lock, "나만 보기", "다른 사람에게 공개되지 않는 나만의 기억이에요")}</div>
+      <p class="f-noteline">${I.info}심은 뒤에도 내 정원에서 언제든 바꿀 수 있어요.</p>
       <label class="field"><span>장소 이름</span><input id="placeName" maxlength="40" value="${esc(dr.place)}" placeholder="예: 망원동 골목 카페 창가" autocomplete="off"></label>
       <label class="field"><span>발견 힌트 <em>선택</em></span><input id="hintText" maxlength="60" value="${esc(dr.hint)}" placeholder="발견 전에 보여 줄 한 줄. 사진·글은 안 보여요" autocomplete="off"></label>
-      <button class="option" data-act="vis" data-v="all" aria-pressed="${dr.vis === "all"}"><span class="oi">🌷</span><div><b>모두에게</b><span>가까이 온 누구나 발견할 수 있어요</span></div><span class="radio"></span></button>
-      <button class="option" data-act="vis" data-v="me" aria-pressed="${dr.vis === "me"}"><span class="oi">🔒</span><div><b>나만 보기</b><span>나만 볼 수 있어요. 지도에도 다른 사람에겐 안 보여요</span></div><span class="radio"></span></button>
-      <p class="reassure">심은 뒤에도 내 정원에서 언제든 바꿀 수 있어요.</p>
       </div><div class="flow-foot"><button class="btn btn-primary btn-block" id="plantBtn" data-act="plant" ${ready ? "" : "disabled"}>이 자리에 기억 심기</button></div></section>`;
     }
-    if (step === "doing") return `<section class="screen" aria-label="심는 중" aria-busy="true"><div class="center-state"><div class="sprout"><span class="seed"></span><span class="stem"></span><span class="bud"></span></div><h2 class="pix" style="font-weight:700;font-size:20px">기억을 심는 중…</h2><p>이 자리에 조심스럽게 묻고 있어요</p></div></section>`;
+    if (step === "doing") return `<section class="screen f-doing" aria-label="심는 중" aria-busy="true"><div class="f-stage" style="height:420px">${ORBIT(110, 250, 170)}${AT(125, 265, 140, BR.seed("planted", 140), "breathe")}</div>
+      <div class="f-copy"><h2>기억을 심는 중…</h2><p>이 자리에 조심스럽게 묻고 있어요</p></div></section>`;
     if (step === "fail") {
       const e = S.plantErr || "";
       const msg = e === "low_accuracy" ? "위치 정확도가 낮아서 심지 못했어요.<br>잠시 뒤 하늘이 트인 곳에서 다시 시도해 주세요."
         : e === "no_location" ? "현재 위치를 확인할 수 없어 심지 못했어요.<br>위치를 켜고 다시 시도해 주세요."
         : e === "too_many" ? "짧은 시간에 너무 많이 심었어요.<br>1분 뒤에 다시 시도해 주세요."
         : "연결이 불안정해서 확인을 받지 못했어요.<br>쓴 내용은 그대로 남아 있으니 다시 시도해 주세요.";
-      return `<section class="screen" aria-label="심기 실패"><div class="center-state" role="alert"><span class="icon" style="width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:var(--color-danger-soft);color:var(--color-danger)">${e === "low_accuracy" || e === "no_location" ? I.crosshair : I.wifi}</span>
-      <h2>아직 심어지지 않았어요</h2><p>${msg}</p>
-      <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:300px;margin-top:8px"><button class="btn btn-primary" data-act="plant">다시 시도</button><a class="btn btn-ghost" href="#/plant/3">내용 확인하기</a></div></div></section>`;
+      return `<section class="screen" aria-label="심기 실패"><header class="flow-head f-flowhead"><a class="icon-btn" href="#/" aria-label="닫기">${I.close}</a></header>
+      <div class="f-fail" role="alert"><span class="f-sic err big">${e === "low_accuracy" || e === "no_location" ? I.locOff : I.wifi}</span><h1>아직 심어지지 않았어요</h1><p>${msg}</p>
+      ${dr.text ? `<div class="f-draft">${dr.photo ? `<img src="${dr.photo}" alt="">` : `<span class="noimg">${BR.seed("planted", 40)}</span>`}<div><b>${esc(dr.text.slice(0, 40))}${dr.text.length > 40 ? "…" : ""}</b><span>임시 저장됨 · ${dr.vis === "me" ? "나만 보기" : "모두에게"}</span></div></div>` : ""}</div>
+      <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="plant">다시 시도</button><a class="btn btn-ghost" href="#/plant/3">내용 확인하기</a></div></section>`;
     }
     if (step === "done") {
       const m = S.lastPlanted;
       if (!m) { location.hash = "#/"; return ""; }
-      return `<section class="screen" aria-label="심기 완료"><div class="center-state">
-      <div class="planted-orb">${BR.seed("planted", 200)}${m.photo ? `<span class="planted-photo"><img src="${esc(m.photo)}" alt=""></span>` : ""}<img class="planted-cat" src="${img("cat")}" alt=""></div>
-      <span class="tag tag-soft">${m.vis === "me" ? I.lock : I.users}${visLabel(m.vis)}</span>
-      <h2>${m.vis === "me" ? "나만 보는 기억을 심었어요" : "기억의 씨앗을 심었어요"}</h2><p>${m.vis === "me" ? "다른 사람에게는 보이지 않아요.<br>내 정원에서 언제든 다시 볼 수 있어요." : `누군가 이 자리 가까이 오면<br>당신의 기억을 발견할 거예요.`}</p></div>
+      return `<section class="screen f-done" aria-label="심기 완료"><div class="f-scroll"><div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark">MEMORY PLANTED</span>
+        ${ORBIT(70, 52, 250)}${AT(97, 80, 196, BR.seed("planted", 196), "pop")}${LUMI(272, 60, 87)}${HILLS(290)}<span class="f-sprout">${I.garden}</span></div>
+      <div class="f-datecard">${stamp(m)}<div><b>${esc(m.place)}</b>${badge("soft", m.vis === "me" ? I.lock : I.users, visLabel(m.vis))}</div></div>
+      <div class="f-copy"><h1>기억을 심었어요</h1><p>${m.vis === "me" ? "다른 사람에게는 보이지 않아요.<br>내 정원에서 언제든 다시 볼 수 있어요." : "누군가 이 장소 가까이 오면<br>당신의 기억을 발견할 수 있어요."}</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/" data-act="after-plant">지도에서 보기</a><a class="btn btn-ghost" href="#/garden">내 정원 보기</a></div></section>`;
     }
     return "";
@@ -581,16 +595,16 @@
   const STITCH_PAL = ["bloom", "lav", "blue"];
   function samplerHTML(col) {
     // 나의 정원 자수: 타인 공개 기억을 현장에서 처음 발견했을 때만 한 송이. 내 기억은 '내가 심은 기억'에 따로.
-    if (!col.length) return `<div class="sampler empty"><div class="ghost">${BR.stitch(86, "locked")}</div><div><b>아직 수놓은 꽃이 없어요</b><p>다른 사람의 기억을 처음 발견하면 여기에 꽃 한 송이가 수놓여요.</p></div></div>`;
-    return `<div class="sampler"><div class="sampler-in">${col.map((m, i) => m.gone
-      ? `<button class="st trace" data-act="gone-info" aria-label="더 이상 열람할 수 없는 기억">${BR.stitch(92, "trace")}</button>`
-      : `<button class="st" data-act="open" data-id="${m.id}" aria-label="${esc(m.title)}">${BR.stitch(92, STITCH_PAL[i % 3])}</button>`).join("")}</div></div>`;
+    if (!col.length) return `<div class="f-cloth"><div class="f-cloth-empty"><b>첫 땀을 놓아 볼까요?</b><span>다른 사람의 기억을 처음 발견하면 여기에 수놓여요</span></div></div>`;
+    return `<div class="f-cloth"><div class="f-cloth-in">${col.map((m, i) => m.gone
+      ? `<button class="st trace" data-act="gone-info" aria-label="더 이상 열람할 수 없는 기억">${BR.stitch(78, "trace")}</button>`
+      : `<button class="st" data-act="open" data-id="${m.id}" aria-label="${esc(m.title)}">${BR.stitch(78, STITCH_PAL[i % 3])}</button>`).join("")}</div></div>`;
   }
   function nearbyHTML() {
     const list = S.near.filter(m => m.state === "undiscovered" && !isGone(m)).sort((a, b) => (distOf(a) ?? 1e9) - (distOf(b) ?? 1e9)).slice(0, 3);
     if (!list.length) return "";
-    return `<section class="nearby" aria-label="근처의 발견 가능한 도안"><div class="nearby-h"><b>${I.crosshair}근처의 발견 가능한 도안</b><span>${locOk() ? "지금 위치 기준" : "지도 기준"}</span></div>
-      <div class="nearby-row">${list.map(m => { const can = canOpen(m), d = distOf(m); return `<button class="pat ${can ? "can" : ""}" data-act="open" data-id="${m.id}">${BR.stitch(40, "locked")}<span>${I.lock}${d != null ? fmtDist(d) : ""}<b>${can ? "열 수 있음" : "잠김"}</b></span></button>`; }).join("")}</div>
+    return `<section class="f-nearby" aria-label="근처의 발견 가능한 도안"><div class="h"><b>${I.crosshair}근처의 발견 가능한 도안</b><span>${locOk() ? "지금 위치 기준" : "지도 기준"}</span></div>
+      <div class="row">${list.map(m => { const can = canOpen(m), d = distOf(m); return `<button class="f-pat ${can ? "can" : ""}" data-act="open" data-id="${m.id}">${BR.stitch(26, "locked")}<span>${can ? I.unlock : I.lock}<b>${d != null ? fmtDist(d) : "?"}</b><em>${can ? "열 수 있음" : "잠김"}</em></span></button>`; }).join("")}</div>
       <p>위치가 바뀌면 이 목록은 달라져요. 위의 내 정원 자수는 그대로 남아요.</p></section>`;
   }
   function viewGarden() {
@@ -601,23 +615,27 @@
     const col = colAll.filter(m => !m.gone);
     const tab = S.gardenTab, list = tab === "mine" ? mine : col;
     const received = mine.reduce((a, m) => a + (m.hearts || 0), 0);
-    const grid = gs === "loading" ? [1, 2, 3, 4].map(() => `<span class="polaroid sk-card" aria-hidden="true"><span class="sk" style="aspect-ratio:1;border-radius:12px"></span><span class="sk" style="height:14px;width:70%"></span></span>`).join("")
-      : gs === "error" ? `<div class="state" role="alert"><span class="icon">${I.wifi}</span><h3>정원을 불러오지 못했어요</h3><p>심은 기억과 모은 기억은 그대로 있어요. 연결을 확인하고 다시 시도해 주세요.</p><div class="actions"><button class="btn btn-primary" data-act="garden-retry">다시 시도</button></div></div>`
-      : list.length ? list.map(m => `<button class="polaroid" data-act="open" data-id="${m.id}">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : `<span class="noimg">${BR.seed("planted", 90)}</span>`}<b>${esc(m.title)}</b><span>${dateParts(m).full} · ${esc(m.place)}</span>${m.mine && m.vis === "me" ? `<i class="vis-me">${I.lock}나만 보기</i>` : ""}</button>`).join("")
-      : tab === "mine" ? `<div class="state"><img src="${img("cat")}" alt=""><h3>아직 심은 기억이 없어요</h3><p>좋아하는 장소에서 첫 기억을 심어 보세요. 그 자리에 온 누군가가 발견할 거예요.</p><div class="actions"><a class="btn btn-primary" href="#/plant/1">첫 기억 심기</a></div></div>`
-        : `<div class="state"><img src="${img("cat")}" alt=""><h3>아직 모은 기억이 없어요</h3><p>지도에서 가까운 기억을 찾아가 열어 보세요.</p><div class="actions"><a class="btn btn-primary" href="#/">지도 보기</a></div></div>`;
-    return `<section class="screen" aria-label="내 정원"><div class="scroll" id="gardenScroll">
-      <header class="garden-head"><button class="theme-btn" data-act="theme-open" aria-label="화면 테마 설정">${I.theme}</button><div class="profile">${S.avatar === "me" ? `<button class="me-av" data-act="go" data-to="#/avatar" aria-label="내 캐릭터 꾸미기"><img src="${img("me")}" alt="내 캐릭터"><span class="edit">${I.edit}</span></button>` : `<button class="me-av me-empty" data-act="go" data-to="#/avatar"><span class="plus">${I.plus}</span><span class="lb">캐릭터<br>만들기</span></button>`}
-        <div><h1><button class="nick" data-act="nick" aria-label="이름 바꾸기">${esc(S.profile.nickname)}의 정원 <span class="nick-ed">${I.edit}</span></button></h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p></div></div>
-        <div class="stats"><div class="stat"><b>${mine.length}</b><span>심은 기억</span></div><div class="stat"><b>${col.length}</b><span>모은 기억</span></div><div class="stat"><b>${received}</b><span>받은 마음</span></div></div></header>
-      <section class="garden-sec" aria-label="나의 정원 자수"><div class="sec-h"><h2>나의 정원 자수</h2><span>${col.length}송이 수놓음</span></div>${samplerHTML(colAll)}${nearbyHTML()}</section>
-      <div class="seg" role="group" aria-label="보기 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">내가 심은 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">모은 기억 ${col.length}</button></div>
-      <div class="grid">${grid}</div></div>${tabbar("garden")}</section>`;
+    const grid = gs === "loading" ? [1, 2].map(() => `<span class="polaroid f-tile sk-card" aria-hidden="true"><span class="sk" style="aspect-ratio:1;border-radius:10px"></span><span class="sk" style="height:14px;width:70%"></span></span>`).join("")
+      : gs === "error" ? stateBlock("err", I.wifi, "정원을 불러오지 못했어요", "심은 기억과 모은 기억은 그대로 있어요. 연결을 확인하고 다시 시도해 주세요.", `<button class="btn btn-outline f-sbtn" data-act="garden-retry">다시 시도</button>`)
+      : list.length ? list.map(m => `<button class="polaroid f-tile" data-act="open" data-id="${m.id}">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : `<span class="noimg">${BR.seed("planted", 90)}</span>`}<b>${esc(m.title)}</b><span>${esc(m.place)}</span>${m.mine && m.vis === "me" ? `<i class="vis-me">${I.lock}나만 보기</i>` : ""}</button>`).join("")
+      : tab === "mine" ? stateBlock("soft", I.garden, "아직 심은 기억이 없어요", "좋아하는 장소에서 첫 기억을 심어 보세요. 그 자리에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`)
+        : stateBlock("soft", I.map, "아직 모은 기억이 없어요", "지도에서 가까운 기억을 찾아가 열어 보세요.", `<a class="btn btn-primary f-sbtn" href="#/">지도 보기</a>`);
+    const av = S.avatar === "me"
+      ? `<button class="f-av" data-act="go" data-to="#/avatar" aria-label="내 캐릭터 꾸미기"><img src="${img("me")}" alt="내 캐릭터"><span class="edit">${I.edit}</span></button>`
+      : `<button class="f-av empty" data-act="go" data-to="#/avatar" aria-label="캐릭터 만들기">${I.plus}<span class="lb">캐릭터 만들기</span></button>`;
+    return `<section class="screen f-garden" aria-label="내 정원"><div class="scroll" id="gardenScroll">
+      <header class="f-ghead">${AMB(250)}${HILLS(60)}${av}
+        <div class="f-prof"><h1><button class="nick" data-act="nick" aria-label="이름 바꾸기">${esc(S.profile.nickname)}의 정원<span class="nick-ed">${I.edit}</span></button></h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p></div>
+        <button class="f-glass f-themebtn" data-act="theme-open" aria-label="화면 테마 설정">${I.theme}</button>
+        <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>모은 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
+      <section class="f-gsec" aria-label="나의 정원 자수"><div class="f-sech"><h2>나의 정원 자수</h2><i></i><span>${col.length ? col.length + "송이 수놓음" : "아직 비어 있어요"}</span></div>${samplerHTML(colAll)}${nearbyHTML()}</section>
+      <div class="seg f-seg" role="group" aria-label="보기 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">내가 심은 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">모은 기억 ${col.length}</button></div>
+      <div class="grid f-grid">${grid}</div></div>${tabbar("garden")}</section>`;
   }
   // M31 화면 테마 — 하나만 고를 수 있고, 바꿔도 화면·위치·글·캐릭터·자수는 그대로
   const THEMES = [["system", "phone", "시스템 설정 따르기", "기기의 라이트/다크 설정에 맞춰요"], ["day", "sun", "낮 테마 · Dusk Paper", "항상 낮 화면으로 봐요"], ["night", "moon", "밤 테마 · Night Garden", "항상 밤 화면으로 봐요"], ["auto", "clock", "시간대에 따라 자동", "해 질 녘엔 밤, 해 뜰 녘엔 낮으로 바뀌어요"]];
   function themeSheet() {
-    openModal(`<h3>화면 테마</h3><div class="theme-opts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div>
+    openModal(`<h3>화면 테마</h3><div class="theme-opts f-themeopts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div>
       <p class="reassure">하나만 고를 수 있어요. 테마를 바꿔도 보던 화면, 지도 위치, 쓰던 글, 내 캐릭터와 정원 자수는 그대로예요.</p>`);
   }
   function isNight() {
@@ -826,13 +844,21 @@
 
   /* ---------------- WELCOME ---------------- */
   function viewWelcome(step) {
-    if (step === "location") return `<section class="screen welcome" aria-label="위치 권한 안내"><div class="hero">
-      <div class="perm-illu"><img src="${img("cat")}" alt=""><span class="p" style="left:6px;top:40px"><img src="assets/img/sunset.webp" alt=""></span><span class="p l" style="right:0;top:24px"><img src="assets/img/bridge.webp" alt=""></span><span class="p l" style="right:20px;bottom:10px"><img src="assets/img/alley.webp" alt=""></span></div>
-      <h1>가까이 가야<br><em>열리는 기억</em>이에요</h1><p>현재 위치는 가까운 기억을 찾고,<br>열고, 심을 때 사용해요.</p></div>
-      <div class="foot"><button class="btn btn-primary btn-block" data-act="allow">위치 허용하고 시작하기</button><button class="btn btn-ghost" data-act="deny">나중에 할게요, 둘러보기만</button></div></section>`;
-    return `<section class="screen welcome" aria-label="시작"><div class="hero"><span class="kicker">우주에서 온 기록수집가 · LUMI</span><img src="${img("cat")}" alt="날개 달린 고양이 루미">
-      <h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을<br>발견해요</h1><p>오늘 이 자리에서 있었던 일을 남기면<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div>
-      <div class="foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
+    if (step === "location") return `<section class="screen f-welcome" aria-label="위치 권한 안내"><div class="f-scroll">
+      <div class="f-stage" style="height:430px">${AMB(440)}${ORBIT(70, 24, 250)}
+        <span class="f-me" style="left:125px;top:79px"><i></i></span><span class="f-pill" style="left:143px;top:53px">열람 반경 약 ${S.set.radius}m</span>
+        ${AT(208, 82, 72, BR.seed("available", 72))}${AT(300, 204, 68, BR.seed("dormant", 68))}${AT(28, 160, 60, BR.seed("planted", 60))}
+        ${HILLS(280)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
+      <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
+      <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
+        <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요. 위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>
+      <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="allow">위치 허용하고 시작하기</button><button class="btn btn-ghost" data-act="deny">나중에 할게요, 둘러보기만</button></div></section>`;
+    return `<section class="screen f-welcome" aria-label="시작"><div class="f-scroll">
+      <div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark" style="top:28px">MEMORY GARDEN</span>
+        ${ORBIT(45, 22, 300)}${ORBIT(85, 62, 220)}${AT(97, 74, 196, BR.seed("available", 196), "breathe")}${AT(26, 52, 88, BR.seed("planted", 88))}${AT(282, 216, 76, BR.seed("dormant", 76))}
+        ${HILLS(280)}${LUMI(16, 215, 115)}</div>
+      <div class="f-intro"><span class="f-kicker">우주에서 온 기록수집가 · LUMI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
+      <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
   }
 
   /* ---------------- modals ---------------- */
@@ -1017,6 +1043,8 @@
       case "after-plant": if (S.lastPlanted) focusOn(S.lastPlanted); break;
       case "gtab": S.gardenTab = t.dataset.t; render(); break;
       case "avatar": location.hash = "#/avatar"; break;
+      case "lumi-hide": S.lumiHidden = true; render(); break;
+      case "lumi-show": S.lumiHidden = false; S.selected = null; render(); break;
       case "allow": S.onboarded = true; store.set("onboarded", true); startLocation(); location.hash = "#/"; break;
       case "deny": S.onboarded = true; store.set("onboarded", true); S.locWanted = false; store.set("locWanted", false); location.hash = "#/"; break;
     }
