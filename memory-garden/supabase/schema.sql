@@ -411,3 +411,56 @@ create policy "mg avatars update own" on storage.objects for update to authentic
   using (bucket_id = 'avatars' and split_part(name, '/', 1) = auth.uid()::text);
 create policy "mg avatars delete own" on storage.objects for delete to authenticated
   using (bucket_id = 'avatars' and split_part(name, '/', 1) = auth.uid()::text);
+
+-- ---------- 마케팅(이메일) 수신 동의 ----------
+-- 정보통신망법: 광고성 정보는 로그인 동의와 별개로 '선택' 동의를 받고, 동의·철회 시각을 남겨요.
+-- 시각은 서버가 기록해요(클라이언트 값은 무시).
+create table if not exists public.marketing_consents (
+  user_id       uuid primary key default auth.uid() references auth.users on delete cascade,
+  opt_in        boolean not null default false,
+  channel       text not null default 'email' check (channel in ('email')),
+  asked_at      timestamptz not null default now(),
+  consented_at  timestamptz,
+  withdrawn_at  timestamptz,
+  updated_at    timestamptz not null default now()
+);
+alter table public.marketing_consents enable row level security;
+drop policy if exists "consent select own" on public.marketing_consents;
+drop policy if exists "consent insert own" on public.marketing_consents;
+drop policy if exists "consent update own" on public.marketing_consents;
+create policy "consent select own" on public.marketing_consents for select to authenticated using (user_id = auth.uid());
+create policy "consent insert own" on public.marketing_consents for insert to authenticated with check (user_id = auth.uid() and public.is_member());
+create policy "consent update own" on public.marketing_consents for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+revoke all on public.marketing_consents from anon;
+
+create or replace function public.marketing_stamp()
+returns trigger language plpgsql as $$
+begin
+  if tg_op = 'INSERT' then
+    new.asked_at := now();
+    new.consented_at := case when new.opt_in then now() end;
+    new.withdrawn_at := null;
+  else
+    new.user_id := old.user_id; new.asked_at := old.asked_at;
+    new.consented_at := case when new.opt_in and not old.opt_in then now() when new.opt_in then old.consented_at else old.consented_at end;
+    new.withdrawn_at := case when not new.opt_in and old.opt_in then now() when new.opt_in then null else old.withdrawn_at end;
+  end if;
+  new.updated_at := now();
+  return new;
+end $$;
+drop trigger if exists marketing_stamp on public.marketing_consents;
+create trigger marketing_stamp before insert or update on public.marketing_consents
+  for each row execute function public.marketing_stamp();
+
+-- 메일 도구로 내보낼 목록: 대시보드 SQL Editor 에서만 조회(앱·API로는 접근 불가한 admin 스키마)
+--   select * from admin.marketing_audience;
+create schema if not exists admin;
+revoke all on schema admin from public, anon, authenticated;
+create or replace view admin.marketing_audience as
+  select u.email, p.nickname, c.consented_at
+  from public.marketing_consents c
+  join auth.users u on u.id = c.user_id
+  left join public.profiles p on p.id = c.user_id
+  where c.opt_in and u.email is not null and u.email <> ''
+  order by c.consented_at;
+revoke all on admin.marketing_audience from public, anon, authenticated;

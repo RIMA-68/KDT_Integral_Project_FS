@@ -86,6 +86,19 @@
         if (error) throw new ApiError("login", error.message);
       },
       async logout() { await sb.auth.signOut({ scope: "local" }); },
+      memberEmail() { return (user && user.is_anonymous === false && user.email) || null; },
+      // 광고성 이메일 수신 동의(선택). 동의·철회 시각은 서버 트리거가 기록해요.
+      async marketing() {
+        const { data, error } = await sb.from("marketing_consents").select("opt_in, consented_at").eq("user_id", uid).maybeSingle();
+        if (error) throw new ApiError("consent", error.message);
+        return data;   // null = 아직 안 물어봄
+      },
+      async setMarketing(on) {
+        const cur = await this.marketing();
+        const q = cur ? sb.from("marketing_consents").update({ opt_in: on }).eq("user_id", uid) : sb.from("marketing_consents").insert({ opt_in: on });
+        const { error } = await q;
+        if (error) throw new ApiError("consent", error.message);
+      },
       async settings() {
         try { const s = await call("app_settings"); return { radius: +s.unlock_radius_m || DEFAULTS.radius, maxAcc: +s.max_accuracy_m || DEFAULTS.maxAcc, nearbyKm: +s.nearby_km || 3, requireLogin: s.require_login !== false }; }
         catch (_) { return DEFAULTS; }
@@ -212,6 +225,7 @@
       member() { return true; },          // 데모 모드는 로그인 없이 모두 체험
       memberName() { return null; },
       async loginKakao() { }, async switchToKakao() { }, async logout() { },
+      memberEmail() { return null; }, async marketing() { return { opt_in: false }; }, async setMarketing() { },
       async settings() { return S; },
       async profile() { return db.profile; },
       async updateProfile(p) { Object.assign(db.profile, p); persist(); },

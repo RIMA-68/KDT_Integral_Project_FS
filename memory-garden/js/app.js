@@ -266,6 +266,14 @@
     return `<section class="screen" aria-label="로그인 필요">${flowHead(1)}<div class="center-state login-gate"><img src="${img("cat")}" alt="" style="width:132px"><h2>${h}</h2><p>${p}</p>
       <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:320px;margin-top:8px">${kakaoBtn()}<a class="btn btn-ghost" href="#/">지도 둘러보기</a></div></div></section>`;
   }
+  // 광고성 정보 수신 동의: 로그인 동의와 별개, 선택. 처음 로그인한 뒤 한 번만 물어봐요.
+  function marketingSheet() {
+    const email = API.memberEmail();
+    openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>새 기억 소식을 이메일로 받아 볼래요?</h3><p class="av-note" style="margin:0">근처에 새로 심긴 기억, 이벤트 소식을 가끔 보내 드려요. 받지 않아도 서비스는 똑같이 쓸 수 있어요.</p></div>
+      <dl class="consent-box"><div><dt>받는 곳</dt><dd>${esc(email)}</dd></div><div><dt>목적</dt><dd>서비스 소식·이벤트 등 광고성 정보 안내</dd></div><div><dt>보관</dt><dd>동의를 철회할 때까지</dd></div></dl>
+      <button class="btn btn-primary btn-block" data-act="mkt-set" data-v="1">(선택) 동의하고 받기</button><button class="btn btn-ghost" data-act="mkt-set" data-v="0">받지 않을게요</button>
+      <p class="reassure">내 정원 → 이름 옆 연필 버튼에서 언제든 바꿀 수 있어요.</p>`);
+  }
   function doLogin() {
     toast("카카오 로그인 화면으로 이동해요");
     API.loginKakao().catch(e => { console.error(e); toast(e.code === "linking_disabled" ? "서버 설정이 필요해요: Supabase에서 manual linking을 켜 주세요" : "로그인을 시작하지 못했어요. 다시 시도해 주세요"); });
@@ -835,7 +843,8 @@
     $app.appendChild(s);
     const f = s.querySelector("textarea,button"); if (f) setTimeout(() => f.focus(), 50);
   }
-  function closeModal() { document.querySelectorAll(".scrim").forEach(n => n.remove()); }
+  // 모달이 떠 있는 동안 미뤄 둔 화면 갱신(위치 변화 등)은 닫을 때 반영해요
+  function closeModal() { const open = document.querySelectorAll(".scrim"); open.forEach(n => n.remove()); if (open.length && typeof softRender === "function") softRender(); }
 
   /* ---------------- boot / error screens ---------------- */
   function viewBoot() {
@@ -975,8 +984,14 @@
         break;
       }
       case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button>
-        ${DEMO ? "" : API.member() ? `<div class="account-row"><span>${KAKAO_ICON}카카오 계정으로 로그인됨</span><button data-act="logout">로그아웃</button></div>` : `<div class="account-row anon"><span>임시 정원이에요 · 이 기기에서만 볼 수 있어요</span><button data-act="login-open">로그인</button></div>`}`); break;
+        ${DEMO ? "" : API.member() ? `<div class="account-row"><span>${KAKAO_ICON}카카오 계정으로 로그인됨</span><button data-act="logout">로그아웃</button></div>${API.memberEmail() ? `<div class="account-row"><span>이메일 소식 받기 <small>(선택 · ${S.mkt ? "동의함" : "받지 않음"})</small></span><button class="av-switch" role="switch" aria-checked="${!!S.mkt}" aria-label="이메일 소식 받기" data-act="mkt-toggle"></button></div>` : ""}` : `<div class="account-row anon"><span>임시 정원이에요 · 이 기기에서만 볼 수 있어요</span><button data-act="login-open">로그인</button></div>`}`); break;
       case "login": doLogin(); break;
+      case "mkt-set": case "mkt-toggle": {
+        const on = a === "mkt-set" ? t.dataset.v === "1" : !S.mkt;
+        API.setMarketing(on).then(() => { S.mkt = on; closeModal(); if (a === "mkt-toggle") render(); toast(on ? "이메일 소식 받기에 동의했어요" : a === "mkt-set" ? "이메일 소식은 받지 않아요" : "이메일 소식 받기를 껐어요"); })
+          .catch(() => toast("저장하지 못했어요. 다시 시도해 주세요"));
+        break;
+      }
       case "login-open": loginSheet("account"); break;
       case "login-switch": API.switchToKakao().catch(() => toast("로그인을 시작하지 못했어요")); break;
       case "logout": API.logout().then(() => { try { localStorage.removeItem("mg:avatar"); localStorage.removeItem("mg:look"); localStorage.removeItem("mg:portrait"); } catch (_) { } location.hash = "#/"; location.reload(); }); break;
@@ -1104,6 +1119,8 @@
         <button class="btn btn-kakao btn-block" data-act="login-switch">${KAKAO_ICON}그 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">취소</button>`);
       else toast(/cancel|denied/i.test(le.message) ? "로그인을 취소했어요" : "로그인하지 못했어요. 다시 시도해 주세요");
     } else if (S.justLoggedIn) toast("카카오 계정으로 로그인했어요");
+    // 로그인한 사람에게 이메일이 있으면 수신 동의를 한 번만 물어봐요
+    if (!DEMO && API.member() && API.memberEmail()) API.marketing().then(c => { S.mkt = !!(c && c.opt_in); if (!c && !document.querySelector(".scrim")) marketingSheet(); }).catch(() => { });
     // 위치: 이미 허용했거나 이전에 쓰겠다고 한 경우에만 바로 시작(묻지 않고 켜지 않아요)
     if (S.onboarded && GEO.state === "idle") {
       const perm = await GEO.permission();
