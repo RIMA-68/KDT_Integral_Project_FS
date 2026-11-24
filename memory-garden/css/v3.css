@@ -1,0 +1,229 @@
+/* 기억 정원 · v3 (Figma MG3·9 최종 마스터 / MG3·10 Night 기준, 2026-11-24)
+   - 기억의 씨앗·씨앗 핀·꽃(A+B)·정원 자수(짧은 줄기+잎)
+   - 정책 화면: 발견 전 비공개, 공개 범위 변경, 공유 링크, 열람 불가 흔적, 위치 정확도
+   - 화면 테마: 낮(Dusk Paper) / 밤(Night Garden) — 같은 화면, 토큰만 바뀜 */
+
+:root{
+  --state-available:#8A6100; --state-available-bg:#FFF4D6; --state-discovered:#C9566F; --text-accent:#B94335;
+  --sky-1:#FFE2D6; --sky-2:#FFF0E6; --sky-3:var(--color-bg);
+  --pin-fill:#FFFCF7; --pin-dormant:#9C8F84; --pin-badge:#302B3C; --pin-lock:#FFFCF7; --pin-selected:#302B3C;
+  --glass:rgba(255,255,255,.92); --glass-2:rgba(255,255,255,.72); --card:#FFFFFF; --bar:rgba(255,252,247,.95);
+  --fabric:#FBF7EF; --fabric-line:#E7B7A8; --seed-halo:#FFE3D3;
+}
+
+/* ---------- 밤 · Night Garden (MG · Theme Night 값) ---------- */
+:root[data-theme="night"]{
+  --color-bg:#17182F; --color-surface:#222544; --color-surface-sunk:#2C3053; --color-line:#414666;
+  --color-text:#F5F3FA; --color-text-sub:#B6B7CE; --color-text-faint:#8F92B5;
+  --color-primary:#B6B7F2; --color-primary-press:#C8C9F6; --color-primary-soft:#353A61; --color-on-primary:#20213B;
+  --color-accent:#9CC6F0; --color-accent-soft:#213659; --color-blush:#F1B9AD; --color-glow:#E9CA88; --color-glow-soft:#393126;
+  --color-locked:#B3AEDA; --color-locked-soft:#2C3053; --color-success:#9AD7AE; --color-success-soft:#1C3836;
+  --color-danger:#FFA49C; --color-danger-soft:#3F2234; --color-scrim:rgba(5,6,18,.6);
+  --plum-700:#D8D4F0; --cream-400:#414666; --cream-200:#1B1D38;
+  --map-land:#1B1D38; --map-block:#262949; --map-block-2:#23264A; --map-park:#22392F; --map-park-2:#2A4537;
+  --map-water:#1B3150; --map-water-2:#24406A; --map-road:#3B4070; --map-road-edge:#2E3258; --map-label:#B6B7CE;
+  --shadow-1:0 1px 2px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.25); --shadow-2:0 2px 6px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.4);
+  --shadow-3:0 -8px 40px rgba(0,0,0,.45); --shadow-primary:0 8px 20px rgba(130,132,230,.35);
+  --state-available:#E9CA88; --state-available-bg:#3A3550; --state-discovered:#F1B9CB; --text-accent:#A5A8E8;
+  --sky-1:#14152B; --sky-2:#232650; --sky-3:#17182F;
+  --pin-fill:#2C3053; --pin-dormant:#6B7196; --pin-badge:#B3AEDA; --pin-lock:#17182F; --pin-selected:#B6B7F2;
+  --glass:rgba(34,37,68,.92); --glass-2:rgba(34,37,68,.72); --card:#222544; --bar:rgba(23,24,47,.95);
+  --fabric:#FBF7EF; --seed-halo:#353A61;
+  color-scheme:dark;
+}
+[data-theme="night"] body{background:var(--color-bg)}
+@media (min-width:860px){[data-theme="night"] body{background:radial-gradient(1200px 600px at 20% 0%,#2A2D5A 0,transparent 60%),radial-gradient(900px 600px at 100% 100%,#1D2D4F 0,transparent 60%),#121327}
+  [data-theme="night"] .app{box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 10px #2C3053,0 0 0 11px #414666}}
+[data-theme="night"] .icon-btn,[data-theme="night"] .brand,[data-theme="night"] .loc-chip,[data-theme="night"] .av-mini,[data-theme="night"] .av-turn{background:var(--glass);color:var(--color-text)}
+[data-theme="night"] .bubble,[data-theme="night"] .me-label,[data-theme="night"] .polaroid,[data-theme="night"] .success-card,[data-theme="night"] .hint-card .ic{background:var(--card)}
+[data-theme="night"] .seg button[aria-pressed="true"]{background:var(--color-surface);color:var(--color-text)}
+[data-theme="night"] .detail-bar{background:var(--bar)}
+[data-theme="night"] .chip[aria-pressed="true"],[data-theme="night"] .demo-chip[aria-pressed="true"],[data-theme="night"] .av-tabs button[aria-selected="true"]{background:var(--color-primary);color:var(--color-on-primary)}
+[data-theme="night"] .toast,[data-theme="night"] .pin-dist,[data-theme="night"] .banner button{background:#F5F3FA;color:#20213B}
+[data-theme="night"] .tab-plant,[data-theme="night"] .btn-primary{color:var(--color-on-primary)}
+[data-theme="night"] .welcome{background:linear-gradient(180deg,#14152B 0,#232650 45%,var(--color-bg) 75%)}
+[data-theme="night"] .welcome .kicker{background:var(--color-surface);color:var(--color-primary)}
+[data-theme="night"] .perm-illu{background:radial-gradient(circle,#353A61 0,#353A61 30%,rgba(53,58,97,.5) 31%,rgba(53,58,97,.5) 55%,rgba(53,58,97,.2) 56%)}
+[data-theme="night"] .tag-mine{color:#CFE4FA}
+[data-theme="night"] .av-head h1{background:var(--glass-2)}
+[data-theme="night"] .av-veil .state{background:rgba(34,37,68,.9)}
+[data-theme="night"] .option[aria-pressed="true"] .radio{background:var(--color-surface)}
+[data-theme="night"] .map-label.water{fill:#8FB3DA}
+[data-theme="night"] .map-label.park{fill:#9CC49A}
+[data-theme="night"] .demo-panel{color:#F5F3FA}
+[data-theme="night"] .hint-card .ic{color:var(--color-glow)}
+[data-theme="night"] .story,[data-theme="night"] .mem-title{color:var(--color-text)}
+
+/* ---------- 씨앗 핀 ---------- */
+.pin button{left:-20px;top:-46px;width:40px;height:46px;display:grid;place-items:end center;filter:drop-shadow(0 4px 6px rgba(40,30,30,.18))}
+.pin.active button{left:-25px;top:-57px;width:50px;height:57px}
+.pin .mg-pin{display:block;transition:transform var(--dur-base) var(--ease-spring)}
+.pin.is-available .mg-pin{animation:seedPulse 2.4s ease-in-out infinite}
+@keyframes seedPulse{50%{transform:translateY(-3px)}}
+.pin-dist{top:-70px;display:inline-flex;align-items:center;gap:3px;background:var(--glass);color:var(--color-text);box-shadow:var(--shadow-1);border:1px solid var(--color-line)}
+.pin.active .pin-dist{top:-82px}
+.pin-dist svg{width:11px;height:11px}
+.pin.is-available .pin-dist{background:var(--state-available-bg);color:var(--state-available);border-color:transparent}
+.pin.is-mine .pin-dist{background:var(--color-primary);color:var(--color-on-primary);border-color:transparent}
+.pin.is-discovered .pin-dist{color:var(--state-discovered)}
+.me.low .me-dot{opacity:.6}
+.me-acc{position:absolute;left:-100px;top:-100px;width:200px;height:200px;border-radius:50%;background:rgba(93,168,245,.08);border:1.5px dashed rgba(93,168,245,.45)}
+
+/* ---------- 카드 · 태그 ---------- */
+.mcard.undisc .thumb,.peek .thumb.seed-thumb{background:radial-gradient(circle at 50% 45%,var(--sky-2),var(--color-surface-sunk));display:grid;place-items:center}
+.mcard.undisc .ttl{color:var(--color-text)}
+.mcard .tagline{display:flex}
+.mcard.undisc .meta{font-size:12.5px;color:var(--color-text-sub)}
+.mcard.locked .thumb::after,.mcard.locked .thumb img{display:none}
+.tag svg{width:12px;height:12px}
+.tag-avail{background:var(--state-available-bg);color:var(--state-available)}
+.tag-disc{background:var(--color-surface-sunk);color:var(--state-discovered)}
+.tag-soft{background:var(--color-surface-sunk);color:var(--color-text-sub)}
+.tag-disc-line{background:transparent;color:var(--text-accent);box-shadow:inset 0 0 0 1px var(--color-line)}
+.tag-ok{background:var(--color-success-soft);color:var(--color-success);height:28px;padding:0 12px;font-size:12px}
+.peek .thumb.seed-thumb{width:84px;height:84px}
+.mg-seed,.mg-stitch,.mg-flower{display:block;max-width:100%;height:auto}
+
+/* ---------- 잠긴 기억 (M10 / M10-2) ---------- */
+.lock-sky{position:relative;flex:none;height:56%;min-height:380px;background:linear-gradient(180deg,var(--sky-1) 0,var(--sky-2) 60%,var(--sky-3));overflow:hidden;display:flex;flex-direction:column;align-items:center}
+.lock-sky::before{content:"";position:absolute;inset:0;background:radial-gradient(3px 3px at 12% 20%,var(--color-blush),transparent),radial-gradient(3px 3px at 82% 16%,var(--color-blush),transparent),radial-gradient(2px 2px at 70% 40%,var(--color-glow),transparent),radial-gradient(3px 3px at 20% 62%,var(--color-blush),transparent),radial-gradient(2px 2px at 90% 66%,var(--color-glow),transparent);opacity:.8}
+.lock-head{position:relative;z-index:2;width:100%;display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-top) + 12px) 16px 0}
+.lock-head h1{font-size:14px;font-weight:700;color:var(--color-text)}
+.lock-orb{position:relative;margin-top:4px;width:220px;height:220px;display:grid;place-items:center}
+.lock-orb .ring{position:absolute;inset:-6px;border-radius:50%;border:1.5px dashed var(--color-blush);opacity:.7}
+.lock-orb.can .ring{border-color:var(--state-available);animation:spin 30s linear infinite}
+.lock-orb .mg-seed{animation:float 4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lock-sky .lock-center{position:relative;inset:auto;color:var(--color-text);gap:6px;padding:0 24px 30px;margin-top:-6px}
+.lock-sky .lock-dist{text-shadow:none;font-size:40px;color:var(--color-text)}
+.lock-sky .lock-dist.small{font-size:26px}
+.lock-sky .lock-center p{text-shadow:none;font-size:14px;font-weight:600;color:var(--color-text-sub)}
+.lock-sky .compass{background:var(--glass);color:var(--color-text);box-shadow:var(--shadow-1);height:32px;font-size:12.5px}
+.lock-sky .compass svg{width:14px;height:14px}
+.lock-sheet{margin-top:-24px}
+.undisc-row{display:flex;align-items:flex-start;gap:10px}
+.undisc-row b{display:block;font-size:16px;font-weight:800}
+.undisc-row span:not(.tag){font-size:13px;color:var(--color-text-sub)}
+.undisc-row .tag{margin-left:auto;flex:none}
+.fine{font-size:13px;line-height:1.55;color:var(--color-text-sub)}
+.fine.acc{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--color-text-faint)}
+.fine.acc svg{width:15px;height:15px}
+.walk-top{display:flex;justify-content:space-between;font-size:12.5px;color:var(--color-text-sub);margin-bottom:8px}
+.detail-bar .btn svg{margin-right:4px;vertical-align:-3px}
+
+/* ---------- 열린 기억 · 내 기억 상세 (M09 / M32) ---------- */
+.when-row{display:flex;gap:14px;align-items:center}
+.date-block{flex:none;width:76px;height:76px;border-radius:14px;background:var(--color-surface-sunk);box-shadow:inset 0 0 0 1px var(--color-line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-display);line-height:1.15}
+.date-block i{font-style:normal;font-size:9px;color:var(--color-text-faint);letter-spacing:.06em}
+.date-block b{font-size:19px;color:var(--color-text)}
+.date-block em{font-style:normal;font-size:9px;color:var(--text-accent)}
+.when-info{min-width:0;display:flex;flex-direction:column;gap:8px}
+.when-info .place{display:flex;align-items:center;gap:4px;font-size:15px;font-weight:800}
+.when-info .place svg{width:16px;height:16px;color:var(--color-primary)}
+.when-info .tags{display:flex;flex-wrap:wrap;gap:6px}
+.mem-title{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.35}
+.vis-card{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border-radius:var(--r-lg);background:var(--color-surface-sunk);text-align:left}
+.vis-card .ic{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--color-surface);color:var(--color-text-sub)}
+.vis-card .ic svg{width:18px;height:18px}
+.vis-card small{display:block;font-size:12px;color:var(--color-text-sub)}
+.vis-card b{font-size:15px}
+.vis-card .chg{margin-left:auto;display:flex;align-items:center;gap:2px;font-size:13px;font-weight:700;color:var(--text-accent)}
+.vis-card .chg svg{width:14px;height:14px}
+.detail-photo .nophoto{height:100%;display:grid;place-items:center;background:linear-gradient(180deg,var(--sky-1),var(--sky-2))}
+.confirm-list{margin:0 0 6px;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5;color:var(--color-text-sub)}
+.plain-head{padding:calc(var(--safe-top) + 12px) 16px 0}
+.gone-stitch{opacity:.9;margin-bottom:6px}
+.gone-modal{display:flex;gap:12px;align-items:flex-start}
+.gone-modal .ic{flex:none;width:28px;height:28px;color:var(--color-text-sub)}
+.gone-modal h3{margin:2px 0 6px}
+
+/* ---------- 최초 발견 (M11) ---------- */
+.found{background:linear-gradient(180deg,var(--sky-1) 0,var(--sky-2) 50%,var(--color-bg));align-items:center;overflow:hidden}
+.found .skip{position:absolute;right:16px;top:calc(var(--safe-top) + 14px);z-index:3;font-size:14px;font-weight:700;color:var(--color-text-sub)}
+.found-stage{position:relative;margin-top:calc(var(--safe-top) + 70px);width:280px;height:280px;display:grid;place-items:center}
+.found-stage::before{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px dashed var(--color-blush);opacity:.8}
+.found-cat{position:absolute;right:-10px;bottom:24px;width:96px;animation:float 3.6s ease-in-out infinite}
+.found-copy{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:24px 20px 0}
+.found-copy .kick{font-family:var(--font-display);font-size:11px;color:var(--text-accent);letter-spacing:.06em}
+.found-copy h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.found-copy .t{font-size:17px;font-weight:700}
+.found-copy .d{font-size:13px;color:var(--color-text-sub);margin-bottom:6px}
+.found .flow-foot{margin-top:auto;width:100%}
+.found .petal{width:10px;height:10px;background:var(--color-blush);border-radius:60% 0}
+.mg-orb{position:relative;width:var(--orb);height:var(--orb)}
+.mg-orb-ring{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.mg-orb-photo{position:absolute;left:12%;top:14%;width:76%;height:76%;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px rgba(255,255,255,.85),0 10px 30px rgba(120,80,80,.25);background:var(--color-surface-sunk)}
+.mg-orb-photo img{width:100%;height:100%;object-fit:cover}
+.mg-orb-photo i{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.75) 0,rgba(255,255,255,0) 22%),radial-gradient(circle at 50% 50%,transparent 60%,rgba(201,191,227,.35) 100%)}
+.mg-orb-flower{position:absolute;right:2%;top:0;z-index:4}
+.mg-orb.bloom .mg-orb-flower{animation:bloomIn .9s .25s var(--ease-spring) both}
+.mg-orb-glow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:0;opacity:0;animation:glowIn 1.6s .2s ease-out forwards}
+.mg-orb-glow svg{display:block}
+@keyframes bloomIn{from{transform:scale(.2) rotate(-40deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes glowIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}40%{opacity:1}100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}}
+
+/* ---------- 심기 완료 (M17 / M17-2) ---------- */
+.planted-orb{position:relative;width:220px;height:220px;display:grid;place-items:center;margin-bottom:6px}
+.planted-photo{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%) rotate(-3deg);width:78px;height:78px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-2);border:3px solid var(--card)}
+.planted-photo img{width:100%;height:100%;object-fit:cover}
+.planted-cat{position:absolute;right:-30px;top:20px;width:76px;animation:float 3.6s ease-in-out infinite}
+
+/* ---------- 내 정원 (M19 · M21 · M22) ---------- */
+.garden-head{background:linear-gradient(180deg,var(--sky-1),var(--color-bg))}
+.theme-btn{position:absolute;right:16px;top:calc(var(--safe-top) + 14px);z-index:3;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--glass);color:var(--color-text);box-shadow:var(--shadow-1)}
+.theme-btn svg{width:20px;height:20px}
+.garden-sec{padding:6px 20px 18px;display:flex;flex-direction:column;gap:12px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between}
+.sec-h h2{font-size:17px;font-weight:800}
+.sec-h span{font-size:12px;color:var(--color-text-sub)}
+.sampler{border-radius:var(--r-lg);background:var(--fabric);padding:10px;box-shadow:var(--shadow-1)}
+.sampler-in{border:2px dashed var(--fabric-line);border-radius:14px;padding:12px 10px;display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;min-height:120px;align-items:center;background-image:radial-gradient(rgba(180,160,140,.18) 1px,transparent 1.2px);background-size:7px 7px}
+.sampler .st{padding:2px;border-radius:12px}
+.sampler .st:active{transform:scale(.96)}
+.sampler.empty{display:flex;align-items:center;gap:14px;padding:16px}
+.sampler.empty .ghost{opacity:.5;flex:none}
+.sampler.empty b{font-size:15px;color:#302B3C}
+.sampler.empty p{font-size:13px;color:#6E6671;margin-top:4px}
+.nearby{border-radius:var(--r-lg);background:var(--color-surface-sunk);padding:14px;display:flex;flex-direction:column;gap:10px}
+.nearby-h{display:flex;align-items:center;justify-content:space-between}
+.nearby-h b{display:flex;align-items:center;gap:6px;font-size:14px}
+.nearby-h b svg{width:16px;height:16px}
+.nearby-h span{font-size:12px;color:var(--color-text-sub)}
+.nearby-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pat{display:flex;align-items:center;gap:6px;padding:8px;border-radius:12px;border:1.5px dashed var(--color-line);background:var(--color-surface);text-align:left}
+.pat .mg-stitch{flex:none;opacity:.8}
+.pat span{display:flex;flex-direction:column;font-family:var(--font-display);font-size:11px;color:var(--color-text-sub);line-height:1.35}
+.pat span svg{width:11px;height:11px}
+.pat b{font-family:var(--font-body);font-size:12px;font-weight:700;color:var(--color-text-sub)}
+.pat.can{border-color:var(--state-available);background:var(--state-available-bg)}
+.pat.can b,.pat.can span{color:var(--state-available)}
+.nearby p{font-size:12px;color:var(--color-text-sub);line-height:1.5}
+.polaroid{position:relative;background:var(--card)}
+.polaroid .noimg{background:linear-gradient(180deg,var(--sky-1),var(--sky-2))}
+.polaroid .vis-me{position:absolute;left:14px;top:14px;display:flex;align-items:center;gap:3px;height:22px;padding:0 8px;border-radius:999px;background:rgba(48,43,60,.72);color:#fff;font-style:normal;font-size:11px;font-weight:700}
+.polaroid .vis-me svg{width:11px;height:11px}
+.theme-opts{display:flex;flex-direction:column;gap:10px}
+.option .oi svg{width:20px;height:20px}
+.option[aria-checked="true"]{box-shadow:inset 0 0 0 2px var(--color-text)}
+
+/* ---------- 공유 링크 (S01~S04) ---------- */
+.share{background:linear-gradient(180deg,var(--sky-1) 0,var(--sky-2) 45%,var(--color-bg))}
+.share-head{padding:calc(var(--safe-top) + 12px) 16px 0}
+.share-head .brand{display:inline-flex;box-shadow:none;background:transparent}
+.share-body{flex:1;overflow-y:auto;padding:4px 20px 16px;display:flex;flex-direction:column;gap:12px}
+.share-orb{align-self:center;margin:4px 0}
+.chip-plain{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:999px;background:var(--color-surface-sunk);font-size:12px;color:var(--color-text-sub)}
+.chip-plain svg{width:13px;height:13px}
+.share h1{font-size:22px;font-weight:800;line-height:1.35;letter-spacing:-.02em}
+.share .sub{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--color-text-sub)}
+.share .sub svg{width:15px;height:15px;color:var(--color-primary)}
+.share .note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-md);background:var(--color-accent-soft);font-size:13px;line-height:1.5;color:var(--color-text-sub)}
+.share .note.ok{background:var(--color-success-soft)}
+.share .note svg{flex:none;width:18px;height:18px;color:var(--color-accent)}
+.share .flow-foot{padding-top:8px}
+
+/* ---------- 데모 패널 ---------- */
+.demo-chip[data-revoke]{text-align:left}
+
+/* 밤: 탭 막대 */
+:root[data-theme="night"] .tabbar{background:rgba(23,24,47,.92)}

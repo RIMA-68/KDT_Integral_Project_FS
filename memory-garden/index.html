@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>/* 첫 화면이 번쩍이지 않게 테마를 먼저 정해요 (M31: 시스템·낮·밤·시간대) */(function(){var t="system";try{t=JSON.parse(localStorage.getItem("mg:theme"))||"system"}catch(e){}var h=new Date().getHours();var n=t==="night"||(t==="auto"&&(h>=18||h<6))||(t==="system"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-theme",n?"night":"day")})();</script>
+<meta name="theme-color" content="#FBF6EE">
+<title>기억 정원</title>
+<meta name="description" content="장소에 사진과 이야기를 심고, 걸어가서 다른 사람의 기억을 발견하는 위치 기반 기록 서비스">
+<meta property="og:type" content="website">
+<meta property="og:title" content="기억 정원">
+<meta property="og:description" content="장소에 남긴 기억을 가까이 가서 발견해요">
+<meta property="og:image" content="assets/img/og-generic.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/img/cat.webp" type="image/webp">
+<link rel="apple-touch-icon" href="assets/img/cat.webp">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/Galmuri11-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/v3.css">
+</head>
+<body>
+<div class="stage">
+  <aside class="demo-panel" id="demo" aria-label="데모 컨트롤">
+    <h1><img src="assets/img/cat.webp" alt="">기억 정원</h1>
+    <p>모바일 웹 프로토타입이에요. 휴대폰으로 열면 이 패널 없이 앱 화면만 보여요.</p>
+    <div class="demo-group">
+      <h2>화면 테마</h2>
+      <div class="demo-row">
+        <button class="demo-chip" data-theme="system">시스템</button>
+        <button class="demo-chip" data-theme="day">낮 · Dusk Paper</button>
+        <button class="demo-chip" data-theme="night">밤 · Night Garden</button>
+        <button class="demo-chip" data-theme="auto">시간대</button>
+      </div>
+    </div>
+    <div class="demo-group">
+      <h2>화면 이동</h2>
+      <div class="demo-row">
+        <button class="demo-chip" data-go="#/welcome">온보딩</button>
+        <button class="demo-chip" data-go="#/">지도 홈</button>
+        <button class="demo-chip" data-go="#/m/sunset">열린 기억</button>
+        <button class="demo-chip" data-go="#/m/alley">잠긴 기억</button>
+        <button class="demo-chip" data-go="#/m/toast">열 수 있는 기억</button>
+        <button class="demo-chip" data-go="#/plant/1">기억 심기</button>
+        <button class="demo-chip" data-go="#/garden">내 정원</button>
+        <button class="demo-chip" data-go="#/avatar">캐릭터 꾸미기</button>
+        <button class="demo-chip" data-go="#/s/alley">공유 링크</button>
+      </div>
+    </div>
+    <div class="demo-group">
+      <h2>위치 권한</h2>
+      <div class="demo-row">
+        <button class="demo-chip" data-loc="ok">허용</button>
+        <button class="demo-chip" data-loc="denied">거부</button>
+        <button class="demo-chip" data-loc="low">정확도 낮음</button>
+      </div>
+    </div>
+    <div class="demo-group">
+      <h2>정책 상태</h2>
+      <div class="demo-row"><button class="demo-chip" data-revoke="1">작성자가 '다리 위 편지'를 비공개로</button></div>
+    </div>
+    <div class="demo-group">
+      <h2>데이터 상태</h2>
+      <div class="demo-row">
+        <button class="demo-chip" data-ds="ok">정상</button>
+        <button class="demo-chip" data-ds="loading">로딩</button>
+        <button class="demo-chip" data-ds="empty">비어 있음</button>
+        <button class="demo-chip" data-ds="error">오류</button>
+      </div>
+    </div>
+    <div class="demo-group">
+      <h2>초기화</h2>
+      <div class="demo-row"><button class="demo-chip" data-reset="1">처음부터 다시</button></div>
+    </div>
+  </aside>
+  <main id="app" class="app" aria-live="polite"></main>
+</div>
+<noscript><p style="padding:24px">기억 정원은 자바스크립트가 필요해요.</p></noscript>
+<script src="js/data.js"></script>
+<script src="js/brand.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

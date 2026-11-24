@@ -1,0 +1,11 @@
+{
+  "name": "기억 정원",
+  "short_name": "기억 정원",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBF6EE",
+  "theme_color": "#FBF6EE",
+  "lang": "ko",
+  "icons": [{ "src": "assets/img/cat.webp", "sizes": "572x520", "type": "image/webp" }]
+}

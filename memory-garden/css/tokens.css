@@ -1,0 +1,70 @@
+/* 기억 정원 · Design Tokens
+   Tier 1 primitive → Tier 2 semantic. Components only use semantic tokens. */
+@font-face{font-family:"Pretendard";src:url("../assets/fonts/PretendardVariable.woff2") format("woff2-variations");font-weight:45 920;font-display:swap}
+@font-face{font-family:"Galmuri11";src:url("../assets/fonts/Galmuri11.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Galmuri11";src:url("../assets/fonts/Galmuri11-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
+
+:root{
+  /* primitive */
+  --cream-50:#FFFCF7; --cream-100:#FBF6EE; --cream-200:#F5EEE3; --cream-300:#EAE1D3; --cream-400:#D9CCB8;
+  --plum-900:#2B2337; --plum-700:#4A4058; --plum-500:#625A70; --plum-300:#9C94A6; --plum-200:#C9C2D2;
+  --coral-600:#E9543F; --coral-500:#FF6B57; --coral-100:#FFE6E0; --coral-50:#FFF3F0;
+  --sky-500:#5DA8F5; --sky-300:#8CC2FF; --sky-100:#E6F2FF;
+  --pink-300:#FFB3C6; --pink-100:#FFE8EE;
+  --honey-400:#FFD36B; --honey-100:#FFF4D6;
+  --lilac-400:#B8AEC8; --lilac-100:#EFEBF5;
+  --green-600:#2F9E74; --green-100:#DDF3E9;
+  --red-600:#D9434A; --red-100:#FDE4E4;
+
+  /* semantic · color */
+  --color-bg:var(--cream-100);
+  --color-surface:#FFFFFF;
+  --color-surface-sunk:var(--cream-200);
+  --color-line:var(--cream-300);
+  --color-text:var(--plum-900);
+  --color-text-sub:var(--plum-500);
+  --color-text-faint:var(--plum-300);
+  --color-primary:var(--coral-500);
+  --color-primary-press:var(--coral-600);
+  --color-primary-soft:var(--coral-100);
+  --color-on-primary:#FFFFFF;
+  --color-accent:var(--sky-500);
+  --color-accent-soft:var(--sky-100);
+  --color-blush:var(--pink-300);
+  --color-glow:var(--honey-400);
+  --color-glow-soft:var(--honey-100);
+  --color-locked:var(--lilac-400);
+  --color-locked-soft:var(--lilac-100);
+  --color-success:var(--green-600);
+  --color-success-soft:var(--green-100);
+  --color-danger:var(--red-600);
+  --color-danger-soft:var(--red-100);
+  --color-scrim:rgba(43,35,55,.42);
+
+  /* map */
+  --map-land:#F1EADC; --map-block:#E8DDC9; --map-block-2:#EDE3D2; --map-park:#D9E8C4; --map-park-2:#CBE0B2;
+  --map-water:#CDE2F4; --map-water-2:#BBD7EF; --map-road:#FFFDF8; --map-road-edge:#E2D6C2; --map-label:#8A7F70;
+
+  /* type */
+  --font-body:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  --font-display:"Galmuri11","Pretendard",monospace;
+  --fs-display:28px; --fs-title:21px; --fs-card:16px; --fs-body:15px; --fs-sub:13px; --fs-meta:12px; --fs-tiny:11px;
+
+  /* space & shape */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px;
+  --r-sm:10px; --r-md:16px; --r-lg:22px; --r-xl:28px; --r-pill:999px;
+  --shadow-1:0 1px 2px rgba(74,54,36,.06),0 4px 12px rgba(74,54,36,.06);
+  --shadow-2:0 2px 6px rgba(74,54,36,.06),0 12px 32px rgba(74,54,36,.12);
+  --shadow-3:0 -8px 40px rgba(74,54,36,.14);
+  --shadow-primary:0 8px 20px rgba(233,84,63,.32);
+
+  /* motion */
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --dur-fast:160ms; --dur-base:280ms; --dur-slow:520ms;
+
+  /* layout */
+  --app-max:430px; --tab-h:72px;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+  --z-map:0; --z-float:10; --z-sheet:20; --z-tab:30; --z-overlay:40; --z-toast:50;
+}
