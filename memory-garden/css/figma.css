@@ -575,3 +575,14 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .btn-mail{gap:8px}
 .btn-mail svg{flex:none}
 .set-btns{display:flex;flex-direction:column;gap:8px}
+
+/* 프로필 바꾸기 */
+.prof-head{display:flex;align-items:center;gap:14px}
+.prof-pic,.set-pic{flex:none;border-radius:50%;overflow:hidden;background:var(--f-avbg);box-shadow:inset 0 0 0 1px var(--color-line)}
+.prof-pic{width:72px;height:72px}
+.set-pic{width:44px;height:44px}
+.prof-pic img,.set-pic img{width:100%;height:100%;object-fit:cover;object-position:50% 8%;display:block}
+.prof-head h3{margin:0 0 4px}
+.prof-opts{display:flex;flex-direction:column;gap:8px}
+.prof-opts .option{cursor:pointer}
+.set-prof{min-height:68px}

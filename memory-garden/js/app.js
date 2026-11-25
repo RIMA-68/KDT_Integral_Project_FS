@@ -43,7 +43,9 @@
 
   /* ---------------- helpers ---------------- */
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const img = id => !id ? "assets/img/char-lavender.webp" : /^(https?:|data:|blob:)/.test(id) ? id : id === "me" ? (S.portrait || "assets/img/char-lavender.webp") : `assets/img/${id}.webp`;
+  // 사용자 프로필: 직접 꾸민 캐릭터 또는 올린 사진만 보여요. 없으면 기본 실루엣(예전 프리셋 캐릭터 그림은 쓰지 않아요).
+  const AV_DEFAULT = "assets/img/avatar-default.svg";
+  const img = id => !id ? AV_DEFAULT : /^(https?:|data:|blob:)/.test(id) ? id : id === "me" ? (S.portrait || AV_DEFAULT) : id === "cat" ? "assets/img/cat.webp" : /^char-|^photo$/.test(id) ? AV_DEFAULT : `assets/img/${id}.webp`;
   const pos = () => GEO.state === "ok" ? GEO.pos : null;
   const member = () => !S.set.requireLogin || API.member();   // 심기·처음 열기는 로그인한 사람만(서버도 같은 기준)
   const locOk = () => !!pos();
@@ -683,8 +685,8 @@
       : tab === "mine" ? stateBlock("soft", I.garden, "아직 심은 기억이 없어요", "좋아하는 장소에서 첫 기억을 심어 보세요. 그 자리에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`)
         : stateBlock("soft", I.map, "아직 모은 기억이 없어요", "지도에서 가까운 기억을 찾아가 열어 보세요.", `<a class="btn btn-primary f-sbtn" href="#/">지도 보기</a>`);
     const av = S.avatar === "me"
-      ? `<button class="f-av" data-act="go" data-to="#/avatar" aria-label="내 캐릭터 꾸미기"><img src="${img("me")}" alt="내 캐릭터"><span class="edit">${I.edit}</span></button>`
-      : `<button class="f-av empty" data-act="go" data-to="#/avatar" aria-label="캐릭터 만들기">${I.plus}<span class="lb">캐릭터 만들기</span></button>`;
+      ? `<button class="f-av" data-act="profile-open" aria-label="프로필 바꾸기"><img src="${img("me")}" alt="내 프로필"><span class="edit">${I.edit}</span></button>`
+      : `<button class="f-av empty" data-act="profile-open" aria-label="프로필 만들기">${I.plus}<span class="lb">프로필 만들기</span></button>`;
     return `<section class="screen f-garden" aria-label="내 정원"><div class="scroll" id="gardenScroll">
       <header class="f-ghead">${AMB(250)}${HILLS(60)}${av}
         <div class="f-prof"><h1><button class="nick" data-act="nick" aria-label="이름 바꾸기">${esc(S.profile.nickname)}의 정원<span class="nick-ed">${I.edit}</span></button></h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p></div>
@@ -700,6 +702,34 @@
     openModal(`<h3>화면 테마</h3><div class="theme-opts f-themeopts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div>
       <p class="reassure">하나만 고를 수 있어요. 테마를 바꿔도 보던 화면, 지도 위치, 쓰던 글, 내 캐릭터와 정원 자수는 그대로예요.</p>`);
   }
+  /* ---------------- 프로필 바꾸기: 캐릭터 · 사진 · 이름 ---------------- */
+  function profileSheet() {
+    const has = S.avatar === "me";
+    openModal(`<div class="prof-head"><span class="prof-pic"><img src="${img(has ? "me" : "")}" alt="지금 프로필"></span><div><h3>${esc(S.profile.nickname)}</h3><p class="av-note" style="margin:0">다른 사람이 내 기억을 발견하면<br>이 프로필과 이름이 보여요.</p></div></div>
+      <div class="prof-opts">
+        <button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>캐릭터로 꾸미기</b><span>머리·옷·신발을 골라 나만의 캐릭터를 만들어요</span></div></button>
+        <label class="option"><span class="oi">${I.camera}</span><div><b>사진으로 바꾸기</b><span>앨범에서 사진 한 장을 골라요</span></div><input type="file" accept="image/*" data-act="prof-photo" aria-label="프로필 사진 고르기" hidden></label>
+        <button class="option" data-act="nick"><span class="oi">${I.users}</span><div><b>정원 이름 바꾸기</b><span>지금 이름 · ${esc(S.profile.nickname)}</span></div></button>
+      </div><button class="btn btn-ghost" data-act="close">닫기</button>`);
+  }
+  // 사진은 가운데를 정사각형으로 잘라 400px PNG로 올려요(촬영 정보 등 메타데이터는 남지 않아요)
+  function squarePhoto(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { const n = Math.min(im.naturalWidth, im.naturalHeight), c = document.createElement("canvas"); c.width = c.height = 400;
+        c.getContext("2d").drawImage(im, (im.naturalWidth - n) / 2, (im.naturalHeight - n) / 2, n, n, 0, 0, 400, 400); URL.revokeObjectURL(url); res(c.toDataURL("image/png")); };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("decode")); };
+      im.src = url;
+    });
+  }
+  function setProfilePhoto(file) {
+    squarePhoto(file).then(url => {
+      S.portrait = url; S.avatar = "me"; store.set("avatar", "me"); store.set("portrait", url);
+      closeModal(); render(); toast("프로필 사진을 바꿨어요");
+      return API.uploadAvatar(url).then(u => { S.profile.avatar = "me"; S.profile.avatar_url = u; S.portrait = u; store.set("portrait", u); });
+    }).catch(e => { console.warn("[profile photo]", e); toast("이 사진은 쓸 수 없어요. 다른 사진(JPG·PNG)을 골라 주세요"); });
+  }
+
   /* ---------------- 설정 ---------------- */
   function viewSettings() {
     const row = (ic, t, sub, right, act) => `<${act ? `button data-act="${act}"` : "div"} class="set-row">${ic ? `<span class="set-ic">${ic}</span>` : ""}<span class="set-tx"><b>${t}</b>${sub ? `<small>${sub}</small>` : ""}</span>${right || ""}</${act ? "button" : "div"}>`;
@@ -712,8 +742,8 @@
     const geo = GEO.state === "ok" ? "켜짐" : GEO.state === "denied" ? "꺼짐 · 브라우저 설정에서 켤 수 있어요" : GEO.state === "asking" ? "확인 중" : "아직 사용하지 않음";
     return `<section class="screen f-settings" aria-label="설정"><header class="flow-head f-flowhead"><a class="icon-btn" href="#/garden" aria-label="뒤로">${I.back}</a><h1 class="set-title">설정</h1><span style="width:44px"></span></header>
       <div class="scroll set-body">
+        <section class="set-sec" aria-label="프로필"><h2>프로필</h2><div class="set-card"><button class="set-row set-prof" data-act="profile-open"><span class="set-pic"><img src="${img(S.avatar === "me" ? "me" : "")}" alt=""></span><span class="set-tx"><b>${esc(S.profile.nickname)}</b><small>캐릭터·사진·이름 바꾸기</small></span>${chev}</button></div></section>
         <section class="set-sec" aria-label="계정"><h2>계정</h2><div class="set-card">${account}</div></section>
-        <section class="set-sec" aria-label="내 정원"><h2>내 정원</h2><div class="set-card">${row("", "정원 이름", esc(S.profile.nickname), chev, "nick")}${row("", "내 캐릭터 꾸미기", "", chev, "set-avatar")}</div></section>
         <section class="set-sec" aria-label="화면 테마"><h2>화면 테마</h2><div class="theme-opts f-themeopts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div></section>
         <section class="set-sec" aria-label="위치와 알림"><h2>위치와 알림</h2><div class="set-card">${row(I.crosshair, "위치 사용", geo, GEO.state === "ok" ? "" : chev, GEO.state === "ok" ? "" : "loc")}${!DEMO && API.member() && API.memberEmail() ? row("", "이메일 소식 받기", `선택 · ${S.mkt ? "동의함" : "받지 않음"}`, `<span class="av-switch" role="switch" aria-checked="${!!S.mkt}"></span>`, "mkt-toggle") : ""}</div>
           <p class="set-note">현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.</p></section>
@@ -1097,7 +1127,8 @@
       }
       case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button>`); break;
       case "login": doLogin(); break;
-      case "set-avatar": location.hash = "#/avatar"; break;
+      case "set-avatar": closeModal(); location.hash = "#/avatar"; break;
+      case "profile-open": profileSheet(); break;
       case "mkt-set": case "mkt-toggle": {
         const on = a === "mkt-set" ? t.dataset.v === "1" : !S.mkt;
         API.setMarketing(on).then(() => { S.mkt = on; closeModal(); if (a === "mkt-toggle") render(); toast(on ? "이메일 소식 받기에 동의했어요" : a === "mkt-set" ? "이메일 소식은 받지 않아요" : "이메일 소식 받기를 껐어요"); })
@@ -1158,6 +1189,7 @@
     if (id === "hintText") S.draft.hint = e.target.value;
   });
   $app.addEventListener("change", e => {
+    if (e.target.dataset.act === "prof-photo" && e.target.files[0]) { const f = e.target.files[0]; if (!/^image\//.test(f.type)) { toast("사진 파일만 고를 수 있어요"); return; } setProfilePhoto(f); return; }
     if (e.target.dataset.act === "file" && e.target.files[0]) {
       const f = e.target.files[0]; e.target.value = "";
       if (!/^image\//.test(f.type) && !/\.(heic|heif)$/i.test(f.name)) { toast("사진 파일만 올릴 수 있어요"); return; }
@@ -1294,6 +1326,8 @@
       const info = await API.init();
       const [set, prof] = await Promise.all([API.settings(), API.profile().catch(() => null)]);
       S.set = set; if (prof) S.profile = prof;
+      // 다른 기기(휴대폰)에서 만든 캐릭터·사진도 보이게: 서버 프로필의 이미지를 이 기기에도 반영
+      if (prof && prof.avatar === "me" && prof.avatar_url) { S.avatar = "me"; S.portrait = prof.avatar_url; store.set("avatar", "me"); store.set("portrait", prof.avatar_url); }
       S.boot = "ok"; S.loginError = info && info.loginError; S.justLoggedIn = info && info.justLoggedIn;
       // 카카오로 처음 로그인했으면 기본 닉네임 대신 카카오 이름을 써요(정원에서 바꿀 수 있어요)
       const kname = API.member() && API.memberName();
