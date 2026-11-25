@@ -87,6 +87,23 @@
         const { error } = await sb.auth.signInWithOAuth({ provider: "kakao", options: { redirectTo: back(), queryParams: KAKAO_PICK } });
         if (error) throw new ApiError("login", error.message);
       },
+      // 이메일 링크 로그인(비밀번호 없음). 메일의 링크를 이 브라우저에서 누르면 로그인돼요.
+      // 임시(익명) 정원이면 그 정원에 이메일을 붙여 기록을 그대로 이어요. 이미 다른 정원이 있는 이메일이면 code "email_exists".
+      async loginEmail(email, { fresh = false } = {}) {
+        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
+        if (!fresh && user && user.is_anonymous) {
+          const { error } = await sb.auth.updateUser({ email }, { emailRedirectTo: back() });
+          if (!error) return { linked: true };
+          if (/already|exists|registered/i.test(error.message)) throw new ApiError("email_exists", error.message);
+          throw new ApiError(/rate|seconds/i.test(error.message) ? "rate" : "email", error.message);
+        }
+        if (user && !user.is_anonymous) await sb.auth.signOut({ scope: "local" });
+        const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: back(), shouldCreateUser: true } });
+        if (error) throw new ApiError(/rate|seconds/i.test(error.message) ? "rate" : "email", error.message);
+        return { linked: false };
+      },
+      // 로그인 방식: "kakao" | "email" | null
+      memberProvider() { if (!user || user.is_anonymous) return null; const p = (user.app_metadata && user.app_metadata.provider) || ""; return /kakao/.test(p) || (user.identities || []).some(i => i.provider === "kakao") ? "kakao" : "email"; },
       async logout() { await sb.auth.signOut({ scope: "local" }); },
       memberEmail() { return (user && user.is_anonymous === false && user.email) || null; },
       // 광고성 이메일 수신 동의(선택). 동의·철회 시각은 서버 트리거가 기록해요.
@@ -226,7 +243,7 @@
       async init() { return { uid: "demo" }; },
       member() { return true; },          // 데모 모드는 로그인 없이 모두 체험
       memberName() { return null; },
-      async loginKakao() { }, async switchToKakao() { }, async logout() { },
+      async loginKakao() { }, async switchToKakao() { }, async logout() { }, async loginEmail() { return { linked: false }; }, memberProvider() { return null; },
       memberEmail() { return null; }, async marketing() { return { opt_in: false }; }, async setMarketing() { },
       async settings() { return S; },
       async profile() { return db.profile; },

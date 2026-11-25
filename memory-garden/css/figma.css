@@ -570,3 +570,8 @@ button.set-row:active{background:var(--color-surface-sunk)}
 
 /* 한글은 단어 중간에서 줄이 바뀌지 않게 */
 body{word-break:keep-all;overflow-wrap:break-word}
+
+/* 이메일 로그인 */
+.btn-mail{gap:8px}
+.btn-mail svg{flex:none}
+.set-btns{display:flex;flex-direction:column;gap:8px}

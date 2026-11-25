@@ -268,6 +268,30 @@
   /* ---------------- 로그인 (카카오) ---------------- */
   const KAKAO_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#000" d="M12 3.5c-5 0-9 3.1-9 7 0 2.5 1.7 4.7 4.2 6l-1 3.7c-.1.3.3.6.6.4l4.4-2.9c.3 0 .5.1.8.1 5 0 9-3.1 9-7s-4-7.3-9-7.3Z"/></svg>';
   const kakaoBtn = (label) => `<button class="btn btn-kakao btn-block" data-act="login">${KAKAO_ICON}${label || "카카오로 시작하기"}</button>`;
+  const MAIL_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>';
+  const hasEmail = () => typeof API.loginEmail === "function";
+  const emailBtn = (label) => hasEmail() ? `<button class="btn btn-outline btn-block btn-mail" data-act="email-open">${MAIL_ICON}${label || "이메일로 시작하기"}</button>` : "";
+  // 이메일 링크 로그인: 비밀번호 없이 메일로 받은 링크를 눌러 로그인
+  function emailSheet(prefill) {
+    openModal(`<h3>이메일로 로그인</h3><p class="av-note" style="margin:0">입력한 주소로 로그인 링크를 보내 드려요.<br>비밀번호는 필요 없어요.</p>
+      <label class="field"><span>이메일 주소</span><input id="emailInput" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${esc(prefill || "")}"></label>
+      <button class="btn btn-primary btn-block" data-act="email-send">로그인 링크 받기</button><button class="btn btn-ghost" data-act="close">취소</button>
+      <p class="reassure">메일의 링크는 지금 쓰는 이 브라우저에서 열어 주세요.</p>`);
+    setTimeout(() => { const i = document.getElementById("emailInput"); if (i) i.focus(); }, 60);
+  }
+  function emailSent(email) {
+    openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>메일함을 확인해 주세요</h3><p class="av-note" style="margin:0"><b>${esc(email)}</b>(으)로 로그인 링크를 보냈어요.<br>링크를 누르면 이 화면으로 돌아와 로그인돼요.</p></div>
+      <button class="btn btn-outline btn-block" data-act="email-open" data-v="${esc(email)}">주소 다시 입력하기</button><button class="btn btn-ghost" data-act="close">닫기</button>
+      <p class="reassure">메일이 안 보이면 스팸함도 확인해 주세요. 링크는 이 브라우저에서 열어야 해요.</p>`);
+  }
+  function sendEmailLink(email, fresh) {
+    API.loginEmail(email, { fresh }).then(() => emailSent(email)).catch(e => {
+      console.error(e);
+      if (e.code === "email_exists") openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 이메일이에요</h3><p class="av-note" style="margin:0">해당 이메일로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
+        <button class="btn btn-primary btn-block" data-act="email-fresh" data-v="${esc(email)}">해당 이메일로 로그인</button><button class="btn btn-ghost" data-act="close">지금은 로그인 안 할게요</button>`, { alert: true });
+      else toast(e.code === "rate" ? "잠시 뒤에 다시 보내 주세요" : "링크를 보내지 못했어요. 주소를 확인해 주세요");
+    });
+  }
   const LOGIN_WHY = {
     plant: ["기억을 심으려면 로그인이 필요해요", "심은 기억은 내 계정에 저장돼서, 휴대폰을 바꿔도 내 정원에서 다시 볼 수 있어요."],
     open: ["처음 열려면 로그인이 필요해요", "발견한 기억은 내 정원에 담겨요. 로그인하면 어느 기기에서든 다시 볼 수 있어요."],
@@ -276,13 +300,13 @@
   function loginSheet(kind) {
     const [h, p] = LOGIN_WHY[kind] || LOGIN_WHY.account;
     openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>${h}</h3><p class="av-note" style="margin:0">${p}</p></div>
-      ${kakaoBtn()}<button class="btn btn-ghost" data-act="close">${kind === "account" ? "닫기" : "둘러보기 계속하기"}</button>
+      ${kakaoBtn()}${emailBtn()}<button class="btn btn-ghost" data-act="close">${kind === "account" ? "닫기" : "둘러보기 계속하기"}</button>
       <p class="reassure">지도와 근처 기억 둘러보기는 로그인 없이도 할 수 있어요.</p>`);
   }
   function viewLoginGate() {
     const [h, p] = LOGIN_WHY.plant;
     return `<section class="screen" aria-label="로그인 필요">${flowHead(1)}<div class="center-state login-gate"><img src="${img("cat")}" alt="" style="width:132px"><h2>${h}</h2><p>${p}</p>
-      <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:320px;margin-top:8px">${kakaoBtn()}<a class="btn btn-ghost" href="#/">지도 둘러보기</a></div></div></section>`;
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:320px;margin-top:8px">${kakaoBtn()}${emailBtn()}<a class="btn btn-ghost" href="#/">지도 둘러보기</a></div></div></section>`;
   }
   // 광고성 정보 수신 동의: 로그인 동의와 별개, 선택. 처음 로그인한 뒤 한 번만 물어봐요.
   function marketingSheet() {
@@ -681,9 +705,10 @@
     const row = (ic, t, sub, right, act) => `<${act ? `button data-act="${act}"` : "div"} class="set-row">${ic ? `<span class="set-ic">${ic}</span>` : ""}<span class="set-tx"><b>${t}</b>${sub ? `<small>${sub}</small>` : ""}</span>${right || ""}</${act ? "button" : "div"}>`;
     const chev = `<i class="set-go" aria-hidden="true">›</i>`;
     const name = !DEMO && API.member() ? API.memberName() : null;
+    const byMail = !DEMO && API.member() && typeof API.memberProvider === "function" && API.memberProvider() === "email";
     const account = DEMO ? row(I.info, "데모 모드", "기록은 이 기기에만 저장돼요")
-      : API.member() ? row(KAKAO_ICON, "카카오 계정으로 로그인됨", esc(name || API.memberEmail() || "")) + row("", "다른 카카오 계정으로 로그인", "", chev, "switch-open") + row("", "로그아웃", "", chev, "logout-open")
-      : row(I.info, "임시 정원이에요", "로그인하지 않아서 이 기기에서만 볼 수 있어요") + `<div class="set-pad">${kakaoBtn("카카오로 로그인")}</div>`;
+      : API.member() ? (byMail ? row(MAIL_ICON, "이메일로 로그인됨", esc(API.memberEmail() || "")) : row(KAKAO_ICON, "카카오 계정으로 로그인됨", esc(name || API.memberEmail() || ""))) + row("", "다른 계정으로 로그인", "", chev, "switch-open") + row("", "로그아웃", "", chev, "logout-open")
+      : row(I.info, "임시 정원이에요", "로그인하지 않아서 이 기기에서만 볼 수 있어요") + `<div class="set-pad set-btns">${kakaoBtn("카카오로 로그인")}${emailBtn("이메일로 로그인")}</div>`;
     const geo = GEO.state === "ok" ? "켜짐" : GEO.state === "denied" ? "꺼짐 · 브라우저 설정에서 켤 수 있어요" : GEO.state === "asking" ? "확인 중" : "아직 사용하지 않음";
     return `<section class="screen f-settings" aria-label="설정"><header class="flow-head f-flowhead"><a class="icon-btn" href="#/garden" aria-label="뒤로">${I.back}</a><h1 class="set-title">설정</h1><span style="width:44px"></span></header>
       <div class="scroll set-body">
@@ -1081,8 +1106,15 @@
       }
       case "login-open": loginSheet("account"); break;
       case "login-other": API.switchToKakao().catch(() => toast("로그인을 시작하지 못했어요")); break;
-      case "switch-open": openModal(`<h3>다른 카카오 계정으로 로그인할까요?</h3><p class="av-note" style="margin:0">지금 계정에서 로그아웃한 뒤 카카오 로그인 화면에서 계정을 고를 수 있어요.<br>지금 계정의 정원은 그대로 남아 있어요.</p>
-        <button class="btn btn-kakao btn-block" data-act="login-other">${KAKAO_ICON}다른 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">취소</button>`); break;
+      case "switch-open": openModal(`<h3>다른 계정으로 로그인할까요?</h3><p class="av-note" style="margin:0">지금 계정에서 로그아웃한 뒤 다른 계정으로 로그인해요.<br>지금 계정의 정원은 그대로 남아 있어요.</p>
+        <button class="btn btn-kakao btn-block" data-act="login-other">${KAKAO_ICON}카카오 계정으로 로그인</button>${emailBtn("이메일로 로그인")}<button class="btn btn-ghost" data-act="close">취소</button>`); break;
+      case "email-open": emailSheet(t.dataset.v); break;
+      case "email-send": {
+        const v = ((document.getElementById("emailInput") || {}).value || "").trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { toast("이메일 주소를 확인해 주세요"); break; }
+        t.disabled = true; t.textContent = "보내는 중…"; sendEmailLink(v, API.member()); break;
+      }
+      case "email-fresh": sendEmailLink(t.dataset.v, true); break;
       case "logout-open": openModal(`<h3>로그아웃할까요?</h3><p class="av-note" style="margin:0">정원은 계정에 그대로 남아 있어요.<br>다시 로그인하면 이어서 볼 수 있어요.</p>
         <button class="btn btn-primary btn-block" data-act="logout">로그아웃</button><button class="btn btn-ghost" data-act="close">취소</button>`); break;
       case "login-switch": API.switchToKakao().catch(() => toast("로그인을 시작하지 못했어요")); break;
@@ -1274,7 +1306,7 @@
       if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">해당 계정으로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
         <button class="btn btn-kakao btn-block" data-act="login-switch">${KAKAO_ICON}해당 계정으로 로그인</button><button class="btn btn-outline btn-block" data-act="login-other">다른 카카오 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">지금은 로그인 안 할게요</button>`, { alert: true });
       else toast(/cancel|denied/i.test(le.message) ? "로그인을 취소했어요" : "로그인하지 못했어요. 다시 시도해 주세요");
-    } else if (S.justLoggedIn) toast("카카오 계정으로 로그인했어요");
+    } else if (S.justLoggedIn) toast(typeof API.memberProvider === "function" && API.memberProvider() === "email" ? "이메일로 로그인했어요" : "카카오 계정으로 로그인했어요");
     // 로그인한 사람에게 이메일이 있으면 수신 동의를 한 번만 물어봐요
     if (!DEMO && API.member() && API.memberEmail()) API.marketing().then(c => { S.mkt = !!(c && c.opt_in); if (!c && !document.querySelector(".scrim")) marketingSheet(); }).catch(() => { });
     // 위치: 이미 허용했거나 이전에 쓰겠다고 한 경우에만 바로 시작(묻지 않고 켜지 않아요)
