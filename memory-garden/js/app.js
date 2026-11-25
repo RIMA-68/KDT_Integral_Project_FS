@@ -726,7 +726,9 @@
     const has = S.avatar === "me";
     openModal(`<div class="prof-head"><span class="prof-pic"><img src="${img(has ? "me" : "")}" alt="지금 프로필"></span><div><h3>${esc(S.profile.nickname)}</h3><p class="av-note" style="margin:0">다른 사람이 내 기억을 발견하면<br>이 프로필과 이름이 보여요.</p></div></div>
       <div class="prof-opts">
-        <button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>캐릭터로 꾸미기</b><span>머리·옷·신발을 골라 나만의 캐릭터를 만들어요</span></div></button>
+        ${S.look ? `<button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>지금 캐릭터 고치기</b><span>저장해 둔 캐릭터에서 파츠만 바꿔요</span></div></button>
+        <button class="option" data-act="set-avatar" data-v="new"><span class="oi">${I.plus}</span><div><b>새 캐릭터 만들기</b><span>기본 모습부터 다시 꾸며요.<br>저장하기 전까지 지금 캐릭터는 그대로예요.</span></div></button>`
+        : `<button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>캐릭터 만들기</b><span>머리·옷·신발을 골라 나만의 캐릭터를 만들어요</span></div></button>`}
         <label class="option"><span class="oi">${I.camera}</span><div><b>사진으로 바꾸기</b><span>앨범에서 사진 한 장을 골라요</span></div><input type="file" accept="image/*" data-act="prof-photo" aria-label="프로필 사진 고르기" hidden></label>
         <div class="petal-pick"><b>내 꽃잎 색</b><span>나의 정원의 꽃과, 다른 사람의 발견의 정원에 놓인<br>내 꽃잎이 이 색이에요</span>
           <div class="petal-row" role="radiogroup" aria-label="내 꽃잎 색">${BR.PETALS.map(([k, n]) => `<button role="radio" aria-checked="${myPetal() === k}" aria-label="${n}" data-act="petal-set" data-v="${k}" style="--pc:var(--st-${k}-petal,${BR.PAL[k].petal})"><i></i><span>${n}</span></button>`).join("")}</div></div>
@@ -812,7 +814,7 @@
 
   function viewAvatar() {
     return `<section class="screen av" aria-label="내 캐릭터 꾸미기">
-      <header class="av-head"><button class="icon-btn" data-act="av-back" aria-label="뒤로">${I.back}</button><h1>내 캐릭터 꾸미기</h1><button class="icon-btn" data-act="av-random" aria-label="무작위로 꾸미기" id="avRand" disabled>${I.dice}</button></header>
+      <header class="av-head"><button class="icon-btn" data-act="av-back" aria-label="뒤로">${I.back}</button><h1>${route().arg === "new" ? "새 캐릭터 만들기" : "내 캐릭터 꾸미기"}</h1><button class="icon-btn" data-act="av-random" aria-label="무작위로 꾸미기" id="avRand" disabled>${I.dice}</button></header>
       <div class="av-stage"><canvas id="avCanvas" role="img" aria-label="내 캐릭터 미리보기"></canvas>
         <div class="av-veil" id="avVeil"></div>
         <div class="av-ctrl" id="avCtrl" hidden>
@@ -833,7 +835,9 @@
   function mountAvatar() {
     avTeardown();
     const job = AV.job;
-    AV.draft = Object.assign({}, S.look || (AV.mod ? AV.mod.DEFAULT_LOOK : null));
+    // #/avatar = 지금 캐릭터에서 이어 고치기, #/avatar/new = 기본 모습부터 새로 만들기(저장 전엔 지금 캐릭터 그대로)
+    const fresh = route().arg === "new";
+    AV.draft = Object.assign({}, (!fresh && S.look) || (AV.mod ? AV.mod.DEFAULT_LOOK : null));
     AV.base = S.look ? Object.assign({}, S.look) : null; AV.hist = [];
     if (!AV.tab) AV.tab = "face";
     AV.status = "loading"; AV.err = "";
@@ -847,8 +851,8 @@
     }).then(m => {
       if (!m || job !== AV.job || AV.status === "error") return;
       AV.mod = m;
-      AV.draft = m.normalizeLook(S.look);
-      AV.base = S.look ? Object.assign({}, AV.draft) : null;
+      AV.draft = m.normalizeLook(fresh ? null : S.look);
+      AV.base = S.look ? m.normalizeLook(S.look) : null;
       try { AV.stage = m.createStage(document.getElementById("avCanvas"), AV.draft); }
       catch (e) { AV.err = "webgl"; avFail(); return; }
       AV.status = "ready"; avVeil(null);
@@ -1148,7 +1152,7 @@
       }
       case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button>`); break;
       case "login": doLogin(); break;
-      case "set-avatar": closeModal(); location.hash = "#/avatar"; break;
+      case "set-avatar": closeModal(); location.hash = t.dataset.v === "new" ? "#/avatar/new" : "#/avatar"; break;
       case "profile-open": profileSheet(); break;
       case "petal-set": {
         const v = t.dataset.v, prev = S.profile.petal; S.profile.petal = v; profileSheet(); softRender(true);
