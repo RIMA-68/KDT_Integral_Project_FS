@@ -113,6 +113,7 @@
     camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>',
     alert: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg>',
+    gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>',
     theme: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 7.8a4.2 4.2 0 0 1 0 8.4Z" fill="currentColor"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>',
     users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M15.5 5.2a3 3 0 0 1 0 5.6M17.5 14.2a5 5 0 0 1 3 4.8"/></svg>',
     info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.5"/></svg>',
@@ -289,7 +290,7 @@
     openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>새 기억 소식을 이메일로 받아 볼래요?</h3><p class="av-note" style="margin:0">근처에 새로 심긴 기억, 이벤트 소식을 가끔 보내 드려요. 받지 않아도 서비스는 똑같이 쓸 수 있어요.</p></div>
       <dl class="consent-box"><div><dt>받는 곳</dt><dd>${esc(email)}</dd></div><div><dt>목적</dt><dd>서비스 소식·이벤트 등 광고성 정보 안내</dd></div><div><dt>보관</dt><dd>동의를 철회할 때까지</dd></div></dl>
       <button class="btn btn-primary btn-block" data-act="mkt-set" data-v="1">(선택) 동의하고 받기</button><button class="btn btn-ghost" data-act="mkt-set" data-v="0">받지 않을게요</button>
-      <p class="reassure">내 정원 → 이름 옆 연필 버튼에서 언제든 바꿀 수 있어요.</p>`);
+      <p class="reassure">내 정원 → 설정에서 언제든 바꿀 수 있어요.</p>`);
   }
   function doLogin() {
     toast("카카오 로그인 화면으로 이동해요");
@@ -309,16 +310,16 @@
     let body;
     if (ds === "loading") body = [1, 2, 3].map(() => `<div class="f-skel" aria-hidden="true"><span class="t"></span><span class="l"><i></i><i></i></span><span class="r"></span></div>`).join("");
     else if (ds === "error") body = stateBlock("err", I.wifi, "기억을 불러오지 못했어요", "근처에 기억이 없다는 뜻은 아니에요. 연결을 확인하고 다시 시도해 주세요.", `<button class="btn btn-outline f-sbtn" data-act="retry">다시 시도</button>`);
-    else if (ds === "empty") body = stateBlock("soft", I.garden, "이 근처엔 아직 심어진 기억이 없어요", "여기에 첫 번째 기억을 심으면, 다음에 오는 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`);
+    else if (ds === "empty") body = stateBlock("soft", I.garden, "이 근처엔 아직 심어진 기억이 없어요", "여기에 첫 기억을 심어 보세요.<br>다음에 이곳에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`);
     else body = list.length ? list.map(memoryCard).join("") : stateBlock("soft", I.lock, S.filter === "open" ? "지금 열 수 있는 기억이 없어요" : "잠긴 기억이 없어요", "필터를 바꿔 보세요.", "");
 
     let catLine;
-    if (!locOk()) catLine = GEO.state === "asking" ? "지금 어디 있는지 찾는 중이야…" : "위치를 알 수 없어서 거리는 몰라. 둘러보기는 할 수 있어!";
+    if (!locOk()) catLine = GEO.state === "asking" ? "지금 어디 있는지 찾는 중이야…" : "위치를 몰라서 거리는 알 수 없어.<br>둘러보기는 할 수 있어!";
     else if (ds === "loading") catLine = "근처 기억을 찾는 중이야…";
-    else if (ds === "error") catLine = "신호가 약한가 봐. 다시 찾아볼게!";
-    else if (ds === "empty" || !nearest) catLine = "여긴 아직 아무도 기억을 안 남겼어. 네가 처음이야!";
-    else if (!accOk()) catLine = "하늘이 트인 곳에서 잠시 기다리면 더 정확해져!";
-    else catLine = `가장 가까운 기억은 ${fmtDist(distOf(nearest))} 앞이야. 다가가 볼래?`;
+    else if (ds === "error") catLine = "신호가 약한가 봐.<br>다시 찾아볼게!";
+    else if (ds === "empty" || !nearest) catLine = "여긴 아직 남겨진 기억이 없어.<br>네가 처음이 되어 볼래?";
+    else if (!accOk()) catLine = "하늘이 트인 곳에서 잠시 기다리면<br>위치가 더 정확해져!";
+    else catLine = `가장 가까운 기억은 ${fmtDist(distOf(nearest))} 앞이야.<br>다가가 볼래?`;
     const note = !locOk() ? "위치를 켜면 거리가 보여요" : !accOk() ? "오차가 줄면 거리가 보여요" : `반경 ${R}m 안에서 열려요`;
 
     const sel = S.selected && byId(S.selected);
@@ -663,7 +664,7 @@
     return `<section class="screen f-garden" aria-label="내 정원"><div class="scroll" id="gardenScroll">
       <header class="f-ghead">${AMB(250)}${HILLS(60)}${av}
         <div class="f-prof"><h1><button class="nick" data-act="nick" aria-label="이름 바꾸기">${esc(S.profile.nickname)}의 정원<span class="nick-ed">${I.edit}</span></button></h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p></div>
-        <button class="f-glass f-themebtn" data-act="theme-open" aria-label="화면 테마 설정">${I.theme}</button>
+        <a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
         <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>모은 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
       <section class="f-gsec" aria-label="나의 정원 자수"><div class="f-sech"><h2>나의 정원 자수</h2><i></i><span>${gardenCount(colAll)}</span></div>${samplerHTML(colAll)}${nearbyHTML()}</section>
       <div class="seg f-seg" role="group" aria-label="보기 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">내가 심은 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">모은 기억 ${col.length}</button></div>
@@ -674,6 +675,24 @@
   function themeSheet() {
     openModal(`<h3>화면 테마</h3><div class="theme-opts f-themeopts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div>
       <p class="reassure">하나만 고를 수 있어요. 테마를 바꿔도 보던 화면, 지도 위치, 쓰던 글, 내 캐릭터와 정원 자수는 그대로예요.</p>`);
+  }
+  /* ---------------- 설정 ---------------- */
+  function viewSettings() {
+    const row = (ic, t, sub, right, act) => `<${act ? `button data-act="${act}"` : "div"} class="set-row">${ic ? `<span class="set-ic">${ic}</span>` : ""}<span class="set-tx"><b>${t}</b>${sub ? `<small>${sub}</small>` : ""}</span>${right || ""}</${act ? "button" : "div"}>`;
+    const chev = `<i class="set-go" aria-hidden="true">›</i>`;
+    const name = !DEMO && API.member() ? API.memberName() : null;
+    const account = DEMO ? row(I.info, "데모 모드", "기록은 이 기기에만 저장돼요")
+      : API.member() ? row(KAKAO_ICON, "카카오 계정으로 로그인됨", esc(name || API.memberEmail() || "")) + row("", "다른 카카오 계정으로 로그인", "", chev, "switch-open") + row("", "로그아웃", "", chev, "logout-open")
+      : row(I.info, "임시 정원이에요", "로그인하지 않아서 이 기기에서만 볼 수 있어요") + `<div class="set-pad">${kakaoBtn("카카오로 로그인")}</div>`;
+    const geo = GEO.state === "ok" ? "켜짐" : GEO.state === "denied" ? "꺼짐 · 브라우저 설정에서 켤 수 있어요" : GEO.state === "asking" ? "확인 중" : "아직 사용하지 않음";
+    return `<section class="screen f-settings" aria-label="설정"><header class="flow-head f-flowhead"><a class="icon-btn" href="#/garden" aria-label="뒤로">${I.back}</a><h1 class="set-title">설정</h1><span style="width:44px"></span></header>
+      <div class="scroll set-body">
+        <section class="set-sec" aria-label="계정"><h2>계정</h2><div class="set-card">${account}</div></section>
+        <section class="set-sec" aria-label="내 정원"><h2>내 정원</h2><div class="set-card">${row("", "정원 이름", esc(S.profile.nickname), chev, "nick")}${row("", "내 캐릭터 꾸미기", "", chev, "set-avatar")}</div></section>
+        <section class="set-sec" aria-label="화면 테마"><h2>화면 테마</h2><div class="theme-opts f-themeopts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div></section>
+        <section class="set-sec" aria-label="위치와 알림"><h2>위치와 알림</h2><div class="set-card">${row(I.crosshair, "위치 사용", geo, GEO.state === "ok" ? "" : chev, GEO.state === "ok" ? "" : "loc")}${!DEMO && API.member() && API.memberEmail() ? row("", "이메일 소식 받기", `선택 · ${S.mkt ? "동의함" : "받지 않음"}`, `<span class="av-switch" role="switch" aria-checked="${!!S.mkt}"></span>`, "mkt-toggle") : ""}</div>
+          <p class="set-note">현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.</p></section>
+      </div></section>`;
   }
   function isNight() {
     const t = S.theme;
@@ -899,10 +918,11 @@
   }
 
   /* ---------------- modals ---------------- */
-  function openModal(html) {
+  // opts.alert: 꼭 골라야 하는 안내(이미 정원이 있는 계정 등) — 손잡이 없음, 바깥을 눌러도·끌어도 닫히지 않고 버튼으로만 닫혀요
+  function openModal(html, opts = {}) {
     closeModal();
-    const s = document.createElement("div"); s.className = "scrim"; s.dataset.act = "scrim";
-    s.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><div class="sheet-handle"></div>${html}</div>`;
+    const s = document.createElement("div"); s.className = "scrim" + (opts.alert ? " is-alert" : ""); s.dataset.act = "scrim";
+    s.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${opts.alert ? "" : `<div class="sheet-handle" aria-hidden="true"></div>`}${html}</div>`;
     $app.appendChild(s);
     const f = s.querySelector("textarea,button"); if (f) setTimeout(() => f.focus(), 50);
   }
@@ -942,6 +962,7 @@
     else if (r.name === "plant") html = S.boot === "ok" && !member() && !["done", "doing"].includes(r.arg) ? viewLoginGate() : viewPlant(r.arg || "1");
     else if (r.name === "garden") html = viewGarden();
     else if (r.name === "avatar") html = viewAvatar();
+    else if (r.name === "settings") html = viewSettings();
     else html = viewHome();
     $app.innerHTML = html;
     if (r.name === "avatar") mountAvatar();
@@ -1024,7 +1045,7 @@
           .catch(err => { console.error(err); t.disabled = false; toast("답장을 보내지 못했어요. 다시 시도해 주세요"); });
         break;
       }
-      case "scrim": if (e.target === t) closeModal(); break;
+      case "scrim": if (e.target === t && scrimDown === t && !t.classList.contains("is-alert")) closeModal(); break;
       case "walk": walkTo(byId(id)); break;
       case "discover": { const m = byId(id); if (m && canOpen(m)) discover(id); break; }
       case "found-done": S.found = null; render(); break;
@@ -1033,7 +1054,7 @@
       case "fl-gone": closeModal(); openGone(); break;
       case "gone-info": openGone(); break;
       case "theme-open": themeSheet(); break;
-      case "theme-set": S.theme = t.dataset.v; store.set("theme", S.theme); applyTheme(); themeSheet(); if (MAP) syncMap(); break;
+      case "theme-set": S.theme = t.dataset.v; store.set("theme", S.theme); applyTheme(); if (route().name === "settings") render(); else themeSheet(); if (MAP) syncMap(); break;
       case "vis-open": visSheet(id); break;
       case "vis-pick": { const m = byId(id); if (m && (m.vis || "all") !== t.dataset.v) visConfirm(id, t.dataset.v); else closeModal(); break; }
       case "vis-apply": {
@@ -1049,9 +1070,9 @@
           .catch(err => { console.error(err); closeModal(); toast("기억을 지우지 못했어요"); });
         break;
       }
-      case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button>
-        ${DEMO ? "" : API.member() ? `<div class="account-row"><span>${KAKAO_ICON}카카오 계정으로 로그인됨</span><button data-act="logout">로그아웃</button></div>${API.memberEmail() ? `<div class="account-row"><span>이메일 소식 받기 <small>(선택 · ${S.mkt ? "동의함" : "받지 않음"})</small></span><button class="av-switch" role="switch" aria-checked="${!!S.mkt}" aria-label="이메일 소식 받기" data-act="mkt-toggle"></button></div>` : ""}` : `<div class="account-row anon"><span>임시 정원이에요 · 이 기기에서만 볼 수 있어요</span><button data-act="login-open">로그인</button></div>`}`); break;
+      case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button>`); break;
       case "login": doLogin(); break;
+      case "set-avatar": location.hash = "#/avatar"; break;
       case "mkt-set": case "mkt-toggle": {
         const on = a === "mkt-set" ? t.dataset.v === "1" : !S.mkt;
         API.setMarketing(on).then(() => { S.mkt = on; closeModal(); if (a === "mkt-toggle") render(); toast(on ? "이메일 소식 받기에 동의했어요" : a === "mkt-set" ? "이메일 소식은 받지 않아요" : "이메일 소식 받기를 껐어요"); })
@@ -1059,6 +1080,11 @@
         break;
       }
       case "login-open": loginSheet("account"); break;
+      case "login-other": API.switchToKakao().catch(() => toast("로그인을 시작하지 못했어요")); break;
+      case "switch-open": openModal(`<h3>다른 카카오 계정으로 로그인할까요?</h3><p class="av-note" style="margin:0">지금 계정에서 로그아웃한 뒤 카카오 로그인 화면에서 계정을 고를 수 있어요.<br>지금 계정의 정원은 그대로 남아 있어요.</p>
+        <button class="btn btn-kakao btn-block" data-act="login-other">${KAKAO_ICON}다른 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">취소</button>`); break;
+      case "logout-open": openModal(`<h3>로그아웃할까요?</h3><p class="av-note" style="margin:0">정원은 계정에 그대로 남아 있어요.<br>다시 로그인하면 이어서 볼 수 있어요.</p>
+        <button class="btn btn-primary btn-block" data-act="logout">로그아웃</button><button class="btn btn-ghost" data-act="close">취소</button>`); break;
       case "login-switch": API.switchToKakao().catch(() => toast("로그인을 시작하지 못했어요")); break;
       case "logout": API.logout().then(() => { try { localStorage.removeItem("mg:avatar"); localStorage.removeItem("mg:look"); localStorage.removeItem("mg:portrait"); } catch (_) { } location.hash = "#/"; location.reload(); }); break;
       case "nick-save": {
@@ -1116,6 +1142,24 @@
     else if (e.key === "ArrowDown" && i > 0) { e.preventDefault(); S.sheetMode = order[i - 1]; render(); }
     else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); S.sheetMode = S.sheetMode === "min" ? "peek" : S.sheetMode === "peek" ? "full" : "peek"; render(); }
     if (/^Arrow|Enter| /.test(e.key)) requestAnimationFrame(() => document.querySelector(".f-sheet .sheet-handle")?.focus());
+  });
+
+  // 아래 시트(모달): 바깥은 '눌렀다 뗀 곳이 둘 다 바깥'일 때만 닫혀요(끌다가 바깥에서 손을 떼도 안 닫힘).
+  // 손잡이는 아래로 끌어 닫기만 해요. 위로 끌면 살짝 따라오다 제자리로 돌아와요.
+  let scrimDown = null;
+  $app.addEventListener("pointerdown", e => {
+    scrimDown = e.target.classList && e.target.classList.contains("scrim") ? e.target : null;
+    const h = e.target.closest(".modal .sheet-handle"); if (!h) return;
+    const modal = h.parentElement, scrim = modal.parentElement, y0 = e.clientY;
+    let dy = 0; modal.style.transition = "none"; modal.style.animation = "none";
+    const move = ev => { dy = ev.clientY - y0; modal.style.transform = `translateY(${dy > 0 ? dy : dy / 6}px)`; };
+    const up = () => {
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      modal.style.transition = "transform .2s ease-out";
+      if (dy > 90) { modal.style.transform = "translateY(100%)"; setTimeout(() => { if (scrim.isConnected) closeModal(); }, 180); }
+      else modal.style.transform = "";
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
   });
 
   // 시트 끌기: 손잡이나 제목 줄을 위아래로 끌면 가장 가까운 높이(min·peek·full)로 붙어요. 빠르게 튕기면 그 방향으로 한 단계.
@@ -1227,8 +1271,8 @@
     if (S.boot !== "ok") return;
     if (S.loginError) {
       const le = S.loginError; S.loginError = null;
-      if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">그 계정으로 로그인하면 원래 정원을 볼 수 있어요. 이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
-        <button class="btn btn-kakao btn-block" data-act="login-switch">${KAKAO_ICON}그 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">취소</button>`);
+      if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">해당 계정으로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
+        <button class="btn btn-kakao btn-block" data-act="login-switch">${KAKAO_ICON}해당 계정으로 로그인</button><button class="btn btn-outline btn-block" data-act="login-other">다른 카카오 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">지금은 로그인 안 할게요</button>`, { alert: true });
       else toast(/cancel|denied/i.test(le.message) ? "로그인을 취소했어요" : "로그인하지 못했어요. 다시 시도해 주세요");
     } else if (S.justLoggedIn) toast("카카오 계정으로 로그인했어요");
     // 로그인한 사람에게 이메일이 있으면 수신 동의를 한 번만 물어봐요
