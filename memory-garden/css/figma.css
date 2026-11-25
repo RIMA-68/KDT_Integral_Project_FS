@@ -615,3 +615,9 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .petal-row button[aria-checked="true"] i{box-shadow:0 0 0 2px var(--color-bg),0 0 0 4px var(--color-text)}
 .petal-row span{font-size:12px;color:var(--color-text-sub)}
 .petal-row button[aria-checked="true"] span{color:var(--color-text);font-weight:700}
+
+/* 프로필 바꾸기 버튼 하나로 정리 */
+.f-av-none{border-radius:50%;overflow:hidden}
+.f-av-none img{object-position:50% 50%;border-radius:50%}
+.f-profbtn{align-self:flex-start;margin-top:8px;display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:15px;background:var(--color-surface);box-shadow:var(--f-s);font-size:13px;font-weight:700;color:var(--color-text)}
+.f-profbtn svg{width:14px;height:14px}

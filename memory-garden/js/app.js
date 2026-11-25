@@ -693,14 +693,15 @@
       : list.length ? list.map(m => `<button class="polaroid f-tile" data-act="open" data-id="${m.id}">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : `<span class="noimg">${BR.seed("planted", 90)}</span>`}<b>${esc(m.title)}</b><span>${esc(m.place)}</span>${m.mine && m.vis === "me" ? `<i class="vis-me">${I.lock}나만 보기</i>` : ""}</button>`).join("")
       : tab === "mine" ? stateBlock("soft", I.garden, "아직 심은 기억이 없어요", "좋아하는 장소에서 첫 기억을 심어 보세요. 그 자리에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`)
         : stateBlock("soft", I.map, "아직 모은 기억이 없어요", "지도에서 가까운 기억을 찾아가 열어 보세요.", `<a class="btn btn-primary f-sbtn" href="#/">지도 보기</a>`);
+    // 프로필 수정은 이름 아래 '프로필 바꾸기' 버튼 하나로 모아요(사진·이름 옆 연필 버튼 없음)
     const av = S.avatar === "me"
-      ? `<button class="f-av" data-act="profile-open" aria-label="프로필 바꾸기"><img src="${img("me")}" alt="내 프로필"><span class="edit">${I.edit}</span></button>`
-      : `<button class="f-av empty" data-act="profile-open" aria-label="프로필 만들기">${I.plus}<span class="lb">프로필 만들기</span></button>`;
+      ? `<span class="f-av"><img src="${img("me")}" alt="내 프로필"></span>`
+      : `<span class="f-av f-av-none"><img src="${AV_DEFAULT}" alt=""></span>`;
     return `<section class="screen f-garden" aria-label="내 정원"><div class="scroll" id="gardenScroll">
       <header class="f-ghead">${AMB(250)}${HILLS(60)}${av}
-        <div class="f-prof"><h1><button class="nick" data-act="nick" aria-label="이름 바꾸기">${esc(S.profile.nickname)}의 정원<span class="nick-ed">${I.edit}</span></button></h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p></div>
+        <div class="f-prof"><h1>${esc(S.profile.nickname)}의 정원</h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p><button class="f-profbtn" data-act="profile-open">${I.edit}${S.avatar === "me" ? "프로필 바꾸기" : "프로필 만들기"}</button></div>
         <a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
-        <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>모은 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
+        <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>발견한 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
       <div class="seg f-seg f-bedtabs" role="group" aria-label="정원 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">나의 정원 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">발견의 정원 ${col.length}</button></div>
       <section class="f-gsec" aria-label="${tab === "mine" ? "나의 정원" : "발견의 정원"}"><div class="f-sech"><h2>${tab === "mine" ? `나의 정원 <button class="f-mypetal" data-act="profile-open" aria-label="내 꽃잎 색 ${petalName(myPetal())}, 바꾸기"><i style="background:var(--st-${myPetal()}-petal,${BR.PAL[myPetal()].petal})"></i>${petalName(myPetal())}</button>` : "발견의 정원"}</h2><i></i><span>${gardenCount(tab === "mine" ? mine : colAll)}</span></div>
         <p class="f-bednote">${tab === "mine" ? `내가 심은 기억 ${BLOOM_N}개가 내 색 꽃 한 송이가 돼요.` : `발견한 기억 ${BLOOM_N}개가 한 송이가 돼요.<br>꽃잎마다 그 기억을 남긴 사람의 색으로 수놓여요.`}</p>
