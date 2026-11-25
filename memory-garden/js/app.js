@@ -282,7 +282,7 @@
   function emailSent(email) {
     openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>메일함을 확인해 주세요</h3><p class="av-note" style="margin:0"><b>${esc(email)}</b>(으)로 로그인 링크를 보냈어요.<br>링크를 누르면 이 화면으로 돌아와 로그인돼요.</p></div>
       <button class="btn btn-outline btn-block" data-act="email-open" data-v="${esc(email)}">주소 다시 입력하기</button><button class="btn btn-ghost" data-act="close">닫기</button>
-      <p class="reassure">메일이 안 보이면 스팸함도 확인해 주세요. 링크는 이 브라우저에서 열어야 해요.</p>`);
+      <p class="reassure">메일은 영어로 와요. 보낸 사람 <b>Supabase Auth</b>, 제목 "Your sign-in link" 또는 "Confirm…" 메일에서 <b>Sign in</b>(또는 Confirm) 링크를 눌러 주세요.<br>안 보이면 스팸함도 확인해 주세요. 링크는 이 브라우저에서 열어야 해요.</p>`);
   }
   function sendEmailLink(email, fresh) {
     API.loginEmail(email, { fresh }).then(() => emailSent(email)).catch(e => {
