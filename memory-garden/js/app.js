@@ -628,47 +628,56 @@
   }
 
   /* ---------------- GARDEN (M19 · M20 · M21 · M22) ---------------- */
-  const STITCH_PAL = ["bloom", "lav", "blue"];
-  // 나의 정원 자수: 타인 공개 기억을 현장에서 처음 발견할 때마다 한 땀. 발견 순서대로 BLOOM_N(3)개씩 묶여 꽃 한 송이가 돼요.
-  // 1번째 줄기·잎 → 2번째 꽃잎 → 3번째 가운데(완성). 내 기억은 '내가 심은 기억'에 따로.
-  function flowers(colAll) {
+  // ---- 정원 두 개 (2026-11-25 리마 결정) ----
+  // 내 꽃밭: 내가 심은 기억 3개 = 내 꽃잎 색 꽃 한 송이. 모은 꽃밭: 발견한 기억 3개 = 한 송이, 꽃잎마다 그 기억을 남긴 사람의 색.
+  // 꽃잎 색: 프로필에서 고르는 개인 색(BR.PETALS 8가지). 색을 안 고른 사람은 이름으로 정해진 색.
+  const PETAL_KEYS = BR.PETALS.map(p => p[0]);
+  const petalOfName = n => { let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PETAL_KEYS[h % PETAL_KEYS.length]; };
+  const myPetal = () => PETAL_KEYS.includes(S.profile.petal) ? S.profile.petal : "bloom";
+  const petalOf = m => m.mine ? myPetal() : PETAL_KEYS.includes(m.author && m.author.petal) ? m.author.petal : petalOfName(m.author && m.author.name);
+  const petalName = k => (BR.PETALS.find(p => p[0] === k) || [, ""])[1];
+  const bedList = kind => { const g = S.garden || { mine: [], collected: [] }; return S.forced === "empty" ? [] : kind === "mine" ? g.mine.slice().reverse() : g.collected; };
+  function flowers(list) {
     const out = [];
-    for (let i = 0; i < colAll.length; i += BLOOM_N) out.push(colAll.slice(i, i + BLOOM_N));
+    for (let i = 0; i < list.length; i += BLOOM_N) out.push(list.slice(i, i + BLOOM_N));
     return out;
   }
-  const flowerParts = f => Array.from({ length: BLOOM_N }, (_, k) => !f[k] ? "off" : f[k].gone ? "gone" : "on");
-  function samplerHTML(colAll) {
-    if (!colAll.length) return `<div class="f-cloth"><div class="f-cloth-empty"><b>첫 땀을 놓아 볼까요?</b><span>다른 사람의 기억을 ${BLOOM_N}번 발견하면 꽃 한 송이가 완성돼요</span></div></div>`;
-    const fl = flowers(colAll);
-    return `<div class="f-cloth"><div class="f-cloth-in">${fl.map((f, i) => {
+  const flowerParts = f => Array.from({ length: BLOOM_N }, (_, k) => !f[k] ? "off" : f[k].gone ? "gone" : petalOf(f[k]));
+  function samplerHTML(kind) {
+    const list = bedList(kind);
+    if (!list.length) return kind === "mine"
+      ? `<div class="f-cloth"><div class="f-cloth-empty"><b>첫 기억을 심어 볼까요?</b><span>기억을 ${BLOOM_N}개 심으면 내 색 꽃 한 송이가 피어요</span></div></div>`
+      : `<div class="f-cloth"><div class="f-cloth-empty"><b>첫 땀을 놓아 볼까요?</b><span>다른 사람의 기억을 ${BLOOM_N}번 발견하면 꽃 한 송이가 피어요</span></div></div>`;
+    return `<div class="f-cloth"><div class="f-cloth-in">${flowers(list).map((f, i) => {
       const done = f.length === BLOOM_N, allGone = f.every(m => m.gone);
       const label = done ? `${i + 1}번째 꽃, 완성${allGone ? ", 더 이상 열람할 수 없는 기억" : ""}` : `${i + 1}번째 꽃, ${f.length}/${BLOOM_N} 수놓음`;
-      return `<button class="st${done ? " done" : " grow"}${allGone ? " trace" : ""}" data-act="flower" data-i="${i}" aria-label="${label}">${BR.stitch(78, STITCH_PAL[i % 3], true, flowerParts(f))}${done ? "" : `<em class="st-n">${f.length}/${BLOOM_N}</em>`}</button>`;
+      return `<button class="st${done ? " done" : " grow"}${allGone ? " trace" : ""}" data-act="flower" data-k="${kind}" data-i="${i}" aria-label="${label}">${BR.stitch(78, myPetal(), true, flowerParts(f))}${done ? "" : `<em class="st-n">${f.length}/${BLOOM_N}</em>`}</button>`;
     }).join("")}</div></div>`;
   }
-  function openGone() { openModal(`<div class="gone-modal"><span class="ic">${I.info}</span><div><h3>더 이상 열람할 수 없는 기억이에요</h3><p class="av-note" style="margin:0">작성자가 기억을 지웠거나 비공개로 바꿨어요. 사진·글·작성자는 볼 수 없고, 발견했던 부분만 흐린 흔적 실로 남아요.</p></div></div><button class="btn btn-soft btn-block" data-act="close">확인</button>`); }
-  function flowerSheet(i) {
-    const g = S.garden; if (!g) return;
-    const f = flowers(g.collected)[i]; if (!f) return;
-    const done = f.length === BLOOM_N, PART = ["줄기·잎", "꽃잎", "가운데"];
+  function openGone() { openModal(`<div class="gone-modal"><span class="ic">${I.info}</span><div><h3>더 이상 열람할 수 없는 기억이에요</h3><p class="av-note" style="margin:0">작성자가 기억을 지웠거나 비공개로 바꿨어요.<br>사진·글·작성자는 볼 수 없고, 발견했던 꽃잎만 흐린 흔적 실로 남아요.</p></div></div><button class="btn btn-soft btn-block" data-act="close">확인</button>`); }
+  function flowerSheet(kind, i) {
+    const f = flowers(bedList(kind))[i]; if (!f) return;
+    const done = f.length === BLOOM_N, PART = ["첫 꽃잎", "둘째 꽃잎", "셋째 꽃잎"];
     const rows = Array.from({ length: BLOOM_N }, (_, k) => {
       const m = f[k];
-      if (!m) return `<li class="fl-row off"><span class="fl-part">${PART[k]}</span><div><b>아직 비어 있어요</b><span>다음에 발견하는 기억이 여기에 수놓여요</span></div></li>`;
+      if (!m) return `<li class="fl-row off"><span class="fl-part">${PART[k]}</span><div><b>아직 비어 있어요</b><span>${kind === "mine" ? "다음에 심는 기억이 여기에 수놓여요" : "다음에 발견하는 기억이 여기에 수놓여요"}</span></div></li>`;
       if (m.gone) return `<li><button class="fl-row gone" data-act="fl-gone"><span class="fl-part">${PART[k]}</span><div><b>더 이상 열람할 수 없는 기억</b><span>흔적만 남아 있어요</span></div></button></li>`;
-      return `<li><button class="fl-row" data-act="fl-open" data-id="${m.id}"><span class="fl-part">${PART[k]}</span><div><b>${esc(m.title)}</b><span>${esc(m.place)}</span></div><i class="fl-go" aria-hidden="true">›</i></button></li>`;
+      const pk = petalOf(m);
+      return `<li><button class="fl-row" data-act="fl-open" data-id="${m.id}"><span class="fl-part"><i class="fl-dot" style="background:var(--st-${pk}-petal,${BR.PAL[pk].petal})"></i>${PART[k]}</span><div><b>${esc(m.title)}</b><span>${kind === "mine" ? esc(m.place) : `${esc(m.author ? m.author.name : "정원사")}의 ${petalName(pk)} 실 · ${esc(m.place)}`}</span></div><i class="fl-go" aria-hidden="true">›</i></button></li>`;
     }).join("");
-    openModal(`<div class="fl-head">${BR.stitch(64, STITCH_PAL[i % 3], true, flowerParts(f))}<div><h3>${done ? `${i + 1}번째 꽃` : `피어나는 중인 꽃`}</h3><p class="av-note" style="margin:0">${done ? `기억 ${BLOOM_N}개로 완성한 꽃이에요.` : `${BLOOM_N - f.length}번 더 발견하면 꽃이 완성돼요.`}</p></div></div><ul class="fl-list">${rows}</ul>`);
+    const left = BLOOM_N - f.length;
+    openModal(`<div class="fl-head">${BR.stitch(64, myPetal(), true, flowerParts(f))}<div><h3>${done ? `${i + 1}번째 꽃` : `피어나는 중인 꽃`}</h3><p class="av-note" style="margin:0">${done ? (kind === "mine" ? `내가 심은 기억 ${BLOOM_N}개로 피운 꽃이에요.` : `기억 ${BLOOM_N}개가 함께 피운 꽃이에요.`) : kind === "mine" ? `${left}번 더 심으면 꽃이 완성돼요.` : `${left}번 더 발견하면 꽃이 완성돼요.`}</p></div></div><ul class="fl-list">${rows}</ul>`);
   }
   function nearbyHTML() {
     const list = S.near.filter(m => m.state === "undiscovered" && !isGone(m)).sort((a, b) => (distOf(a) ?? 1e9) - (distOf(b) ?? 1e9)).slice(0, 3);
     if (!list.length) return "";
     return `<section class="f-nearby" aria-label="근처의 발견 가능한 도안"><div class="h"><b>${I.crosshair}근처의 발견 가능한 도안</b><span>${locOk() ? "지금 위치 기준" : "지도 기준"}</span></div>
       <div class="row">${list.map(m => { const can = canOpen(m), d = distOf(m); return `<button class="f-pat ${can ? "can" : ""}" data-act="open" data-id="${m.id}">${BR.stitch(26, "locked")}<span>${can ? I.unlock : I.lock}<b>${d != null ? fmtDist(d) : "?"}</b><em>${can ? "열 수 있음" : "잠김"}</em></span></button>`; }).join("")}</div>
-      <p>위치가 바뀌면 이 목록은 달라져요. 위의 내 정원 자수는 그대로 남아요.</p></section>`;
+      <p>위치가 바뀌면 이 목록은 달라져요.<br>위의 모은 꽃밭은 그대로 남아요.</p></section>`;
   }
-  function gardenCount(colAll) {
-    if (!colAll.length) return "아직 비어 있어요";
-    const doneN = Math.floor(colAll.length / BLOOM_N), left = BLOOM_N - colAll.length % BLOOM_N;
+  function gardenCount(list) {
+    if (!list.length) return "아직 비어 있어요";
+    const doneN = Math.floor(list.length / BLOOM_N), left = BLOOM_N - list.length % BLOOM_N;
     return (doneN ? `${doneN}송이 완성` : "") + (left < BLOOM_N ? `${doneN ? " · " : ""}다음 꽃까지 ${left}번` : "");
   }
   function viewGarden() {
@@ -692,8 +701,11 @@
         <div class="f-prof"><h1><button class="nick" data-act="nick" aria-label="이름 바꾸기">${esc(S.profile.nickname)}의 정원<span class="nick-ed">${I.edit}</span></button></h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p></div>
         <a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
         <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>모은 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
-      <section class="f-gsec" aria-label="나의 정원 자수"><div class="f-sech"><h2>나의 정원 자수</h2><i></i><span>${gardenCount(colAll)}</span></div>${samplerHTML(colAll)}${nearbyHTML()}</section>
-      <div class="seg f-seg" role="group" aria-label="보기 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">내가 심은 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">모은 기억 ${col.length}</button></div>
+      <div class="seg f-seg f-bedtabs" role="group" aria-label="꽃밭 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">내 꽃밭 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">모은 꽃밭 ${col.length}</button></div>
+      <section class="f-gsec" aria-label="${tab === "mine" ? "내 꽃밭" : "모은 꽃밭"}"><div class="f-sech"><h2>${tab === "mine" ? `내 꽃밭 <button class="f-mypetal" data-act="profile-open" aria-label="내 꽃잎 색 ${petalName(myPetal())}, 바꾸기"><i style="background:var(--st-${myPetal()}-petal,${BR.PAL[myPetal()].petal})"></i>${petalName(myPetal())}</button>` : "모은 꽃밭"}</h2><i></i><span>${gardenCount(tab === "mine" ? mine : colAll)}</span></div>
+        <p class="f-bednote">${tab === "mine" ? `내가 심은 기억 ${BLOOM_N}개가 내 색 꽃 한 송이가 돼요.` : `발견한 기억 ${BLOOM_N}개가 한 송이가 돼요.<br>꽃잎마다 그 기억을 남긴 사람의 색으로 수놓여요.`}</p>
+        ${samplerHTML(tab === "mine" ? "mine" : "col")}${tab === "col" ? nearbyHTML() : ""}</section>
+      <div class="f-listh"><h2>${tab === "mine" ? "내가 심은 기억" : "모은 기억"}</h2></div>
       <div class="grid f-grid">${grid}</div></div>${tabbar("garden")}</section>`;
   }
   // M31 화면 테마 — 하나만 고를 수 있고, 바꿔도 화면·위치·글·캐릭터·자수는 그대로
@@ -709,6 +721,8 @@
       <div class="prof-opts">
         <button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>캐릭터로 꾸미기</b><span>머리·옷·신발을 골라 나만의 캐릭터를 만들어요</span></div></button>
         <label class="option"><span class="oi">${I.camera}</span><div><b>사진으로 바꾸기</b><span>앨범에서 사진 한 장을 골라요</span></div><input type="file" accept="image/*" data-act="prof-photo" aria-label="프로필 사진 고르기" hidden></label>
+        <div class="petal-pick"><b>내 꽃잎 색</b><span>내 꽃밭의 꽃, 다른 사람이 모은 꽃밭의 내 꽃잎이 이 색이에요</span>
+          <div class="petal-row" role="radiogroup" aria-label="내 꽃잎 색">${BR.PETALS.map(([k, n]) => `<button role="radio" aria-checked="${myPetal() === k}" aria-label="${n}" data-act="petal-set" data-v="${k}" style="--pc:var(--st-${k}-petal,${BR.PAL[k].petal})"><i></i><span>${n}</span></button>`).join("")}</div></div>
         <button class="option" data-act="nick"><span class="oi">${I.users}</span><div><b>정원 이름 바꾸기</b><span>지금 이름 · ${esc(S.profile.nickname)}</span></div></button>
       </div><button class="btn btn-ghost" data-act="close">닫기</button>`);
   }
@@ -1104,7 +1118,7 @@
       case "walk": walkTo(byId(id)); break;
       case "discover": { const m = byId(id); if (m && canOpen(m)) discover(id); break; }
       case "found-done": S.found = null; render(); break;
-      case "flower": flowerSheet(+t.dataset.i); break;
+      case "flower": flowerSheet(t.dataset.k, +t.dataset.i); break;
       case "fl-open": closeModal(); S.selected = null; location.hash = "#/m/" + id; break;
       case "fl-gone": closeModal(); openGone(); break;
       case "gone-info": openGone(); break;
@@ -1129,6 +1143,11 @@
       case "login": doLogin(); break;
       case "set-avatar": closeModal(); location.hash = "#/avatar"; break;
       case "profile-open": profileSheet(); break;
+      case "petal-set": {
+        const v = t.dataset.v, prev = S.profile.petal; S.profile.petal = v; profileSheet(); softRender(true);
+        API.updateProfile({ petal: v }).then(() => toast(`꽃잎 색을 ${petalName(v)}(으)로 바꿨어요`)).catch(e => { console.warn(e); S.profile.petal = prev; profileSheet(); softRender(true); toast("꽃잎 색을 저장하지 못했어요. 서버 설정(SQL)이 필요해요"); });
+        break;
+      }
       case "mkt-set": case "mkt-toggle": {
         const on = a === "mkt-set" ? t.dataset.v === "1" : !S.mkt;
         API.setMarketing(on).then(() => { S.mkt = on; closeModal(); if (a === "mkt-toggle") render(); toast(on ? "이메일 소식 받기에 동의했어요" : a === "mkt-set" ? "이메일 소식은 받지 않아요" : "이메일 소식 받기를 껐어요"); })

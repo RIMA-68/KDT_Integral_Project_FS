@@ -116,12 +116,19 @@
     bloom: { petal: "#D99AA0", petalL: "#EEC4C4", back: "#A39BC6", center: C.goldD, stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
     blue: { petal: "#8FB3D6", petalL: "#BFD6EC", back: "#A39BC6", center: C.goldD, stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
     lav: { petal: "#A39BC6", petalL: "#CFC8E4", back: "#D99AA0", center: C.goldD, stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
+    coral: { petal: "#E0897B", petalL: "#F2BDB3", back: "#A39BC6", center: C.goldD, stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
+    rose: { petal: "#C9667D", petalL: "#E6A9B8", back: "#E9CA88", center: C.goldD, stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
+    butter: { petal: "#D6B66F", petalL: "#EDDCAE", back: "#D99AA0", center: "#C98F4E", stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
+    mint: { petal: "#7FAE9F", petalL: "#BCD8CD", back: "#A39BC6", center: C.goldD, stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
+    plum: { petal: "#A9799E", petalL: "#D6B8CE", back: "#8FB3D6", center: C.goldD, stem: C.sageD, leaf: C.sage, leafL: "#C3D3B8" },
     trace: { petal: "#C8C1B8", petalL: "#DDD7CF", back: "#C8C1B8", center: "#BDB5AA", stem: "#C8C1B8", leaf: "#D3CDC4", leafL: "#DDD7CF" },
     locked: { petal: "#C9BFA9", petalL: "#DCD3C0", back: "#C9BFA9", center: "#BFB39A", stem: "#C9BFA9", leaf: "#D3CAB6", leafL: "#DCD3C0" }
   };
-  // 꽃 한 송이 = 발견 3번: 0 줄기·잎 → 1 꽃잎 → 2 가운데. parts = ["on"|"gone"|"off", …] (생략하면 다 수놓인 꽃)
-  // off = 아직 안 놓인 부분(연한 밑그림 점), gone = 지워진·비공개 기억이 놓았던 부분(흔적 색)
-  const PART_OF = k => (k === "stem" || k === "leaf" || k === "leafL") ? 0 : k === "center" ? 2 : 1;
+  // 개인 꽃잎 색 8가지(프로필에서 고름). 키는 서버 profiles.petal 값과 같아요.
+  const PETALS = [["bloom", "꽃분홍"], ["coral", "코랄"], ["rose", "장미"], ["butter", "버터"], ["mint", "민트"], ["blue", "하늘"], ["lav", "라벤더"], ["plum", "자두"]];
+  // 꽃 한 송이 = 기억 3개: 0 줄기·잎+왼쪽 꽃잎 → 1 위 꽃잎 → 2 오른쪽 꽃잎+가운데.
+  // parts = [상태, …] 상태: "on"(pal 색) | 꽃잎 색 키(그 사람 색) | "gone"(흔적 색) | "off"(아직 안 놓임, 연한 점). 생략하면 다 수놓인 꽃.
+  const PART_OF = (k, x, y) => (k === "stem" || k === "leaf" || k === "leafL") ? 0 : k === "center" ? 2 : ((y <= 3 && x >= 4 && x <= 8) || (y === 4 && x === 6)) ? 1 : x < 6 ? 0 : 2;
   function stitch(s = 120, pal = "bloom", withStem = true, parts = null) {
     if (!PAL[pal]) pal = "bloom";
     const cols = PAL[pal], cell = 200 / 13, rows = withStem ? 15 : 13;
@@ -129,14 +136,14 @@
     let i = "";
     for (const [x, y, k] of cells) {
       const X = x * cell, Y = y * cell, d = cell * 0.2;
-      const st = parts ? (parts[PART_OF(k)] || "off") : "on";
+      const st = parts ? (parts[PART_OF(k, x, y)] || "off") : "on";
       if (st === "off") { i += `<circle class="guide" cx="${(X + cell / 2).toFixed(1)}" cy="${(Y + cell / 2).toFixed(1)}" r="${(cell * 0.14).toFixed(1)}" style="fill:var(--st-guide,#CFC3B4)"/>`; continue; }
-      const p = st === "gone" ? "trace" : pal, c = PAL[p][k];
+      const p = st === "gone" ? "trace" : PAL[st] ? st : pal, c = PAL[p][k];
       i += `<path d="M${(X + d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + cell - d).toFixed(1)} ${(Y + cell - d).toFixed(1)} M${(X + cell - d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + d).toFixed(1)} ${(Y + cell - d).toFixed(1)}" style="stroke:var(--st-${p}-${k},${c})" stroke="${c}" stroke-width="${(cell * 0.26).toFixed(1)}" stroke-linecap="round"/>`;
     }
     const h = Math.round(s * (rows - 1) / 13);
     return `<svg class="mg-stitch" width="${s}" height="${h}" viewBox="0 0 200 ${((rows - 1) * cell).toFixed(1)}" fill="none" aria-hidden="true">${i}</svg>`;
   }
 
-  window.MG_BRAND = { seed, photoOrb, seedPin, flower, glow, pinFlower, stitch, C };
+  window.MG_BRAND = { PETALS, PAL, seed, photoOrb, seedPin, flower, glow, pinFlower, stitch, C };
 })();

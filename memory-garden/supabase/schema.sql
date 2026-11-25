@@ -49,6 +49,10 @@ create table if not exists public.profiles (
   avatar_url text check (avatar_url is null or char_length(avatar_url) <= 300),          -- 꾸민 캐릭터 이미지(공개 버킷)
   created_at timestamptz not null default now()
 );
+-- 개인 꽃잎 색(2026-11-25 추가): 내 꽃밭의 꽃 색, 다른 사람이 모은 꽃밭에서 내 기억 부분의 색
+alter table public.profiles add column if not exists petal text not null default 'bloom';
+alter table public.profiles drop constraint if exists profiles_petal_check;
+alter table public.profiles add constraint profiles_petal_check check (petal in ('bloom','coral','rose','butter','mint','blue','lav','plum'));
 alter table public.profiles enable row level security;
 drop policy if exists "profiles readable" on public.profiles;
 drop policy if exists "profiles insert own" on public.profiles;
@@ -180,7 +184,7 @@ returns jsonb language sql stable security definer set search_path = public as $
     'visibility', m.visibility, 'created_at', m.created_at,
     -- 좌표는 지도 핀용(소수 4자리 ≈ 10m). 화면 글자로는 쓰지 않아요.
     'lat', round(m.lat::numeric, 4), 'lng', round(m.lng::numeric, 4),
-    'author', jsonb_build_object('nickname', p.nickname, 'avatar', p.avatar, 'avatar_url', p.avatar_url),
+    'author', jsonb_build_object('nickname', p.nickname, 'avatar', p.avatar, 'avatar_url', p.avatar_url, 'petal', coalesce(p.petal, 'bloom')),
     'hearts', (select count(*) from public.hearts h where h.memory_id = m.id),
     'liked',  exists (select 1 from public.hearts h where h.memory_id = m.id and h.user_id = auth.uid()),
     'first_dist_m', (select d.first_dist_m from public.discoveries d where d.memory_id = m.id and d.user_id = auth.uid()),

@@ -586,3 +586,32 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .prof-opts{display:flex;flex-direction:column;gap:8px}
 .prof-opts .option{cursor:pointer}
 .set-prof{min-height:68px}
+
+:root[data-theme="night"]{
+  --st-coral-petal:#F4A193; --st-coral-petalL:#FBD0C7; --st-coral-back:#9C9EEC; --st-coral-center:#E9CA88; --st-coral-stem:#86B596; --st-coral-leaf:#A6CDB1; --st-coral-leafL:#C8E2CF;
+  --st-rose-petal:#EE8FA6; --st-rose-petalL:#F7C3D0; --st-rose-back:#E9CA88; --st-rose-center:#E9CA88; --st-rose-stem:#86B596; --st-rose-leaf:#A6CDB1; --st-rose-leafL:#C8E2CF;
+  --st-butter-petal:#EBCF8A; --st-butter-petalL:#F6E6BE; --st-butter-back:#F1A9BE; --st-butter-center:#E9CA88; --st-butter-stem:#86B596; --st-butter-leaf:#A6CDB1; --st-butter-leafL:#C8E2CF;
+  --st-mint-petal:#8FD0BC; --st-mint-petalL:#C6EADF; --st-mint-back:#9C9EEC; --st-mint-center:#E9CA88; --st-mint-stem:#86B596; --st-mint-leaf:#A6CDB1; --st-mint-leafL:#C8E2CF;
+  --st-plum-petal:#D3A1C7; --st-plum-petalL:#EBCDE2; --st-plum-back:#8EC1F0; --st-plum-center:#E9CA88; --st-plum-stem:#86B596; --st-plum-leaf:#A6CDB1; --st-plum-leafL:#C8E2CF;
+}
+
+/* ---------- 정원 둘: 내 꽃밭 · 모은 꽃밭 + 개인 꽃잎 색 ---------- */
+.f-bedtabs{position:relative;z-index:2;margin:16px 20px 0}
+.f-gsec .f-sech h2{display:flex;align-items:center;gap:8px}
+.f-mypetal{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px 0 6px;border-radius:13px;background:var(--color-surface-sunk);font-size:12px;font-weight:700;color:var(--color-text-sub)}
+.f-mypetal i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.f-bednote{margin:-4px 0 0;font-size:13px;line-height:19px;color:var(--color-text-sub)}
+.f-listh{padding:8px 20px 0}
+.f-listh h2{font-size:16px;font-weight:700;margin:0}
+.f-listh+.f-grid{padding-top:12px}
+.fl-part{display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.fl-dot{width:10px;height:10px;border-radius:50%;flex:none}
+.petal-pick{padding:14px 16px;border-radius:16px;background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-line);display:flex;flex-direction:column;gap:2px}
+.petal-pick>b{font-size:16px;font-weight:700}
+.petal-pick>span{font-size:13px;color:var(--color-text-sub)}
+.petal-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px;margin-top:10px}
+.petal-row button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border-radius:12px}
+.petal-row i{width:32px;height:32px;border-radius:50%;background:var(--pc);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.petal-row button[aria-checked="true"] i{box-shadow:0 0 0 2px var(--color-bg),0 0 0 4px var(--color-text)}
+.petal-row span{font-size:12px;color:var(--color-text-sub)}
+.petal-row button[aria-checked="true"] span{color:var(--color-text);font-weight:700}

@@ -14,7 +14,7 @@
 
   const visIn = v => v === "private" ? "me" : "all";
   const visOut = v => v === "me" ? "private" : "public";
-  const authorOf = a => a ? { name: a.nickname || "정원사", avatar: a.avatar === "me" && a.avatar_url ? a.avatar_url : (a.avatar && a.avatar !== "me" ? a.avatar : "char-lavender") } : { name: "정원사", avatar: "char-lavender" };
+  const authorOf = a => a ? { name: a.nickname || "정원사", avatar: a.avatar === "me" && a.avatar_url ? a.avatar_url : (a.avatar && a.avatar !== "me" ? a.avatar : "char-lavender"), petal: a.petal || null } : { name: "정원사", avatar: "char-lavender", petal: null };
 
   /* =================================================================== */
   /* Supabase                                                              */
@@ -123,7 +123,7 @@
         catch (_) { return DEFAULTS; }
       },
       async profile() {
-        const { data, error } = await sb.from("profiles").select("nickname, avatar, avatar_url").eq("id", uid).maybeSingle();
+        const { data, error } = await sb.from("profiles").select("*").eq("id", uid).maybeSingle();
         if (error) throw new ApiError("profile", error.message);
         return data || { nickname: "정원사", avatar: "char-lavender" };
       },
