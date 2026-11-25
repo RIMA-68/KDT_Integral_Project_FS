@@ -119,14 +119,20 @@
     trace: { petal: "#C8C1B8", petalL: "#DDD7CF", back: "#C8C1B8", center: "#BDB5AA", stem: "#C8C1B8", leaf: "#D3CDC4", leafL: "#DDD7CF" },
     locked: { petal: "#C9BFA9", petalL: "#DCD3C0", back: "#C9BFA9", center: "#BFB39A", stem: "#C9BFA9", leaf: "#D3CAB6", leafL: "#DCD3C0" }
   };
-  function stitch(s = 120, pal = "bloom", withStem = true) {
+  // 꽃 한 송이 = 발견 3번: 0 줄기·잎 → 1 꽃잎 → 2 가운데. parts = ["on"|"gone"|"off", …] (생략하면 다 수놓인 꽃)
+  // off = 아직 안 놓인 부분(연한 밑그림 점), gone = 지워진·비공개 기억이 놓았던 부분(흔적 색)
+  const PART_OF = k => (k === "stem" || k === "leaf" || k === "leafL") ? 0 : k === "center" ? 2 : 1;
+  function stitch(s = 120, pal = "bloom", withStem = true, parts = null) {
     if (!PAL[pal]) pal = "bloom";
     const cols = PAL[pal], cell = 200 / 13, rows = withStem ? 15 : 13;
     const cells = withStem ? CELLS.filter(c => c[1] <= 8).concat(STEM.map(c => [c[0], c[1] - 1, c[2]])) : CELLS;
     let i = "";
     for (const [x, y, k] of cells) {
       const X = x * cell, Y = y * cell, d = cell * 0.2;
-      i += `<path d="M${(X + d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + cell - d).toFixed(1)} ${(Y + cell - d).toFixed(1)} M${(X + cell - d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + d).toFixed(1)} ${(Y + cell - d).toFixed(1)}" style="stroke:var(--st-${pal}-${k},${cols[k]})" stroke="${cols[k]}" stroke-width="${(cell * 0.26).toFixed(1)}" stroke-linecap="round"/>`;
+      const st = parts ? (parts[PART_OF(k)] || "off") : "on";
+      if (st === "off") { i += `<circle class="guide" cx="${(X + cell / 2).toFixed(1)}" cy="${(Y + cell / 2).toFixed(1)}" r="${(cell * 0.14).toFixed(1)}" style="fill:var(--st-guide,#CFC3B4)"/>`; continue; }
+      const p = st === "gone" ? "trace" : pal, c = PAL[p][k];
+      i += `<path d="M${(X + d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + cell - d).toFixed(1)} ${(Y + cell - d).toFixed(1)} M${(X + cell - d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + d).toFixed(1)} ${(Y + cell - d).toFixed(1)}" style="stroke:var(--st-${p}-${k},${c})" stroke="${c}" stroke-width="${(cell * 0.26).toFixed(1)}" stroke-linecap="round"/>`;
     }
     const h = Math.round(s * (rows - 1) / 13);
     return `<svg class="mg-stitch" width="${s}" height="${h}" viewBox="0 0 200 ${((rows - 1) * cell).toFixed(1)}" fill="none" aria-hidden="true">${i}</svg>`;

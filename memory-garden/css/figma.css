@@ -521,3 +521,28 @@ body{background:var(--color-bg)}
 
 /* 화면은 세로로만 스크롤 — 배경 장식이 옆으로 삐져나와 가로 스크롤이 생기지 않게 */
 .scroll{overflow-x:hidden}
+
+/* ---------- 정원 자수: 3번 발견하면 꽃 한 송이 ---------- */
+:root{--st-guide:#CDBDA9}
+:root[data-theme="night"]{--st-guide:#4A4F7A}
+.f-cloth-in .st{position:relative}
+.f-cloth-in .st .guide{opacity:.9}
+.f-cloth-in .st-n{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);font-style:normal;font-family:var(--font-pix),var(--font-body);font-size:11px;font-weight:700;letter-spacing:.4px;line-height:16px;padding:0 6px;border-radius:8px;background:var(--color-surface);color:var(--f-accent);box-shadow:0 0 0 1px var(--color-line)}
+.f-cloth-in .st.done:not(.trace) .mg-stitch{animation:flBloom .9s var(--ease-out) both}
+@keyframes flBloom{0%{filter:drop-shadow(0 0 0 rgba(233,202,136,0))}40%{filter:drop-shadow(0 0 8px rgba(233,202,136,.9))}100%{filter:drop-shadow(0 0 0 rgba(233,202,136,0))}}
+:root[data-theme="night"] .f-cloth-in .st.grow .mg-stitch{filter:none}
+@media (prefers-reduced-motion:reduce){.f-cloth-in .st.done .mg-stitch{animation:none}}
+.fl-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.fl-head .mg-stitch{flex:none}
+.fl-head h3{margin:0 0 4px}
+.fl-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.fl-row{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--color-surface-sunk);text-align:left;color:var(--color-text)}
+.fl-row div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fl-row b{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-row div span{font-size:13px;color:var(--color-text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-part{flex:none;min-width:52px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:10px;background:var(--color-surface);color:var(--f-accent)}
+.fl-row.off{background:transparent;border:1.2px dashed var(--f-outline);opacity:.85}
+.fl-row.off b{font-weight:600;color:var(--color-text-sub)}
+.fl-row.gone b{color:var(--color-text-sub)}
+.fl-row.gone .fl-part{color:var(--color-text-faint)}
+.fl-go{font-style:normal;font-size:22px;line-height:1;color:var(--color-text-faint)}
