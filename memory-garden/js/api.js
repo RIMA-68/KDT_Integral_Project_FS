@@ -54,6 +54,8 @@
       firstDist: j.first_dist_m, replies: (j.replies || []).map(r => ({ id: r.id, name: r.nickname || "정원사", avatar: authorOf(r).avatar, text: r.body, date: r.created_at, mine: r.mine })), full: true
     });
 
+    // 카카오 로그인 때마다 계정 고르기 화면을 띄워요(브라우저에 남은 카카오 로그인으로 예전 계정에 자동으로 붙지 않게)
+    const KAKAO_PICK = { prompt: "select_account" };
     return {
       mode: "live",
       async init() {
@@ -74,7 +76,7 @@
       // 익명으로 쓰던 기록을 그대로 카카오 계정에 이어 붙여요. 카카오 화면으로 이동했다가 돌아와요.
       async loginKakao() {
         try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
-        const opts = { provider: "kakao", options: { redirectTo: back() } };
+        const opts = { provider: "kakao", options: { redirectTo: back(), queryParams: KAKAO_PICK } };
         const { error } = user && user.is_anonymous ? await sb.auth.linkIdentity(opts) : await sb.auth.signInWithOAuth(opts);
         if (error) throw new ApiError(/manual linking/i.test(error.message) ? "linking_disabled" : "login", error.message);
       },
@@ -82,7 +84,7 @@
       async switchToKakao() {
         await sb.auth.signOut({ scope: "local" });
         try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
-        const { error } = await sb.auth.signInWithOAuth({ provider: "kakao", options: { redirectTo: back() } });
+        const { error } = await sb.auth.signInWithOAuth({ provider: "kakao", options: { redirectTo: back(), queryParams: KAKAO_PICK } });
         if (error) throw new ApiError("login", error.message);
       },
       async logout() { await sb.auth.signOut({ scope: "local" }); },
