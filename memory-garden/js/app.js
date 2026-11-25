@@ -318,9 +318,15 @@
       <button class="btn btn-primary btn-block" data-act="mkt-set" data-v="1">(선택) 동의하고 받기</button><button class="btn btn-ghost" data-act="mkt-set" data-v="0">받지 않을게요</button>
       <p class="reassure">내 정원 → 설정에서 언제든 바꿀 수 있어요.</p>`);
   }
-  function doLogin() {
+  // 임시 정원에 남긴 게 없으면(새 기기 등) 이어 붙일 필요가 없어 바로 로그인해요 → '이미 정원이 있는 계정' 안내와 두 번째 로그인이 생기지 않아요
+  async function anonEmpty() {
+    if (API.member()) return false;
+    try { const g = S.garden || await API.garden(); return !!g && !g.mine.length && !g.collected.length; } catch (_) { return false; }
+  }
+  async function doLogin() {
     toast("카카오 로그인 화면으로 이동해요");
-    API.loginKakao().catch(e => { console.error(e); toast(e.code === "linking_disabled" ? "서버 설정이 필요해요: Supabase에서 manual linking을 켜 주세요" : "로그인을 시작하지 못했어요. 다시 시도해 주세요"); });
+    const fresh = await anonEmpty();
+    API.loginKakao({ fresh }).catch(e => { console.error(e); toast(e.code === "linking_disabled" ? "서버 설정이 필요해요: Supabase에서 manual linking을 켜 주세요" : "로그인을 시작하지 못했어요. 다시 시도해 주세요"); });
   }
 
   /* ---------------- HOME / MAP ---------------- */
@@ -1163,12 +1169,12 @@
       case "email-send": {
         const v = ((document.getElementById("emailInput") || {}).value || "").trim();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { toast("이메일 주소를 확인해 주세요"); break; }
-        t.disabled = true; t.textContent = "보내는 중…"; sendEmailLink(v, API.member()); break;
+        t.disabled = true; t.textContent = "보내는 중…"; (API.member() ? Promise.resolve(true) : anonEmpty()).then(fresh => sendEmailLink(v, fresh)); break;
       }
       case "email-fresh": sendEmailLink(t.dataset.v, true); break;
       case "logout-open": openModal(`<h3>로그아웃할까요?</h3><p class="av-note" style="margin:0">정원은 계정에 그대로 남아 있어요.<br>다시 로그인하면 이어서 볼 수 있어요.</p>
         <button class="btn btn-primary btn-block" data-act="logout">로그아웃</button><button class="btn btn-ghost" data-act="close">취소</button>`); break;
-      case "login-switch": API.switchToKakao().catch(() => toast("로그인을 시작하지 못했어요")); break;
+      case "login-switch": API.switchToKakao({ pick: false }).catch(() => toast("로그인을 시작하지 못했어요")); break;
       case "logout": API.logout().then(() => { try { localStorage.removeItem("mg:avatar"); localStorage.removeItem("mg:look"); localStorage.removeItem("mg:portrait"); } catch (_) { } location.hash = "#/"; location.reload(); }); break;
       case "nick-save": {
         const v = ((document.getElementById("nickInput") || {}).value || "").trim(); if (!v) { toast("한 글자 이상 써 주세요"); break; }
