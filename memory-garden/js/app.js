@@ -273,7 +273,7 @@
   const emailBtn = (label) => hasEmail() ? `<button class="btn btn-outline btn-block btn-mail" data-act="email-open">${MAIL_ICON}${label || "이메일로 시작하기"}</button>` : "";
   // 이메일 링크 로그인: 비밀번호 없이 메일로 받은 링크를 눌러 로그인
   function emailSheet(prefill) {
-    openModal(`<h3>이메일로 로그인</h3><p class="av-note" style="margin:0">입력한 주소로 로그인 링크를 보내 드려요.<br>비밀번호는 필요 없어요.</p>
+    openModal(`<h3>이메일로 로그인</h3><p class="av-note" style="margin:0">입력한 주소로 로그인 링크를 보내 드려요.<br>비밀번호는 필요하지 않아요.</p>
       <label class="field"><span>이메일 주소</span><input id="emailInput" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${esc(prefill || "")}"></label>
       <button class="btn btn-primary btn-block" data-act="email-send">로그인 링크 받기</button><button class="btn btn-ghost" data-act="close">취소</button>
       <p class="reassure">메일의 링크는 지금 쓰는 이 브라우저에서 열어 주세요.</p>`);
@@ -282,7 +282,7 @@
   function emailSent(email) {
     openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>메일함을 확인해 주세요</h3><p class="av-note" style="margin:0"><b>${esc(email)}</b>(으)로 로그인 링크를 보냈어요.<br>링크를 누르면 이 화면으로 돌아와 로그인돼요.</p></div>
       <button class="btn btn-outline btn-block" data-act="email-open" data-v="${esc(email)}">주소 다시 입력하기</button><button class="btn btn-ghost" data-act="close">닫기</button>
-      <p class="reassure">메일은 영어로 와요. 보낸 사람 <b>Supabase Auth</b>, 제목 "Your sign-in link" 또는 "Confirm…" 메일에서 <b>Sign in</b>(또는 Confirm) 링크를 눌러 주세요.<br>안 보이면 스팸함도 확인해 주세요. 링크는 이 브라우저에서 열어야 해요.</p>`);
+      <p class="reassure">메일은 영어로 와요.<br>보낸 사람 <b>Supabase Auth</b>, 제목 "Your sign-in link" 또는 "Confirm…" 메일이에요.<br>메일 안의 <b>Sign in</b>(또는 Confirm) 링크를 눌러 주세요.<br>메일이 안 보이면 스팸함도 확인해 주세요.<br>링크는 이 브라우저에서 열어야 해요.</p>`);
   }
   function sendEmailLink(email, fresh) {
     API.loginEmail(email, { fresh }).then(() => emailSent(email)).catch(e => {
