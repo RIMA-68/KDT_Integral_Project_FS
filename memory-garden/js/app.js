@@ -629,7 +629,7 @@
 
   /* ---------------- GARDEN (M19 · M20 · M21 · M22) ---------------- */
   // ---- 정원 두 개 (2026-11-25 리마 결정) ----
-  // 내 꽃밭: 내가 심은 기억 3개 = 내 꽃잎 색 꽃 한 송이. 모은 꽃밭: 발견한 기억 3개 = 한 송이, 꽃잎마다 그 기억을 남긴 사람의 색.
+  // 나의 정원: 내가 심은 기억 3개 = 내 꽃잎 색 꽃 한 송이. 발견의 정원: 발견한 기억 3개 = 한 송이, 꽃잎마다 그 기억을 남긴 사람의 색.
   // 꽃잎 색: 프로필에서 고르는 개인 색(BR.PETALS 8가지). 색을 안 고른 사람은 이름으로 정해진 색.
   const PETAL_KEYS = BR.PETALS.map(p => p[0]);
   const petalOfName = n => { let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PETAL_KEYS[h % PETAL_KEYS.length]; };
@@ -673,7 +673,7 @@
     if (!list.length) return "";
     return `<section class="f-nearby" aria-label="근처의 발견 가능한 도안"><div class="h"><b>${I.crosshair}근처의 발견 가능한 도안</b><span>${locOk() ? "지금 위치 기준" : "지도 기준"}</span></div>
       <div class="row">${list.map(m => { const can = canOpen(m), d = distOf(m); return `<button class="f-pat ${can ? "can" : ""}" data-act="open" data-id="${m.id}">${BR.stitch(26, "locked")}<span>${can ? I.unlock : I.lock}<b>${d != null ? fmtDist(d) : "?"}</b><em>${can ? "열 수 있음" : "잠김"}</em></span></button>`; }).join("")}</div>
-      <p>위치가 바뀌면 이 목록은 달라져요.<br>위의 모은 꽃밭은 그대로 남아요.</p></section>`;
+      <p>위치가 바뀌면 이 목록은 달라져요.<br>위의 발견의 정원은 그대로 남아요.</p></section>`;
   }
   function gardenCount(list) {
     if (!list.length) return "아직 비어 있어요";
@@ -701,11 +701,11 @@
         <div class="f-prof"><h1><button class="nick" data-act="nick" aria-label="이름 바꾸기">${esc(S.profile.nickname)}의 정원<span class="nick-ed">${I.edit}</span></button></h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p></div>
         <a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
         <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>모은 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
-      <div class="seg f-seg f-bedtabs" role="group" aria-label="꽃밭 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">내 꽃밭 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">모은 꽃밭 ${col.length}</button></div>
-      <section class="f-gsec" aria-label="${tab === "mine" ? "내 꽃밭" : "모은 꽃밭"}"><div class="f-sech"><h2>${tab === "mine" ? `내 꽃밭 <button class="f-mypetal" data-act="profile-open" aria-label="내 꽃잎 색 ${petalName(myPetal())}, 바꾸기"><i style="background:var(--st-${myPetal()}-petal,${BR.PAL[myPetal()].petal})"></i>${petalName(myPetal())}</button>` : "모은 꽃밭"}</h2><i></i><span>${gardenCount(tab === "mine" ? mine : colAll)}</span></div>
+      <div class="seg f-seg f-bedtabs" role="group" aria-label="정원 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">나의 정원 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">발견의 정원 ${col.length}</button></div>
+      <section class="f-gsec" aria-label="${tab === "mine" ? "나의 정원" : "발견의 정원"}"><div class="f-sech"><h2>${tab === "mine" ? `나의 정원 <button class="f-mypetal" data-act="profile-open" aria-label="내 꽃잎 색 ${petalName(myPetal())}, 바꾸기"><i style="background:var(--st-${myPetal()}-petal,${BR.PAL[myPetal()].petal})"></i>${petalName(myPetal())}</button>` : "발견의 정원"}</h2><i></i><span>${gardenCount(tab === "mine" ? mine : colAll)}</span></div>
         <p class="f-bednote">${tab === "mine" ? `내가 심은 기억 ${BLOOM_N}개가 내 색 꽃 한 송이가 돼요.` : `발견한 기억 ${BLOOM_N}개가 한 송이가 돼요.<br>꽃잎마다 그 기억을 남긴 사람의 색으로 수놓여요.`}</p>
         ${samplerHTML(tab === "mine" ? "mine" : "col")}${tab === "col" ? nearbyHTML() : ""}</section>
-      <div class="f-listh"><h2>${tab === "mine" ? "내가 심은 기억" : "모은 기억"}</h2></div>
+      <div class="f-listh"><h2>${tab === "mine" ? "내가 심은 기억" : "발견한 기억"}</h2></div>
       <div class="grid f-grid">${grid}</div></div>${tabbar("garden")}</section>`;
   }
   // M31 화면 테마 — 하나만 고를 수 있고, 바꿔도 화면·위치·글·캐릭터·자수는 그대로
@@ -721,7 +721,7 @@
       <div class="prof-opts">
         <button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>캐릭터로 꾸미기</b><span>머리·옷·신발을 골라 나만의 캐릭터를 만들어요</span></div></button>
         <label class="option"><span class="oi">${I.camera}</span><div><b>사진으로 바꾸기</b><span>앨범에서 사진 한 장을 골라요</span></div><input type="file" accept="image/*" data-act="prof-photo" aria-label="프로필 사진 고르기" hidden></label>
-        <div class="petal-pick"><b>내 꽃잎 색</b><span>내 꽃밭의 꽃, 다른 사람이 모은 꽃밭의 내 꽃잎이 이 색이에요</span>
+        <div class="petal-pick"><b>내 꽃잎 색</b><span>나의 정원의 꽃과, 다른 사람의 발견의 정원에 놓인<br>내 꽃잎이 이 색이에요</span>
           <div class="petal-row" role="radiogroup" aria-label="내 꽃잎 색">${BR.PETALS.map(([k, n]) => `<button role="radio" aria-checked="${myPetal() === k}" aria-label="${n}" data-act="petal-set" data-v="${k}" style="--pc:var(--st-${k}-petal,${BR.PAL[k].petal})"><i></i><span>${n}</span></button>`).join("")}</div></div>
         <button class="option" data-act="nick"><span class="oi">${I.users}</span><div><b>정원 이름 바꾸기</b><span>지금 이름 · ${esc(S.profile.nickname)}</span></div></button>
       </div><button class="btn btn-ghost" data-act="close">닫기</button>`);
