@@ -950,6 +950,7 @@
       S.look = Object.assign({}, AV.draft); S.portrait = url; S.avatar = "me"; AV.base = Object.assign({}, AV.draft);
       // 다른 사람이 내 기억을 발견했을 때 보일 작성자 그림(공개 버킷). 실패해도 이 기기에서는 그대로 보여요.
       API.uploadAvatar(url).then(u => { S.profile.avatar = "me"; S.profile.avatar_url = u; }).catch(e => console.warn("[avatar upload]", e));
+      API.saveLook(Object.assign({}, AV.draft)).catch(e => console.warn("[look save]", e));
       toast(ok ? "내 캐릭터를 저장했어요" : "이 기기에 저장하지 못해서, 이번 방문 동안만 유지돼요");
       location.hash = thenGo || "#/garden";
     }, 40);
@@ -1358,6 +1359,10 @@
       S.set = set; if (prof) S.profile = prof;
       // 다른 기기(휴대폰)에서 만든 캐릭터·사진도 보이게: 서버 프로필의 이미지를 이 기기에도 반영
       if (prof && prof.avatar === "me" && prof.avatar_url) { S.avatar = "me"; S.portrait = prof.avatar_url; store.set("avatar", "me"); store.set("portrait", prof.avatar_url); }
+      // 캐릭터 파츠도 계정 기준으로 맞춰요. 계정에 없고 이 기기에만 있으면(예전 저장분) 계정으로 올려 둬요
+      const sLook = API.look();
+      if (sLook) { S.look = sLook; store.set("look", sLook); }
+      else if (S.look && prof && prof.avatar === "me") API.saveLook(S.look).catch(e => console.warn("[look sync]", e));
       S.boot = "ok"; S.loginError = info && info.loginError; S.justLoggedIn = info && info.justLoggedIn;
       // 카카오로 처음 로그인했으면 기본 닉네임 대신 카카오 이름을 써요(정원에서 바꿀 수 있어요)
       const kname = API.member() && API.memberName();

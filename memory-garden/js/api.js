@@ -133,6 +133,13 @@
         const { error } = await sb.from("profiles").update(patch).eq("id", uid);
         if (error) throw new ApiError("profile", error.message);
       },
+      // 캐릭터 파츠 선택(look)은 계정(user_metadata)에 저장해서 다른 기기에서도 이어서 고칠 수 있게 해요
+      look() { const m = (user && user.user_metadata) || {}; return m.mg_look && typeof m.mg_look === "object" ? m.mg_look : null; },
+      async saveLook(look) {
+        const { data, error } = await sb.auth.updateUser({ data: { mg_look: look } });
+        if (error) throw new ApiError("profile", error.message);
+        if (data && data.user) user = data.user;
+      },
       async uploadAvatar(dataUrl) {
         const blob = await (await fetch(dataUrl)).blob();
         const path = `${uid}/portrait.png`;
@@ -250,6 +257,8 @@
       async settings() { return S; },
       async profile() { return db.profile; },
       async updateProfile(p) { Object.assign(db.profile, p); persist(); },
+      look() { return db.profile.look || null; },
+      async saveLook(l) { db.profile.look = l; persist(); },
       async uploadAvatar(dataUrl) { db.profile.avatar = "me"; db.profile.avatar_url = dataUrl; persist(); return dataUrl; },
       async nearby(pos) {
         await wait(350);
