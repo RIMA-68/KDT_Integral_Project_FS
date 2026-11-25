@@ -621,3 +621,9 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .f-av-none img{object-position:50% 50%;border-radius:50%}
 .f-profbtn{align-self:flex-start;margin-top:8px;display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:15px;background:var(--color-surface);box-shadow:var(--f-s);font-size:13px;font-weight:700;color:var(--color-text)}
 .f-profbtn svg{width:14px;height:14px}
+
+/* 프로필 블록: 이름·소개·버튼을 프로필 사진(88px) 높이 안에 맞춰 위·아래 끝선을 사진과 맞춤 */
+.f-garden .f-prof{top:calc(var(--safe-top) + 20px);height:88px;gap:0;justify-content:space-between}
+.f-garden .f-prof h1{line-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f-garden .f-prof p{line-height:18px;margin-top:-6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f-garden .f-profbtn{margin-top:0;height:28px;padding:0 12px 0 10px;font-size:12.5px}
