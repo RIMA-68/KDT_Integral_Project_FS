@@ -671,25 +671,29 @@
     for (let i = 0; i < list.length; i += BLOOM_N) out.push(list.slice(i, i + BLOOM_N));
     return out;
   }
-  const flowerParts = f => Array.from({ length: BLOOM_N }, (_, k) => !f[k] ? "off" : f[k].gone ? "gone" : petalOf(f[k]));
+  const foldPetal = m => PETAL_KEYS.includes(m.petal) ? m.petal : "lav";
+  const flowerParts = f => Array.from({ length: BLOOM_N }, (_, k) => !f[k] ? "off" : f[k].folded ? "folded:" + foldPetal(f[k]) : f[k].gone ? "gone" : petalOf(f[k]));
   function samplerHTML(kind) {
     const list = bedList(kind);
     if (!list.length) return kind === "mine"
       ? `<div class="f-cloth"><div class="f-cloth-empty"><b>첫 기억을 심어 볼까요?</b><span>기억을 ${BLOOM_N}개 심으면 내 색 꽃 한 송이가 피어요</span></div></div>`
       : `<div class="f-cloth"><div class="f-cloth-empty"><b>첫 땀을 놓아 볼까요?</b><span>다른 사람의 기억을 ${BLOOM_N}번 발견하면 꽃 한 송이가 피어요</span></div></div>`;
     return `<div class="f-cloth"><div class="f-cloth-in">${flowers(list).map((f, i) => {
-      const done = f.length === BLOOM_N, allGone = f.every(m => m.gone);
+      const done = f.length === BLOOM_N, allGone = f.every(m => m.gone && !m.folded);
       const label = done ? `${i + 1}번째 꽃, 완성${allGone ? ", 더 이상 열람할 수 없는 기억" : ""}` : `${i + 1}번째 꽃, ${f.length}/${BLOOM_N} 수놓음`;
       return `<button class="st${done ? " done" : " grow"}${allGone ? " trace" : ""}" data-act="flower" data-k="${kind}" data-i="${i}" aria-label="${label}">${BR.stitch(78, myPetal(), true, flowerParts(f))}${done ? "" : `<em class="st-n">${f.length}/${BLOOM_N}</em>`}</button>`;
     }).join("")}</div></div>`;
   }
-  function openGone() { openModal(`<div class="gone-modal"><span class="ic">${I.info}</span><div><h3>더 이상 열람할 수 없는 기억이에요</h3><p class="av-note" style="margin:0">작성자가 기억을 지웠거나 비공개로 바꿨어요.<br>사진·글·작성자는 볼 수 없고, 발견했던 꽃잎만 흐린 흔적 실로 남아요.</p></div></div><button class="btn btn-soft btn-block" data-act="close">확인</button>`); }
+  function openGone() { openModal(`<div class="gone-modal"><span class="ic">${I.info}</span><div><h3>더 이상 열람할 수 없는 기억이에요</h3><p class="av-note" style="margin:0">작성자가 기억을 지웠거나, 이 기억이 숨겨졌어요.<br>사진·글·작성자는 볼 수 없고, 발견했던 꽃잎만 흐린 흔적 실로 남아요.</p></div></div><button class="btn btn-soft btn-block" data-act="close">확인</button>`); }
+  // '나만 보기'로 바뀐 발견 기억: 꽃잎은 남고 내용만 닫혀요
+  function openFolded() { openModal(`<div class="gone-modal folded-modal"><span class="ic">${BR.seed("dormant", 44)}</span><div><h3>주인이 이 기억을 다시 씨앗 속에 품었어요</h3><p class="av-note" style="margin:0">기억을 심은 사람이 '나만 보기'로 바꿨어요.<br>사진과 이야기는 지금 열어 볼 수 없지만, 그 자리에서 함께 수놓은 꽃잎은 옅은 실로 내 정원에 남아 있어요.<br>주인이 다시 꺼내 두면 이 꽃잎에서 다시 열어 볼 수 있어요.</p></div></div><button class="btn btn-soft btn-block" data-act="close">확인</button>`); }
   function flowerSheet(kind, i) {
     const f = flowers(bedList(kind))[i]; if (!f) return;
     const done = f.length === BLOOM_N, PART = ["첫 꽃잎", "둘째 꽃잎", "셋째 꽃잎"];
     const rows = Array.from({ length: BLOOM_N }, (_, k) => {
       const m = f[k];
       if (!m) return `<li class="fl-row off"><span class="fl-part"><i class="fl-dot empty"></i>${PART[k]}</span><div><b>아직 비어 있어요</b><span>${kind === "mine" ? "다음에 심는 기억이 여기에 수놓여요" : "다음에 발견하는 기억이 여기에 수놓여요"}</span></div></li>`;
+      if (m.folded) { const fp = foldPetal(m); return `<li><button class="fl-row folded" data-act="fl-folded"><span class="fl-part"><i class="fl-dot" style="background:var(--st-${fp}-petal,${BR.PAL[fp].petal});opacity:.45"></i>${PART[k]}</span><div><b>주인이 다시 품은 기억</b><span>꽃잎은 옅은 실로 남아 있어요</span></div><i class="fl-go" aria-hidden="true">›</i></button></li>`; }
       if (m.gone) return `<li><button class="fl-row gone" data-act="fl-gone"><span class="fl-part"><i class="fl-dot gone"></i>${PART[k]}</span><div><b>더 이상 열람할 수 없는 기억</b><span>흔적만 남아 있어요</span></div></button></li>`;
       const pk = petalOf(m);
       return `<li><button class="fl-row" data-act="fl-open" data-id="${m.id}"><span class="fl-part"><i class="fl-dot" style="background:var(--st-${pk}-petal,${BR.PAL[pk].petal})"></i>${PART[k]}</span><div><b>${esc(m.title)}</b><span>${kind === "mine" ? esc(m.place) : `${esc(m.author ? m.author.name : "정원사")}의 ${petalName(pk)} 실 · ${esc(m.place)}`}</span></div><i class="fl-go" aria-hidden="true">›</i></button></li>`;
@@ -1343,6 +1347,7 @@
       }
       case "fl-open": closeModal(); S.selected = null; location.hash = "#/m/" + id; break;
       case "fl-gone": closeModal(); openGone(); break;
+      case "fl-folded": closeModal(); openFolded(); break;
       case "gone-info": openGone(); break;
       case "theme-open": themeSheet(); break;
       case "theme-set": S.theme = t.dataset.v; store.set("theme", S.theme); applyTheme(); if (route().name === "settings") render(); else themeSheet(); if (MAP) syncMap(); break;

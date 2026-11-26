@@ -138,8 +138,10 @@
       const X = x * cell, Y = y * cell, d = cell * 0.2;
       const st = parts ? (parts[PART_OF(k, x, y)] || "off") : "on";
       if (st === "off") { i += `<circle class="guide" cx="${(X + cell / 2).toFixed(1)}" cy="${(Y + cell / 2).toFixed(1)}" r="${(cell * 0.14).toFixed(1)}" style="fill:var(--st-guide,#CFC3B4)"/>`; continue; }
-      const p = st === "gone" ? "trace" : PAL[st] ? st : pal, c = PAL[p][k];
-      i += `<path d="M${(X + d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + cell - d).toFixed(1)} ${(Y + cell - d).toFixed(1)} M${(X + cell - d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + d).toFixed(1)} ${(Y + cell - d).toFixed(1)}" style="stroke:var(--st-${p}-${k},${c})" stroke="${c}" stroke-width="${(cell * 0.26).toFixed(1)}" stroke-linecap="round"/>`;
+      // "folded:색" = 주인이 다시 품은(나만 보기) 기억: 그 사람 꽃잎 색 그대로, 옅은 실로
+      const fold = typeof st === "string" && st.startsWith("folded:"), fk = fold ? st.slice(7) : st;
+      const p = fk === "gone" ? "trace" : PAL[fk] ? fk : pal, c = PAL[p][k];
+      i += `<path ${fold ? 'class="folded" opacity=".38" ' : ""}d="M${(X + d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + cell - d).toFixed(1)} ${(Y + cell - d).toFixed(1)} M${(X + cell - d).toFixed(1)} ${(Y + d).toFixed(1)} L${(X + d).toFixed(1)} ${(Y + cell - d).toFixed(1)}" style="stroke:var(--st-${p}-${k},${c})" stroke="${c}" stroke-width="${(cell * 0.26).toFixed(1)}" stroke-linecap="round"/>`;
     }
     const h = Math.round(s * (rows - 1) / 13);
     return `<svg class="mg-stitch" width="${s}" height="${h}" viewBox="0 0 200 ${((rows - 1) * cell).toFixed(1)}" fill="none" aria-hidden="true">${i}</svg>`;

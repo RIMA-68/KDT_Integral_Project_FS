@@ -178,7 +178,7 @@
         const url = await sign([...g.mine.map(m => m.photo_path), ...g.collected.filter(c => !c.gone).map(c => c.memory.photo_path)]);
         return {
           mine: g.mine.map(m => full(m, url)),
-          collected: g.collected.map(c => c.gone ? { gone: true, id: "trace-" + c.trace_id, at: c.discovered_at } : Object.assign(full(c.memory, url), { gone: false, at: c.discovered_at }))
+          collected: g.collected.map(c => c.gone ? { gone: true, folded: !!c.folded, petal: c.petal || null, id: "trace-" + c.trace_id, at: c.discovered_at } : Object.assign(full(c.memory, url), { gone: false, at: c.discovered_at }))
         };
       },
       async plant(d) {
@@ -328,7 +328,7 @@
         const mine = db.memories.filter(m => m.owner === "me").sort((a, b) => b.date.localeCompare(a.date)).map(fullOf);
         const collected = Object.entries(db.discoveries).sort((a, b) => a[1].at.localeCompare(b[1].at)).map(([id, d]) => {
           const m = db.memories.find(x => x.id === id);
-          return m && open(m) ? Object.assign(fullOf(m), { gone: false, at: d.at }) : { gone: true, id: "trace-" + id, at: d.at };
+          return m && open(m) ? Object.assign(fullOf(m), { gone: false, at: d.at }) : { gone: true, folded: !!m && m.vis === "me" && !(db.reported || {})[id], petal: m && m.author ? m.author.petal || "lav" : null, id: "trace-" + id, at: d.at };
         });
         return { mine, collected };
       },

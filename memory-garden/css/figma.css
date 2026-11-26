@@ -743,3 +743,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .nt-big svg{width:30px;height:30px}
 .nt-foot{text-align:center;margin-top:12px}
 .nt-foot a{color:var(--color-primary);font-weight:600}
+
+/* 주인이 다시 품은(나만 보기) 발견 기억 */
+.folded-modal .ic{width:48px;height:48px;display:grid;place-items:center}
+.fl-row.folded b{color:var(--color-text-sub)}
