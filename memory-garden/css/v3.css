@@ -34,7 +34,7 @@
 [data-theme="night"] body{background:var(--color-bg)}
 @media (min-width:860px){[data-theme="night"] body{background:radial-gradient(1200px 600px at 20% 0%,#2A2D5A 0,transparent 60%),radial-gradient(900px 600px at 100% 100%,#1D2D4F 0,transparent 60%),#121327}
   [data-theme="night"] .app{box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 10px #2C3053,0 0 0 11px #414666}}
-[data-theme="night"] .icon-btn,[data-theme="night"] .brand,[data-theme="night"] .loc-chip,[data-theme="night"] .av-mini,[data-theme="night"] .av-turn{background:var(--glass);color:var(--color-text)}
+[data-theme="night"] .icon-btn,[data-theme="night"] .brand,[data-theme="night"] .loc-chip,[data-theme="night"] .av-mini,[data-theme="night"] .av-pill,[data-theme="night"] .av-turn{background:var(--glass);color:var(--color-text)}
 [data-theme="night"] .bubble,[data-theme="night"] .me-label,[data-theme="night"] .polaroid,[data-theme="night"] .success-card,[data-theme="night"] .hint-card .ic{background:var(--card)}
 [data-theme="night"] .seg button[aria-pressed="true"]{background:var(--color-surface);color:var(--color-text)}
 [data-theme="night"] .detail-bar{background:var(--bar)}

@@ -652,3 +652,59 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .rep-opts .f-opt{min-height:0;height:auto;padding:12px 16px}
 .rep-opts .f-opt b{font-size:15px}
 .modal .rep-opts{margin:6px 0 14px}
+
+/* ---------- 내 발자취 지도 (2026-11-26) ---------- */
+.f-trailcard{display:flex;align-items:center;gap:14px;margin:12px 20px 0;padding:12px 14px;border-radius:16px;background:var(--color-surface);box-shadow:0 0 0 1px var(--color-line),0 4px 12px rgba(90,64,48,.08);color:var(--color-text);text-decoration:none}
+.f-trailcard:active{transform:scale(.99)}
+.tc-stack{position:relative;flex:none;width:64px;height:52px}
+.tc-stack img{position:absolute;top:2px;left:calc(var(--i) * 9px);width:44px;height:44px;object-fit:cover;border-radius:9px;border:2px solid var(--color-surface);box-shadow:0 2px 6px rgba(48,43,60,.18);transform:rotate(calc((var(--i) - 1) * 6deg))}
+.tc-stack img:nth-child(1){z-index:3}.tc-stack img:nth-child(2){z-index:2}.tc-stack img:nth-child(3){z-index:1}
+.tc-stack i{display:grid;place-items:center;width:52px;height:52px;border-radius:12px;background:var(--f-lilac)}
+.tc-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.tc-t b{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:700}
+.tc-t b svg{width:17px;height:17px;color:var(--color-primary)}
+.tc-t span{font-size:12.5px;color:var(--color-text-sub)}
+.tc-go{font-style:normal;font-size:22px;color:var(--color-text-faint)}
+.f-trailcard+.f-grid{padding-top:14px}
+
+.trail{position:relative;height:100%;overflow:hidden;background:var(--map-land)}
+.tr-map{position:absolute;inset:0;z-index:0}
+.tr-head{position:absolute;z-index:4;top:16px;left:50%;transform:translateX(-50%);max-width:calc(100% - 136px);padding:7px 16px;border-radius:20px;background:var(--f-glass);box-shadow:var(--f-s);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);text-align:center;pointer-events:none}
+.tr-head h1{margin:0;font-size:15px;font-weight:700;color:var(--color-text)}
+.tr-head p{margin:1px 0 0;font-size:11.5px;color:var(--color-text-sub);white-space:nowrap}
+.tr-pin button{position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 9px));padding:0;border:0;background:none;cursor:pointer;transition:transform var(--dur-base,.2s) var(--ease-spring,ease)}
+.tr-pin button:active{transform:translate(-50%,calc(-100% - 9px)) scale(.94)}
+.tr-ph{position:relative;z-index:2;display:grid;place-items:center;width:54px;height:54px;border-radius:14px;overflow:hidden;background:var(--f-lilac);border:3px solid #fff;box-shadow:0 4px 12px rgba(48,43,60,.28)}
+.tr-ph img{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:cover;display:block}
+.tr-tail{position:absolute;z-index:1;left:50%;bottom:-8px;width:14px;height:10px;margin-left:-7px;background:#fff;clip-path:polygon(0 0,100% 0,50% 100%)}
+.tr-back{position:absolute;z-index:1;inset:0;border-radius:14px;background:#fff;box-shadow:0 3px 8px rgba(48,43,60,.2);transform:translate(6px,-6px) rotate(7deg)}
+.tr-back::after{content:"";position:absolute;inset:5px;border-radius:9px;background:var(--f-lilac)}
+.tr-n{position:absolute;z-index:3;right:-12px;top:-12px;min-width:26px;height:26px;padding:0 7px;border-radius:13px;display:grid;place-items:center;background:var(--color-primary);color:var(--color-on-primary,#fff);font-family:var(--font-display);font-size:13px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(48,43,60,.25)}
+.tr-pin.is-group .tr-ph{width:60px;height:60px}
+.tr-strip,.tr-card{position:absolute;z-index:4;left:0;right:0;bottom:0;background:var(--color-surface);border-radius:22px 22px 0 0;box-shadow:0 -6px 20px rgba(48,43,60,.12);padding:14px 0 calc(16px + env(safe-area-inset-bottom))}
+.tr-striph{display:flex;align-items:baseline;justify-content:space-between;padding:0 20px 10px}
+.tr-striph b{font-size:15px;font-weight:700;color:var(--color-text)}
+.tr-striph span{font-size:12px;color:var(--color-text-faint)}
+.tr-row{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 4px;scroll-padding-inline:16px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.tr-row::-webkit-scrollbar{display:none}
+.tr-chip{flex:none;width:232px;display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:14px;background:var(--color-surface-sunk);text-align:left;color:var(--color-text);scroll-snap-align:start;box-shadow:inset 0 0 0 2px transparent}
+.tr-chip[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--color-primary);background:var(--color-primary-soft)}
+.tr-cph{position:relative;flex:none;width:54px;height:54px;border-radius:11px;overflow:hidden;display:grid;place-items:center;background:var(--f-lilac)}
+.tr-cph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tr-cph em{position:absolute;left:4px;top:4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;display:grid;place-items:center;background:rgba(48,43,60,.72);color:#fff;font-style:normal;font-family:var(--font-display);font-size:10px}
+.tr-ct{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.tr-ct b{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-ct span{font-size:12px;color:var(--color-text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-open{display:none;font-style:normal;font-size:11.5px;font-weight:700;color:var(--color-primary)}
+.tr-chip[aria-pressed="true"] .tr-open{display:block}
+.tr-chip[aria-pressed="true"] .tr-ct small{display:none}
+.tr-ct small{font-family:var(--font-display);font-size:10.5px;color:var(--color-text-faint)}
+.tr-card{padding:20px 24px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.tr-card b{font-size:16px;font-weight:700;color:var(--color-text)}
+.tr-card p{margin:0;font-size:13px;line-height:1.55;color:var(--color-text-sub)}
+.tr-card .f-sbtn{margin-top:8px}
+.tr-empty{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:var(--f-lilac);margin-bottom:4px}
+.tr-li .tr-lph{position:relative;flex:none;width:44px;height:44px;border-radius:10px;overflow:hidden;display:grid;place-items:center;background:var(--f-lilac)}
+.tr-li .tr-lph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+[data-theme="night"] .tr-ph,[data-theme="night"] .tr-n{border-color:#E9E6F5}
+[data-theme="night"] .tr-tail,[data-theme="night"] .tr-back{background:#E9E6F5}

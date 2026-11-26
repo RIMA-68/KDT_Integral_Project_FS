@@ -103,8 +103,10 @@
     undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
     fwd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
     front: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>',
+    fit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
     map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z"/><path d="M9 4v14M15 6v14"/></svg>',
     garden: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7"/><path d="M12 14c-4 0-6-2.5-6-6 3.5 0 6 2 6 6Z"/><path d="M12 12c0-3.5 2.5-6 6-6 0 3.5-2 6-6 6Z"/><path d="M5 21h14"/></svg>',
+    restart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>',
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
@@ -156,7 +158,7 @@
     mapLoading = true;
     const c = pos() || S.nearAt || HOME_CENTER;
     window.MG_MAP.create(mapHost, {
-      kakaoKey: CFG.kakaoJsKey, center: c,
+      center: c,
       onMapClick: () => setTimeout(() => { if (Date.now() - lastPinTap > 400 && S.selected) { S.selected = null; render(); } }, 0),
       onMove: () => { if (!locOk() && MAP) { const ce = MAP.center(); if (!S.nearAt || GEO.distance(S.nearAt, ce) > 400) fetchNear(ce); } }
     }).then(m => {
@@ -215,8 +217,9 @@
   function loadGarden() {
     if (S.boot !== "ok") return;
     if (!S.garden) S.gardenState = "loading";
-    API.garden().then(g => { S.garden = g; S.gardenState = "ok"; g.collected.forEach(c => { if (c.gone) return; S.status[c.id] = "discovered"; }); softRender(true); })
-      .catch(e => { console.error(e); S.gardenState = "error"; softRender(true); });
+    const onTrail = () => (route() || {}).name === "trail" && !document.querySelector(".scrim");
+    API.garden().then(g => { S.garden = g; S.gardenState = "ok"; g.collected.forEach(c => { if (c.gone) return; S.status[c.id] = "discovered"; }); if (onTrail()) render(); else softRender(true); })
+      .catch(e => { console.error(e); S.gardenState = "error"; if (onTrail()) render(); else softRender(true); });
   }
   function loadDetail(id) {
     if (S.status[id] === "loading") return;
@@ -724,8 +727,63 @@
         <p class="f-bednote">${tab === "mine" ? `내가 심은 기억 ${BLOOM_N}개가 내 색 꽃 한 송이가 돼요.` : `발견한 기억 ${BLOOM_N}개가 한 송이가 돼요.<br>꽃잎마다 그 기억을 남긴 사람의 색으로 수놓여요.`}</p>
         ${samplerHTML(tab === "mine" ? "mine" : "col")}${tab === "col" ? nearbyHTML() : ""}</section>
       <div class="f-listh"><h2>${tab === "mine" ? "내가 심은 기억" : "발견한 기억"}</h2></div>
+      ${tab === "mine" && gs === "ok" && mine.length ? trailCard(mine) : ""}
       <div class="grid f-grid">${grid}</div></div>${tabbar("garden")}</section>`;
   }
+  /* ---------------- 내 발자취: 내가 심은 기억만 지도에 모아 보기 ---------------- */
+  function trailCard(mine) {
+    const ph = mine.filter(m => m.photo).slice(0, 3);
+    const spots = trailSpots(mine);
+    return `<a class="f-trailcard" href="#/trail"><span class="tc-stack" aria-hidden="true">${ph.length ? ph.map((m, i) => `<img src="${esc(m.photo)}" alt="" style="--i:${i}">`).join("") : `<i>${BR.seed("planted", 40)}</i>`}</span>
+      <span class="tc-t"><b>${I.map}내 발자취 지도</b><span>심은 기억 ${mine.length}개 · ${spots}곳을 지도에서 모아 봐요</span></span><i class="tc-go" aria-hidden="true">›</i></a>`;
+  }
+  // 50m 안쪽은 같은 곳으로 세어요(위도·경도는 화면에 보이지 않아요)
+  function trailSpots(list) {
+    const pts = [];
+    list.forEach(m => { if (typeof m.lat !== "number") return; if (!pts.some(p => GEO.distance(p, m) < 50)) pts.push({ lat: m.lat, lng: m.lng }); });
+    return pts.length;
+  }
+  const TR = { map: null, job: 0, failed: false };
+  function trailTeardown() { TR.job++; if (TR.map) { try { TR.map.destroy(); } catch (_) { } TR.map = null; } }
+  const trailPin = (m, n) => `<div class="tr-pin${n > 1 ? " is-group" : ""}"><button aria-label="${n > 1 ? `기억 ${n}개 묶음, 눌러서 펼치기` : esc(m.title)}">
+      ${n > 1 ? `<i class="tr-back" aria-hidden="true"></i>` : ""}<span class="tr-ph">${m.photo ? `<img src="${esc(m.photo)}" alt="">` : BR.seed("planted", 40)}</span>${n > 1 ? `<b class="tr-n">${n}</b>` : ""}<i class="tr-tail"></i></button></div>`;
+  function trailList() { const g = S.garden || { mine: [] }; return (S.forced === "empty" ? [] : g.mine).slice().sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))); }
+  function viewTrail() {
+    if (!S.garden && S.gardenState !== "loading" && S.gardenState !== "error") loadGarden();
+    const gs = S.forced === "loading" ? "loading" : S.forced === "error" ? "error" : S.gardenState === "error" && !S.garden ? "error" : !S.garden ? "loading" : "ok";
+    const list = trailList(), old = list.slice().reverse();
+    const sub = gs === "ok" && list.length ? `심은 기억 ${list.length}개 · ${trailSpots(list)}곳` : "내가 심은 기억만 보여요";
+    let bottom = "";
+    if (gs === "loading") bottom = `<div class="tr-card tr-state" aria-busy="true"><div class="sprout"><span class="seed"></span><span class="stem"></span><span class="bud"></span></div><p>발자취를 불러오는 중…</p></div>`;
+    else if (gs === "error") bottom = `<div class="tr-card tr-state" role="alert"><b>발자취를 불러오지 못했어요</b><p>심은 기억은 그대로 있어요. 연결을 확인하고 다시 시도해 주세요.</p><button class="btn btn-primary f-sbtn" data-act="garden-retry">다시 시도</button></div>`;
+    else if (!list.length) bottom = `<div class="tr-card tr-state"><span class="tr-empty">${BR.seed("planted", 56)}</span><b>아직 발자취가 없어요</b><p>기억을 심으면 그 자리에 사진 핀이 꽂혀요.<br>여기서 내가 다녀간 곳을 한눈에 모아 볼 수 있어요.</p><a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a></div>`;
+    else bottom = `<div class="tr-strip" aria-label="오래된 순서로 따라가기"><div class="tr-striph"><b>발자취 따라가기</b><span>오래된 순서</span></div>
+      <div class="tr-row" id="trRow">${old.map((m, i) => { const d = dateParts(m); return `<button class="tr-chip" data-act="trail-go" data-id="${m.id}"><span class="tr-cph">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : BR.seed("planted", 30)}<em>${i + 1}</em></span><span class="tr-ct"><b>${esc(m.title)}</b><span>${esc(m.place || "")}</span><small>${d.full}</small><i class="tr-open">한 번 더 누르면 열려요 ›</i></span></button>`; }).join("")}</div></div>`;
+    return `<section class="screen trail" aria-label="내 발자취"><div class="tr-map map-host" id="trailMap"></div>
+      <a class="f-glass" style="left:16px;top:16px" href="#/garden" data-act="back" aria-label="뒤로">${I.back}</a>
+      <div class="tr-head"><h1>내 발자취</h1><p>${sub}</p></div>
+      ${gs === "ok" && list.length ? `<button class="f-glass" style="right:16px;top:16px" data-act="trail-fit" aria-label="전체 보기">${I.fit}</button>` : ""}
+      ${bottom}</section>`;
+  }
+  function mountTrail() {
+    trailTeardown();
+    const job = TR.job, host = document.getElementById("trailMap"); if (!host) return;
+    const list = trailList();
+    const c = list[0] || pos() || HOME_CENTER;
+    window.MG_MAP.trail(host, {
+      center: { lat: c.lat, lng: c.lng }, html: trailPin, padding: [56, 96], bottomPad: list.length ? 200 : 260,
+      onOpen: id => { location.hash = "#/m/" + encodeURIComponent(id); },
+      onGroup: ids => trailGroup(ids)
+    }).then(m => {
+      if (job !== TR.job) { m.destroy(); return; }
+      TR.map = m; m.setItems(list); m.fit(false);
+    }).catch(e => { console.error(e); });
+  }
+  function trailGroup(ids) {
+    const list = trailList().filter(m => ids.includes(m.id));
+    openModal(`<h3>이 근처에 심은 기억 ${list.length}개</h3><ul class="fl-list">${list.map(m => `<li><button class="fl-row tr-li" data-act="fl-open" data-id="${m.id}"><span class="tr-lph">${m.photo ? `<img src="${esc(m.photo)}" alt="">` : BR.seed("planted", 28)}</span><div><b>${esc(m.title)}</b><span>${esc(m.place || "")} · ${dateParts(m).full}</span></div><i class="fl-go" aria-hidden="true">›</i></button></li>`).join("")}</ul>`);
+  }
+
   // M31 화면 테마 — 하나만 고를 수 있고, 바꿔도 화면·위치·글·캐릭터·자수는 그대로
   const THEMES = [["system", "phone", "시스템 설정 따르기", "기기의 라이트/다크 설정에 맞춰요"], ["day", "sun", "낮 테마 · Dusk Paper", "항상 낮 화면으로 봐요"], ["night", "moon", "밤 테마 · Night Garden", "항상 밤 화면으로 봐요"], ["auto", "clock", "시간대에 따라 자동", "해 질 녘엔 밤, 해 뜰 녘엔 낮으로 바뀌어요"]];
   function themeSheet() {
@@ -737,8 +795,7 @@
     const has = S.avatar === "me";
     openModal(`<div class="prof-head"><span class="prof-pic"><img src="${img(has ? "me" : "")}" alt="지금 프로필"></span><div><h3>${esc(S.profile.nickname)}</h3><p class="av-note" style="margin:0">다른 사람이 내 기억을 발견하면<br>이 프로필과 이름이 보여요.</p></div></div>
       <div class="prof-opts">
-        ${S.look ? `<button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>지금 캐릭터 고치기</b><span>저장해 둔 캐릭터에서 파츠만 바꿔요</span></div></button>
-        <button class="option" data-act="set-avatar" data-v="new"><span class="oi">${I.plus}</span><div><b>새 캐릭터 만들기</b><span>기본 모습부터 다시 꾸며요.<br>저장하기 전까지 지금 캐릭터는 그대로예요.</span></div></button>`
+        ${S.look ? `<button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>캐릭터 수정하기</b><span>지금 캐릭터에서 바꾸고 싶은 부분만 골라요.<br>처음부터 다시 만들기도 이 안에서 할 수 있어요.</span></div></button>`
         : `<button class="option" data-act="set-avatar"><span class="oi">${I.edit}</span><div><b>캐릭터 만들기</b><span>머리·옷·신발을 골라 나만의 캐릭터를 만들어요</span></div></button>`}
         <label class="option"><span class="oi">${I.camera}</span><div><b>사진으로 바꾸기</b><span>앨범에서 사진 한 장을 골라요</span></div><input type="file" accept="image/*" data-act="prof-photo" aria-label="프로필 사진 고르기" hidden></label>
         <div class="petal-pick"><b>내 꽃잎 색</b><span>나의 정원의 꽃과, 다른 사람의 발견의 정원에 놓인<br>내 꽃잎이 이 색이에요</span>
@@ -860,11 +917,12 @@
 
   function viewAvatar() {
     return `<section class="screen av" aria-label="내 캐릭터 꾸미기">
-      <header class="av-head"><button class="icon-btn" data-act="av-back" aria-label="뒤로">${I.back}</button><h1>${route().arg === "new" ? "새 캐릭터 만들기" : "내 캐릭터 꾸미기"}</h1><button class="icon-btn" data-act="av-random" aria-label="무작위로 꾸미기" id="avRand" disabled>${I.dice}</button></header>
+      <header class="av-head"><button class="icon-btn" data-act="av-back" aria-label="뒤로">${I.back}</button><h1>${avFirst() ? "내 캐릭터 만들기" : "캐릭터 수정하기"}</h1><button class="icon-btn" data-act="av-random" aria-label="무작위로 꾸미기" id="avRand" disabled>${I.dice}</button></header>
       <div class="av-stage"><canvas id="avCanvas" role="img" aria-label="내 캐릭터 미리보기"></canvas>
         <div class="av-veil" id="avVeil"></div>
         <div class="av-ctrl" id="avCtrl" hidden>
-          <button class="av-mini av-u" data-act="av-undo" id="avUndo" aria-label="되돌리기" disabled>${I.undo}</button></div>
+          <button class="av-mini av-u" data-act="av-undo" id="avUndo" aria-label="되돌리기" disabled>${I.undo}</button>
+          ${avFirst() ? "" : `<button class="av-pill av-r" data-act="av-reset" id="avReset" aria-label="처음부터 다시 만들기">${I.restart}처음부터</button>`}</div>
       </div>
       <div class="av-panel"><div class="av-tabs" role="tablist" aria-label="꾸밀 부분" id="avTabs"></div><div class="av-body" id="avBody" role="tabpanel"></div>
         <div class="av-foot"><button class="btn btn-primary btn-block" data-act="av-save" id="avSave" disabled>이 모습으로 저장</button></div></div>
@@ -881,7 +939,7 @@
   function mountAvatar() {
     avTeardown();
     const job = AV.job;
-    // #/avatar = 지금 캐릭터에서 이어 고치기, #/avatar/new = 기본 모습부터 새로 만들기(저장 전엔 지금 캐릭터 그대로)
+    // #/avatar = 지금 캐릭터에서 이어 고치기(처음부터 다시 만들기는 편집 화면 안 버튼), #/avatar/new = 예전 주소 호환
     const fresh = route().arg === "new";
     AV.draft = Object.assign({}, (!fresh && S.look) || (AV.mod ? AV.mod.DEFAULT_LOOK : null));
     AV.base = S.look ? Object.assign({}, S.look) : null; AV.hist = [];
@@ -1019,6 +1077,11 @@
     switch (a) {
       case "av-set": { let v = t.dataset.v; if (t.dataset.k === "blush") v = v === "true"; if (AV.draft[t.dataset.k] === v) return true; avApply(Object.assign({}, AV.draft, { [t.dataset.k]: v })); return true; }
       case "av-random": avApply(AV.mod.randomLook()); return true;
+      case "av-reset":
+        openModal(`<h3>처음부터 다시 만들까요?</h3><p class="av-note" style="margin:0">기본 모습에서 새로 꾸며요. 저장하기 전까지 지금 캐릭터는 그대로이고, 되돌리기로 언제든 돌아올 수 있어요.</p>
+          <button class="btn btn-primary btn-block" data-act="av-reset-go">처음부터 다시 만들기</button><button class="btn btn-ghost" data-act="close">계속 수정하기</button>`);
+        return true;
+      case "av-reset-go": closeModal(); avApply(AV.mod.normalizeLook(null)); AV.tab = "face"; avTabs(); avPanel(); toast("기본 모습으로 바꿨어요. 되돌리기로 돌아갈 수 있어요"); return true;
       case "av-undo": if (AV.hist.length) { AV.draft = AV.hist.pop(); AV.stage.setLook(AV.draft); avPanel(); avSync(); } return true;
       case "av-save": avSave(); return true;
     }
@@ -1080,6 +1143,7 @@
     const keep = { sheet: (document.getElementById("sheetBody") || {}).scrollTop, garden: (document.getElementById("gardenScroll") || {}).scrollTop, route: location.hash };
     closeModal();
     if (r.name !== "avatar") avTeardown();
+    trailTeardown();
     let html = "";
     const needsData = !["welcome", "avatar", "plant"].includes(r.name);
     if (needsData && S.boot !== "ok") html = viewBoot();
@@ -1090,9 +1154,11 @@
     else if (r.name === "garden") html = viewGarden();
     else if (r.name === "avatar") html = viewAvatar();
     else if (r.name === "settings") html = viewSettings();
+    else if (r.name === "trail") html = viewTrail();
     else html = viewHome();
     $app.innerHTML = html;
     if (r.name === "avatar") mountAvatar();
+    if (r.name === "trail" && S.boot === "ok") mountTrail();
     if (r.name === "home" && S.boot === "ok") {
       const slot = document.getElementById("map");
       if (slot && !mapFailed) { slot.appendChild(mapHost); ensureMap(); if (MAP) { MAP.relayout(); syncMap(); } }
@@ -1177,6 +1243,14 @@
       case "discover": { const m = byId(id); if (m && canOpen(m)) discover(id); break; }
       case "found-done": S.found = null; render(); break;
       case "flower": flowerSheet(t.dataset.k, +t.dataset.i); break;
+      case "trail-fit": if (TR.map) TR.map.fit(true); break;
+      case "trail-go": {
+        const m = trailList().find(x => x.id === id); if (!m || !TR.map) break;
+        if (t.getAttribute("aria-pressed") === "true") { location.hash = "#/m/" + encodeURIComponent(id); break; }
+        document.querySelectorAll(".tr-chip[aria-pressed]").forEach(b => b.removeAttribute("aria-pressed"));
+        t.setAttribute("aria-pressed", "true"); TR.map.focus(m.lat, m.lng, 70);
+        break;
+      }
       case "fl-open": closeModal(); S.selected = null; location.hash = "#/m/" + id; break;
       case "fl-gone": closeModal(); openGone(); break;
       case "gone-info": openGone(); break;

@@ -385,6 +385,8 @@ a{color:inherit;text-decoration:none}
 .av-ctrl{position:absolute;inset:0;z-index:2;pointer-events:none}
 .av-ctrl .av-mini{position:absolute}
 .av-u{left:16px;bottom:38px}
+.av-pill{position:absolute;right:16px;bottom:42px;height:36px;padding:0 14px 0 10px;border-radius:18px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);box-shadow:var(--shadow-1);color:var(--color-text);font:inherit;font-size:13px;font-weight:600}
+.av-pill svg{width:14px;height:14px}
 .av-ctrl[hidden]{display:none}
 .av-ctrl>*{pointer-events:auto}
 .av-mini{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.92);box-shadow:var(--shadow-1);color:var(--color-text)}
@@ -441,7 +443,7 @@ a{color:inherit;text-decoration:none}
 .av-foot{flex:none;padding:12px 16px calc(12px + var(--safe-bottom));border-top:1px solid var(--color-line)}
 .av-foot .btn[disabled]{background:var(--color-surface-sunk);color:var(--color-text-sub);box-shadow:none}
 .profile .me-av{cursor:pointer}
-@media (max-height:700px){.av-panel{height:50%}.av-u{bottom:32px}.av-head h1{font-size:14px}}
+@media (max-height:700px){.av-panel{height:50%}.av-u{bottom:32px}.av-pill{bottom:36px}.av-head h1{font-size:14px}}
 .profile .me-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--color-surface);box-shadow:inset 0 0 0 2px var(--color-line),var(--shadow-1)}
 .profile .me-empty .plus{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--color-primary);color:var(--color-on-primary)}
 .profile .me-empty .plus svg{width:18px;height:18px}

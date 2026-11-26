@@ -1,6 +1,5 @@
 /* 기억 정원 · 지도 어댑터
-   카카오맵 JavaScript SDK가 기본이고, 키가 없거나 불러오기에 실패하면
-   Leaflet + OpenStreetMap 으로 대신 그려요(개발·시연용). 화면 코드는 둘의 차이를 몰라도 돼요.
+   2026-11-26 리마 결정: 지도는 Leaflet + OpenStreetMap으로 고정해요(카카오맵 API는 쓰지 않아요).
    핀·내 위치는 앱이 만든 HTML(기억의 씨앗 핀)을 그대로 지도 위에 올려요. */
 (function () {
   "use strict";
@@ -14,67 +13,7 @@
   const el = html => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; };
   const RADIUS_STYLE = { color: "#3D7FD9", fill: "rgba(61,127,217,1)", fillOpacity: .12, opacity: 1 };   // Figma · Map Me
 
-  /* ---------------- Kakao ---------------- */
-  async function kakaoAdapter(host, opts) {
-    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.LatLng) {
-      await loadScript(`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(opts.kakaoKey)}&libraries=services&autoload=false`);
-      await new Promise((res, rej) => { if (!window.kakao || !kakao.maps || !kakao.maps.load) return rej(new Error("kakao sdk")); const t = setTimeout(() => rej(new Error("kakao load timeout")), 9000); kakao.maps.load(() => { clearTimeout(t); res(); }); });
-    }
-    const K = kakao.maps, LL = (lat, lng) => new K.LatLng(lat, lng);
-    const map = new K.Map(host, { center: LL(opts.center.lat, opts.center.lng), level: 3 });
-    // 카카오 로고·저작권 표시는 가리면 안 돼요 → 오른쪽 아래(지도 영역 안)
-    try { map.setCopyrightPosition(K.CopyrightPosition.BOTTOMRIGHT, true); } catch (_) { }
-    map.setMaxLevel(9);
-    if (opts.onMapClick) K.event.addListener(map, "click", () => opts.onMapClick());
-    if (opts.onMove) K.event.addListener(map, "dragend", () => opts.onMove());
-    const pins = new Map();
-    let me = null, rCircle = null, aCircle = null;
-    const circle = (r, dashed) => new K.Circle({ radius: r, strokeWeight: 1.5, strokeColor: RADIUS_STYLE.color, strokeOpacity: RADIUS_STYLE.opacity, strokeStyle: dashed ? "dash" : "shortdash", fillColor: RADIUS_STYLE.fill, fillOpacity: dashed ? .06 : RADIUS_STYLE.fillOpacity });
-    const geocoder = K.services ? new K.services.Geocoder() : null;
-    return {
-      kind: "kakao", map,
-      setMe(pos, html, radius, lowAcc) {
-        if (!pos) { if (me) me.setMap(null); if (rCircle) rCircle.setMap(null); if (aCircle) aCircle.setMap(null); me = rCircle = aCircle = null; return; }
-        const p = LL(pos.lat, pos.lng);
-        if (!me) { me = new K.CustomOverlay({ position: p, content: el(html), xAnchor: 0, yAnchor: 0, zIndex: 3 }); me.setMap(map); }
-        else { me.setPosition(p); me.setContent(el(html)); }
-        if (!rCircle) { rCircle = circle(radius, false); rCircle.setMap(map); }
-        rCircle.setPosition(p); rCircle.setRadius(radius);
-        if (lowAcc) { if (!aCircle) { aCircle = circle(pos.acc, true); aCircle.setMap(map); } aCircle.setPosition(p); aCircle.setRadius(pos.acc); }
-        else if (aCircle) { aCircle.setMap(null); aCircle = null; }
-      },
-      setPins(items) {
-        const keep = new Set();
-        items.forEach(it => {
-          keep.add(it.id);
-          const cur = pins.get(it.id);
-          if (cur && cur.html === it.html && cur.lat === it.lat && cur.lng === it.lng) return;
-          if (cur) cur.ov.setMap(null);
-          const ov = new K.CustomOverlay({ position: LL(it.lat, it.lng), content: el(it.html), xAnchor: 0, yAnchor: 0, clickable: true, zIndex: it.z || 2 });
-          ov.setMap(map); pins.set(it.id, { ov, html: it.html, lat: it.lat, lng: it.lng });
-        });
-        pins.forEach((v, k) => { if (!keep.has(k)) { v.ov.setMap(null); pins.delete(k); } });
-      },
-      panTo(lat, lng, offsetY = 0, smooth = true) {
-        if (smooth) map.panTo(LL(lat, lng)); else map.setCenter(LL(lat, lng));
-        if (offsetY) setTimeout(() => map.panBy(0, offsetY), smooth ? 260 : 0);
-      },
-      center() { const c = map.getCenter(); return { lat: c.getLat(), lng: c.getLng() }; },
-      relayout() { map.relayout(); },
-      regionName(lat, lng) {
-        return new Promise(res => {
-          if (!geocoder) return res(null);
-          geocoder.coord2RegionCode(lng, lat, (r, st) => {
-            if (st !== K.services.Status.OK || !r || !r.length) return res(null);
-            const h = r.find(x => x.region_type === "H") || r[0];
-            res(h.region_3depth_name || h.region_2depth_name || null);
-          });
-        });
-      }
-    };
-  }
-
-  /* ---------------- Leaflet (대체) ---------------- */
+  /* ---------------- Leaflet + OpenStreetMap ---------------- */
   async function leafletAdapter(host, opts) {
     loadCss("vendor/leaflet/leaflet.css");
     if (!window.L) await loadScript("vendor/leaflet/leaflet.js");
@@ -120,19 +59,71 @@
     };
   }
 
+  /* ---------------- 내 발자취: 내가 심은 기억만 사진 핀으로 모아 보기 ----------------
+     사진첩 지도처럼, 화면에서 가까운 핀(약 64px 안)은 한 묶음으로 합쳐 개수를 보여 줘요.
+     묶음을 누르면 그 묶음이 보이게 확대하고, 더 확대할 수 없으면 onGroup으로 목록을 열어요. */
+  async function trailMap(host, opts) {
+    loadCss("vendor/leaflet/leaflet.css");
+    if (!window.L) await loadScript("vendor/leaflet/leaflet.js");
+    const c = opts.center || { lat: 37.5556, lng: 126.9019 };
+    const map = L.map(host, { zoomControl: false, attributionControl: false, minZoom: 6, maxZoom: 19 }).setView([c.lat, c.lng], 15);
+    L.control.attribution({ position: "bottomright", prefix: false }).addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>').addTo(map);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, minZoom: 6 }).addTo(map);
+    const layer = L.layerGroup().addTo(map);
+    const GAP = 64, MAXZ = 18;
+    let items = [];
+    const icon = html => L.divIcon({ className: "mg-ov", html, iconSize: [0, 0], iconAnchor: [0, 0] });
+    function groups() {
+      const z = map.getZoom(), out = [];
+      items.forEach(it => {
+        const pt = map.project([it.lat, it.lng], z);
+        let g = null;
+        for (const o of out) { if (Math.abs(o.pt.x - pt.x) < GAP && Math.abs(o.pt.y - pt.y) < GAP) { g = o; break; } }
+        if (g) { g.list.push(it); g.pt = g.pt.multiplyBy((g.list.length - 1) / g.list.length).add(pt.divideBy(g.list.length)); }
+        else out.push({ pt, list: [it] });
+      });
+      return out.map(g => ({ ll: map.unproject(g.pt, z), list: g.list }));
+    }
+    function draw() {
+      layer.clearLayers();
+      groups().forEach(g => {
+        const n = g.list.length, top = g.list.find(x => x.photo) || g.list[0];
+        const mk = L.marker(g.ll, { icon: icon(opts.html(top, n)), keyboard: false, zIndexOffset: n * 10 });
+        mk.on("click", () => {
+          if (n === 1) return opts.onOpen(top.id);
+          const b = L.latLngBounds(g.list.map(x => [x.lat, x.lng]));
+          const tight = map.getBoundsZoom(b, false, L.point(80, 80)) <= map.getZoom() || map.getZoom() >= MAXZ;
+          if (tight) opts.onGroup(g.list.map(x => x.id));
+          else map.flyToBounds(b, { padding: [80, 80], maxZoom: MAXZ, duration: .45 });
+        });
+        layer.addLayer(mk);
+      });
+    }
+    map.on("zoomend", draw);
+    const api = {
+      map,
+      setItems(list) { items = list.filter(x => typeof x.lat === "number" && typeof x.lng === "number"); draw(); },
+      fit(animate) {
+        if (!items.length) return;
+        const b = L.latLngBounds(items.map(x => [x.lat, x.lng]));
+        const pad = opts.padding || [70, 70];
+        if (items.length === 1) map.setView([items[0].lat, items[0].lng], 16, { animate: !!animate });
+        else map.fitBounds(b, { paddingTopLeft: [pad[0], pad[1]], paddingBottomRight: [pad[0], opts.bottomPad || pad[1]], maxZoom: 17, animate: !!animate });
+      },
+      focus(lat, lng, offsetY) {
+        const z = Math.max(map.getZoom(), 17), pt = map.project([lat, lng], z).add([0, offsetY || 0]);
+        map.flyTo(map.unproject(pt, z), z, { duration: .5 });
+      },
+      relayout() { map.invalidateSize(false); },
+      destroy() { map.remove(); }
+    };
+    return api;
+  }
+
   window.MG_MAP = {
+    trail: trailMap,
     async create(host, opts) {
-      // 비교용 스위치: 주소 뒤 ?map=osm → 예전 지도(OpenStreetMap), ?map=kakao → 카카오맵. 이 기기에 기억돼요.
-      let pref = null;
-      try {
-        const q = new URLSearchParams(location.search).get("map");
-        if (q === "osm" || q === "kakao") localStorage.setItem("mg:map", JSON.stringify(q));
-        pref = JSON.parse(localStorage.getItem("mg:map") || "null");
-      } catch (_) { }
-      if (opts.kakaoKey && pref !== "osm") {
-        try { return await kakaoAdapter(host, opts); }
-        catch (e) { console.warn("[지도] 카카오맵을 불러오지 못해 OpenStreetMap으로 대신 보여 줘요:", e.message); host.innerHTML = ""; }
-      }
+      try { localStorage.removeItem("mg:map"); } catch (_) { }   // 예전 비교용 스위치 값 정리
       return leafletAdapter(host, opts);
     }
   };
