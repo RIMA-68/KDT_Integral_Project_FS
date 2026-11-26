@@ -222,6 +222,21 @@
       },
       // 신고: 사유 spam·abuse·privacy·sexual·other
       async report(id, reason, note) { return call("report_memory", { p_id: id, p_reason: reason, p_note: note || null }); },
+      // 알림(2026-11-26-notifications.sql). SQL 실행 전이면 빈 알림함 + missing 표시
+      async notifications() {
+        try { const r = await call("my_notifications"); return { items: r.items || [], unread: r.unread || 0 }; }
+        catch (e) { if (e.code === "PGRST202") return { items: [], unread: 0, missing: true }; throw e; }
+      },
+      async readNotifications(ids) { return call("read_notifications", { p_ids: ids && ids.length ? ids : null }); },
+      async notifyPrefs() {
+        const { data, error } = await sb.from("notification_prefs").select("reply, collect, heart").maybeSingle();
+        if (error) { if (/PGRST205|42P01/.test(error.code || "")) return { reply: true, collect: true, heart: true }; throw new ApiError("prefs", error.message); }
+        return data || { reply: true, collect: true, heart: true };
+      },
+      async setNotifyPrefs(p) {
+        const { error } = await sb.from("notification_prefs").upsert({ user_id: uid, reply: !!p.reply, collect: !!p.collect, heart: !!p.heart, updated_at: new Date().toISOString() });
+        if (error) throw new ApiError("prefs", error.message);
+      },
       async heart(id, on) {
         const q = on ? sb.from("hearts").insert({ memory_id: id }) : sb.from("hearts").delete().eq("memory_id", id).eq("user_id", uid);
         const { error } = await q;
@@ -330,6 +345,24 @@
       async remove(id) { db.memories = db.memories.filter(x => !(x.id === id && x.owner === "me")); persist(); },
       async reply(id, text) { const m = db.memories.find(x => x.id === id); if (!m || !canView(m)) throw new ApiError("reply"); (db.replies[id] = db.replies[id] || []).push({ name: db.profile.nickname, avatar: db.profile.avatar === "me" && db.profile.avatar_url ? db.profile.avatar_url : db.profile.avatar, text, date: new Date().toISOString(), mine: true }); persist(); },
       async heart(id, on) { if (on) db.hearts[id] = 1; else delete db.hearts[id]; persist(); },
+      // 데모 알림: 이 기기에 심은 기억이 있으면 예시 알림 3개를 보여 줘요
+      async notifications() {
+        await wait(200);
+        const mine = db.memories.filter(m => m.owner === "me");
+        if (!db.notifs && mine.length) {
+          const m0 = mine[mine.length - 1], m1 = mine[0], ago = min => new Date(Date.now() - min * 60000).toISOString();
+          const p = db.nprefs || {}, list = [];
+          if (p.reply !== false) list.push({ id: 3, kind: "reply", memory_id: m0.id, body: "저도 여기 자주 와요. 노을이 정말 예쁘죠!", actor_nickname: "하루", actor_avatar: "char-hoodie", created_at: ago(12), read: false });
+          if (p.collect !== false) list.push({ id: 2, kind: "collect", memory_id: m0.id, created_at: ago(95), read: false });
+          if (p.heart !== false) list.push({ id: 1, kind: "heart", memory_id: m1.id, created_at: ago(60 * 26), read: true });
+          db.notifs = list; persist();
+        }
+        const items = (db.notifs || []).map(n => { const m = db.memories.find(x => x.id === n.memory_id); return Object.assign({}, n, { title: m ? m.title : null, place_name: m ? m.place : null }); });
+        return { items, unread: items.filter(n => !n.read).length };
+      },
+      async readNotifications(ids) { (db.notifs || []).forEach(n => { if (!ids || ids.includes(n.id)) n.read = true; }); persist(); },
+      async notifyPrefs() { return Object.assign({ reply: true, collect: true, heart: true }, db.nprefs || {}); },
+      async setNotifyPrefs(p) { db.nprefs = { reply: !!p.reply, collect: !!p.collect, heart: !!p.heart }; persist(); },
       // 데모 패널: 작성자가 '다리 위 편지'를 비공개로 바꾼 상황
       demoToggleRevoke(id) { const m = db.memories.find(x => x.id === id); if (!m) return false; m.vis = m.vis === "all" ? "me" : "all"; persist(); return m.vis === "me"; },
       demoRevoked(id) { const m = db.memories.find(x => x.id === id); return !!m && m.vis === "me"; },

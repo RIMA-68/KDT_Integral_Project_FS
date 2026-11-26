@@ -21,7 +21,7 @@ const LAYERS = {
   top_b: [77, 309, 266, 278, 100.8, "#6b6066"], top_g: [66, 311, 293, 276, 139.6, "#988391"], top_s: [51, 321, 323, 278, 130.9, "#88817c"],
   // 2026-11-24 신규 파츠 12종: 리마가 만든 원본 그림(Figma MG3·5 신규 파츠 카탈로그)에서 그대로 잘라 낸 것
   hair_wave: [21, 26, 372, 298, 130.4, "#927b7e"], hair_pony: [50, 23, 357, 298, 71.9, "#4f4446"], hair_curly: [27, 20, 361, 251, 120.8, "#7d776f"],
-  top_vest: [62, 307, 293, 270, 151.1, "#a78f90"], top_sweat: [76, 320, 269, 253, 97.0, "#6b5c5b"], top_check: [51, 318, 319, 266, 137.6, "#93867e"],
+  top_vest: [62, 307, 293, 270, 154.0, "#ab9393"], top_sweat: [76, 320, 269, 253, 97.0, "#6b5c5b"], top_check: [51, 318, 319, 266, 137.6, "#93867e"],
   bottom_denim: [95, 563, 229, 200, 111.4, "#706d74"], bottom_susp: [101, 328, 219, 377, 134.7, "#978175"], bottom_long: [64, 570, 295, 187, 109.2, "#796868"],
   shoes_mary: [110, 731, 196, 79, 127.8, "#907973"], shoes_high: [105, 709, 211, 102, 153.4, "#a8948a"], shoes_fur: [108, 719, 206, 91, 136.6, "#998378"]
 };
@@ -122,7 +122,7 @@ let loading = null;
 export function supported() {
   try { const c = document.createElement("canvas"); return !!(c.getContext && c.getContext("2d")); } catch (e) { return false; }
 }
-const ASSET_V = "20261126";
+const ASSET_V = "20261126b";
 export function load() {
   if (loading) return loading;
   const base = new URL("../assets/avatar/", import.meta.url);

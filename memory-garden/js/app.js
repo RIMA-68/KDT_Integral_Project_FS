@@ -55,7 +55,13 @@
   const allMemories = () => S.near;
   const byId = id => S.near.find(m => m.id === id) || (S.garden && [...S.garden.mine, ...S.garden.collected].find(m => m.id === id)) || (S.cache && S.cache[id]);
   S.cache = {};
-  const remember = m => { if (!m) return m; S.cache[m.id] = m; const i = S.near.findIndex(x => x.id === m.id); if (i >= 0) S.near[i] = Object.assign({}, S.near[i], m); return m; };
+  // 새로 받은 기억 정보는 지도 목록·정원 목록·캐시 모두에 덮어써요(정원에서 연 기억에 답장이 바로 보이도록)
+  const remember = m => {
+    if (!m) return m; S.cache[m.id] = m;
+    const i = S.near.findIndex(x => x.id === m.id); if (i >= 0) S.near[i] = Object.assign({}, S.near[i], m);
+    if (S.garden) ["mine", "collected"].forEach(k => { const j = S.garden[k].findIndex(x => x.id === m.id); if (j >= 0) S.garden[k][j] = Object.assign({}, S.garden[k][j], m); });
+    return m;
+  };
   const BR = window.MG_BRAND;
   // 발견(=재열람 권한) · 지금 열 수 있음 · 잠김 — 정책: 현장 제한은 타인 공개 기억의 '최초' 발견에만
   const isGone = m => !!m && (m.gone || S.status[m.id] === "gone");
@@ -121,6 +127,8 @@
     camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>',
     alert: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.6 2H4.4L6 16Z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5.5h16v10.5H10l-4.5 3.5V16H4z"/></svg>',
     gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>',
     theme: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 7.8a4.2 4.2 0 0 1 0 8.4Z" fill="currentColor"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>',
     users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M15.5 5.2a3 3 0 0 1 0 5.6M17.5 14.2a5 5 0 0 1 3 4.8"/></svg>',
@@ -383,6 +391,7 @@
       <header class="topbar f-top">
         <a class="f-logo" href="#/" aria-label="기억 정원 홈"><span class="f-lumi-c"><img src="${img("cat")}" alt=""></span><b>기억 정원</b></a>
         <span class="spacer"></span>
+        ${bellBtn("f-bell")}
         <button class="f-locchip ${locOk() ? "" : "off"}" data-act="loc"><span class="dot"></span>${locOk() ? esc(S.region || "내 위치") : GEO.state === "asking" ? "위치 확인 중" : "위치 꺼짐"}</button>
       </header>
       ${locBanner(bannerTop)}
@@ -720,7 +729,7 @@
     return `<section class="screen f-garden" aria-label="내 정원"><div class="scroll" id="gardenScroll">
       <header class="f-ghead">${AMB(250)}${HILLS(60)}${av}
         <div class="f-prof"><h1>${esc(S.profile.nickname)}의 정원</h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p><button class="f-profbtn" data-act="profile-open">${I.edit}${S.avatar === "me" ? "프로필 바꾸기" : "프로필 만들기"}</button></div>
-        <a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
+        ${bellBtn("f-glass f-gbell")}<a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
         <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>발견한 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
       <div class="seg f-seg f-bedtabs" role="group" aria-label="정원 전환"><button data-act="gtab" data-t="mine" aria-pressed="${tab === "mine"}">나의 정원 ${mine.length}</button><button data-act="gtab" data-t="col" aria-pressed="${tab === "col"}">발견의 정원 ${col.length}</button></div>
       <section class="f-gsec" aria-label="${tab === "mine" ? "나의 정원" : "발견의 정원"}"><div class="f-sech"><h2>${tab === "mine" ? `나의 정원 <button class="f-mypetal" data-act="profile-open" aria-label="내 꽃잎 색 ${petalName(myPetal())}, 바꾸기"><i style="background:var(--st-${myPetal()}-petal,${BR.PAL[myPetal()].petal})"></i>${petalName(myPetal())}</button>` : "발견의 정원"}</h2><i></i><span>${gardenCount(tab === "mine" ? mine : colAll)}</span></div>
@@ -822,6 +831,74 @@
   }
 
   /* ---------------- 설정 ---------------- */
+  /* ---------------- 알림: 내 기억에 답장·담기·마음이 생기면 ---------------- */
+  // 담기·마음은 누가 했는지 보여 주지 않아요(현장에서만 담을 수 있어서 그 사람의 위치가 드러나니까요)
+  S.notif = { items: null, unread: 0, state: "idle", at: 0 };
+  S.nprefs = null;
+  const notifOn = () => typeof API.notifications === "function" && (DEMO || API.member());
+  function loadNotif(force) {
+    if (!notifOn() || S.boot !== "ok") return;
+    if (!force && (S.notif.state === "loading" || Date.now() - S.notif.at < 20000)) return;
+    const first = !S.notif.items;
+    S.notif.state = first ? "loading" : S.notif.state; S.notif.at = Date.now();
+    API.notifications().then(r => {
+      const before = S.notif.unread;
+      S.notif = { items: r.items || [], unread: r.unread || 0, state: r.missing ? "missing" : "ok", at: Date.now() };
+      const rn = (route() || {}).name;
+      if (rn === "alerts" ? first : before !== S.notif.unread) { if (rn === "alerts") render(); else syncBells(); }
+    }).catch(e => { console.warn("[notif]", e); S.notif.state = S.notif.items ? "ok" : "error"; if ((route() || {}).name === "alerts") render(); });
+  }
+  function bellBtn(cls) {
+    if (!notifOn()) return "";
+    const n = S.notif.unread;
+    return `<a class="${cls} f-bellbtn" href="#/alerts" aria-label="알림${n ? `, 새 알림 ${n}개` : ""}">${I.bell}<i class="bell-dot" ${n ? "" : "hidden"}>${n > 9 ? "9+" : n || ""}</i></a>`;
+  }
+  // 화면 전체를 다시 그리지 않고 종 아이콘의 숫자만 바꿔요
+  function syncBells() {
+    const n = S.notif.unread;
+    document.querySelectorAll(".f-bellbtn").forEach(b => { const d = b.querySelector(".bell-dot"); if (d) { d.hidden = !n; d.textContent = n > 9 ? "9+" : n || ""; } b.setAttribute("aria-label", "알림" + (n ? `, 새 알림 ${n}개` : "")); });
+  }
+  const NK = {
+    reply: (n) => `<b>${esc(n.actor_nickname || "정원사")}</b>님이 ${n.title ? `「${esc(n.title)}」에` : "내 기억에"} 답장을 남겼어요`,
+    collect: (n) => `누군가 ${n.title ? `「${esc(n.title)}」을` : "내 기억을"} 현장에서 발견해 정원에 담았어요`,
+    heart: (n) => `누군가 ${n.title ? `「${esc(n.title)}」에` : "내 기억에"} 마음을 보냈어요`
+  };
+  function notifRow(n) {
+    const ic = n.kind === "reply" ? `<span class="nt-av"><img src="${esc(img(n.actor_avatar === "me" && n.actor_avatar_url ? n.actor_avatar_url : n.actor_avatar))}" alt=""><i class="nt-badge k-reply">${I.chat}</i></span>`
+      : n.kind === "heart" ? `<span class="nt-ic k-heart">${I.heart}</span>` : `<span class="nt-ic k-collect">${BR.stitch(30, myPetal(), true)}</span>`;
+    const gone = !n.title;
+    const inner = `${ic}<span class="nt-tx"><span class="nt-t">${(NK[n.kind] || NK.heart)(n)}</span>${n.kind === "reply" && n.body ? `<q>${esc(n.body)}</q>` : ""}<small>${esc(relTime(n.created_at))}${gone ? " · 지워진 기억이에요" : n.place_name ? " · " + esc(n.place_name) : ""}</small></span>${n.read ? "" : `<i class="nt-new" aria-label="새 알림"></i>`}`;
+    return gone ? `<li class="nt-row off${n.read ? "" : " unread"}">${inner}</li>` : `<li><a class="nt-row${n.read ? "" : " unread"}" href="#/m/${esc(n.memory_id)}">${inner}</a></li>`;
+  }
+  function viewAlerts() {
+    const head = `<header class="flow-head f-flowhead"><a class="icon-btn" href="#/garden" data-act="back" aria-label="뒤로">${I.back}</a><h1 class="set-title">알림</h1>${S.notif.items && S.notif.items.some(n => !n.read) ? `<button class="nt-all" data-act="notif-read-all">모두 읽음</button>` : `<span style="width:44px"></span>`}</header>`;
+    let body;
+    const N = S.notif, st = S.forced === "loading" ? "loading" : S.forced === "error" ? "error" : N.state === "idle" ? "loading" : N.state;
+    if (!notifOn()) body = `<div class="center-state"><span class="nt-big">${I.bell}</span><h2>로그인하면 알림을 받을 수 있어요</h2><p>내 기억에 답장이 달리거나, 누군가 담거나<br>마음을 보내면 여기에 모여요.</p><div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:320px">${kakaoBtn()}${emailBtn()}</div></div>`;
+    else if (st === "loading" && !N.items) body = `<ul class="nt-list" aria-busy="true">${'<li class="nt-row sk-card"><span class="nt-ic sk"></span><span class="nt-tx"><span class="sk" style="height:14px;width:80%"></span><span class="sk" style="height:12px;width:40%"></span></span></li>'.repeat(4)}</ul>`;
+    else if (st === "error" && !N.items) body = stateBlock("err", I.wifi, "알림을 불러오지 못했어요", "연결을 확인하고 다시 시도해 주세요.", `<button class="btn btn-outline f-sbtn" data-act="notif-retry">다시 시도</button>`);
+    else if (st === "missing") body = stateBlock("soft", I.bell, "알림을 준비하고 있어요", "서버 설정이 끝나면 내 기억에 생긴 일이 여기에 모여요.", "");
+    else {
+      const items = S.forced === "empty" ? [] : N.items || [];
+      const fresh = items.filter(n => !n.read), old = items.filter(n => n.read);
+      body = !items.length ? stateBlock("soft", I.bell, "아직 알림이 없어요", "누군가 내 기억에 답장을 남기거나, 현장에서 담거나,<br>마음을 보내면 여기에 알려 드릴게요.", `<a class="btn btn-outline f-sbtn" href="#/settings">알림 설정</a>`)
+        : (fresh.length ? `<h2 class="nt-h">새 알림</h2><ul class="nt-list">${fresh.map(notifRow).join("")}</ul>` : "") + (old.length ? `<h2 class="nt-h">지난 알림</h2><ul class="nt-list">${old.map(notifRow).join("")}</ul>` : "")
+          + `<p class="set-note nt-foot">담기와 마음은 누가 했는지 보이지 않아요.<br>알림 종류는 <a href="#/settings">설정</a>에서 끄고 켤 수 있어요.</p>`;
+    }
+    return `<section class="screen f-settings f-alerts" aria-label="알림">${head}<div class="scroll set-body">${body}</div></section>`;
+  }
+  // 알림함을 열면 서버에서는 바로 읽음으로 바꾸고, 이번에 보는 화면에서는 새 알림 표시를 그대로 둬요
+  function mountAlerts() {
+    if (!notifOn()) return;
+    loadNotif(true);
+    if (S.notif.unread && API.readNotifications) { S.notif.unread = 0; API.readNotifications().catch(() => { }); }
+  }
+  function loadNprefs() {
+    if (!notifOn() || S.nprefs || typeof API.notifyPrefs !== "function") return;
+    API.notifyPrefs().then(p => { S.nprefs = p; if ((route() || {}).name === "settings") render(); }).catch(() => { });
+  }
+  const NPREF = [["reply", "답장 알림", "내 기억에 답장이 달리면"], ["collect", "담기 알림", "누군가 현장에서 내 기억을 발견해 담으면"], ["heart", "마음 알림", "누군가 내 기억에 마음을 보내면"]];
+
   function viewSettings() {
     const row = (ic, t, sub, right, act) => `<${act ? `button data-act="${act}"` : "div"} class="set-row">${ic ? `<span class="set-ic">${ic}</span>` : ""}<span class="set-tx"><b>${t}</b>${sub ? `<small>${sub}</small>` : ""}</span>${right || ""}</${act ? "button" : "div"}>`;
     const chev = `<i class="set-go" aria-hidden="true">›</i>`;
@@ -836,7 +913,9 @@
         <section class="set-sec" aria-label="프로필"><h2>프로필</h2><div class="set-card"><button class="set-row set-prof" data-act="profile-open"><span class="set-pic"><img src="${img(S.avatar === "me" ? "me" : "")}" alt=""></span><span class="set-tx"><b>${esc(S.profile.nickname)}</b><small>캐릭터·사진·이름 바꾸기</small></span>${chev}</button></div></section>
         <section class="set-sec" aria-label="계정"><h2>계정</h2><div class="set-card">${account}</div></section>
         <section class="set-sec" aria-label="화면 테마"><h2>화면 테마</h2><div class="theme-opts f-themeopts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div></section>
-        <section class="set-sec" aria-label="위치와 알림"><h2>위치와 알림</h2><div class="set-card">${row(I.crosshair, "위치 사용", geo, GEO.state === "ok" ? "" : chev, GEO.state === "ok" ? "" : "loc")}${!DEMO && API.member() && API.memberEmail() ? row("", "이메일 소식 받기", `선택 · ${S.mkt ? "동의함" : "받지 않음"}`, `<span class="av-switch" role="switch" aria-checked="${!!S.mkt}"></span>`, "mkt-toggle") : ""}</div>
+        ${notifOn() ? `<section class="set-sec" aria-label="알림"><h2>알림</h2><div class="set-card">${row(I.bell, "알림함", S.notif.unread ? `새 알림 ${S.notif.unread}개` : "내 기억에 생긴 일을 모아 봐요", chev, "go-alerts")}${NPREF.map(([k, t, d]) => { const on = !S.nprefs || S.nprefs[k] !== false; return row("", t, d, `<span class="av-switch" role="switch" aria-checked="${on}" aria-label="${t}"></span>`, `npref" data-k="${k}`); }).join("")}</div>
+          <p class="set-note">끈 알림은 알림함에도 쌓이지 않아요. 앱을 열면 확인할 수 있어요.</p></section>` : ""}
+        <section class="set-sec" aria-label="위치와 알림"><h2>위치와 소식</h2><div class="set-card">${row(I.crosshair, "위치 사용", geo, GEO.state === "ok" ? "" : chev, GEO.state === "ok" ? "" : "loc")}${!DEMO && API.member() && API.memberEmail() ? row("", "이메일 소식 받기", `선택 · ${S.mkt ? "동의함" : "받지 않음"}`, `<span class="av-switch" role="switch" aria-checked="${!!S.mkt}"></span>`, "mkt-toggle") : ""}</div>
           <p class="set-note">현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.</p></section>
       </div></section>`;
   }
@@ -1097,7 +1176,7 @@
         ${HILLS(280)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
       <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
       <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
-        <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요. 위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>
+        <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.<br>위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>
       <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="allow">위치 허용하고 시작하기</button><button class="btn btn-ghost" data-act="deny">나중에 할게요, 둘러보기만</button></div></section>`;
     return `<section class="screen f-welcome" aria-label="시작"><div class="f-scroll">
       <div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark" style="top:28px">MEMORY GARDEN</span>
@@ -1155,10 +1234,12 @@
     else if (r.name === "avatar") html = viewAvatar();
     else if (r.name === "settings") html = viewSettings();
     else if (r.name === "trail") html = viewTrail();
+    else if (r.name === "alerts") html = viewAlerts();
     else html = viewHome();
     $app.innerHTML = html;
     if (r.name === "avatar") mountAvatar();
     if (r.name === "trail" && S.boot === "ok") mountTrail();
+    if (S.boot === "ok") { if (r.name === "alerts") mountAlerts(); else if (["home", "garden", "settings"].includes(r.name)) loadNotif(); if (r.name === "settings") loadNprefs(); }
     if (r.name === "home" && S.boot === "ok") {
       const slot = document.getElementById("map");
       if (slot && !mapFailed) { slot.appendChild(mapHost); ensureMap(); if (MAP) { MAP.relayout(); syncMap(); } }
@@ -1244,6 +1325,15 @@
       case "found-done": S.found = null; render(); break;
       case "flower": flowerSheet(t.dataset.k, +t.dataset.i); break;
       case "trail-fit": if (TR.map) TR.map.fit(true); break;
+      case "go-alerts": location.hash = "#/alerts"; break;
+      case "notif-retry": S.notif.state = "loading"; render(); loadNotif(true); break;
+      case "notif-read-all": (S.notif.items || []).forEach(n => { n.read = true; }); S.notif.unread = 0; if (API.readNotifications) API.readNotifications().catch(() => { }); render(); break;
+      case "npref": {
+        const k = t.dataset.k, cur = S.nprefs || { reply: true, collect: true, heart: true }, next = Object.assign({}, cur, { [k]: cur[k] === false });
+        S.nprefs = next; render();
+        API.setNotifyPrefs(next).then(() => toast(next[k] ? "알림을 켰어요" : "알림을 껐어요")).catch(() => { S.nprefs = cur; render(); toast("설정을 바꾸지 못했어요. 다시 시도해 주세요"); });
+        break;
+      }
       case "trail-go": {
         const m = trailList().find(x => x.id === id); if (!m || !TR.map) break;
         if (t.getAttribute("aria-pressed") === "true") { location.hash = "#/m/" + encodeURIComponent(id); break; }
@@ -1497,6 +1587,7 @@
     } catch (e) { console.error("[boot]", e); S.boot = "error"; S.bootErr = e.code || "net"; }
     render();
     if (S.boot !== "ok") return;
+    loadNotif(true);
     if (S.loginError) {
       const le = S.loginError; S.loginError = null;
       if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">해당 계정으로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
@@ -1517,6 +1608,9 @@
   window.addEventListener("hashchange", () => { S.nav++; render(); });
   try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (S.theme === "system") applyTheme(); }); } catch (_) { }
   window.addEventListener("resize", () => { if (MAP) MAP.relayout(); });
+  // 알림은 앱이 보이는 동안 1분마다, 다시 앱으로 돌아왔을 때 한 번 확인해요
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") loadNotif(); });
+  setInterval(() => { if (document.visibilityState === "visible") loadNotif(true); }, 60000);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.boot === "ok" && (route() || {}).name === "home") { if (S.locWanted && GEO.state !== "ok" && GEO.state !== "denied") GEO.start(); refreshNear(); } });
   boot();
 })();
