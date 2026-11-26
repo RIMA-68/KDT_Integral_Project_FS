@@ -747,3 +747,8 @@ body{word-break:keep-all;overflow-wrap:break-word}
 /* 주인이 다시 품은(나만 보기) 발견 기억 */
 .folded-modal .ic{width:48px;height:48px;display:grid;place-items:center}
 .fl-row.folded b{color:var(--color-text-sub)}
+
+/* 2026-11-26 제목(선택) 칸 · 본문과 같은 제목은 한 번만 */
+.f-ctitle{border:0;outline:0;background:transparent;font:inherit;font-size:18px;font-weight:700;line-height:26px;color:var(--color-text);padding:2px 0 8px;border-bottom:1px dashed var(--f-outline);border-radius:0;width:100%}
+.f-ctitle::placeholder{color:var(--color-text-faint);font-weight:500}
+.mem-title.mem-only{font-size:19px;line-height:29px;font-weight:600;white-space:pre-line}

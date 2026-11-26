@@ -34,7 +34,7 @@
     found: null, region: null, regionAt: null,
     avatar: store.get("avatar", "char-lavender"),
     look: store.get("look", null), portrait: store.get("portrait", null),
-    draft: { photo: null, blob: null, text: "", vis: "all", place: "", hint: "", noPhoto: false },
+    draft: { photo: null, blob: null, text: "", title: "", vis: "all", place: "", hint: "", noPhoto: false },
     lastPlanted: null, plantErr: null, busy: false, nav: 0
   };
   const BLOOM_N = 3;   // 꽃 한 송이를 완성하는 발견 수(리마 결정 2026-11-25)
@@ -457,8 +457,8 @@
         <div class="author"><span class="avatar"><img src="${esc(img(mine ? (S.avatar === "me" ? "me" : S.avatar) : m.author.avatar))}" alt=""></span><div><b>${mine ? "내가 심은 기억" : esc(m.author.name)}</b><span>${(t => t === "방금" ? "방금 심음" : esc(t) + "에 심음")(relTime(m.date, m.when))}</span></div></div>
         ${mine ? `<button class="vis-card f-vis" data-act="vis-open" data-id="${m.id}"><span class="ic">${visIc(vis)}</span><span><small>공개 범위</small><b>${visLabel(vis)}</b></span><span class="chg">변경${I.fwd}</span></button>
           <p class="fine">${vis === "me" ? "다른 사람에게는 보이지 않아요." : vis === "key" ? "이 장소에서 비밀번호까지 맞힌 사람만 열 수 있어요." : "이 장소 가까이 온 사람이 발견할 수 있어요."}<br>나는 공개 범위와 상관없이 언제든 볼 수 있어요.</p>` : ""}
-        <h1 class="mem-title">${esc(m.title)}</h1>
-        <p class="story">${esc(m.story)}</p>
+        ${sameAsStory(m) ? `<h1 class="mem-title mem-only">${esc(m.story)}</h1>` : `<h1 class="mem-title">${esc(m.title)}</h1>
+        <p class="story">${esc(m.story)}</p>`}
         ${mine && m.hint ? `<div class="hint-card"><span class="ic">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
         <div class="divider"></div>
         <div class="replies"><h3>답장 <span class="n">${replies.length}</span></h3>
@@ -468,6 +468,17 @@
         <div class="detail-bar f-actbar"><button class="heart-btn" data-act="like" data-id="${m.id}" aria-pressed="${liked}" aria-label="마음 ${hearts}">${I.heart}<span>${hearts}</span></button>
           <button class="btn btn-primary" data-act="reply" data-id="${m.id}">답장 남기기</button></div></div>
     </section>`;
+  }
+  // 제목을 따로 쓰지 않아 본문 첫머리가 제목이 된 기억은 같은 글을 두 번 보여 주지 않아요(2026-11-26)
+  function sameAsStory(m) {
+    const n = x => String(x || "").replace(/…$/, "").replace(/\s+/g, " ").trim();
+    const t = n(m.title), st = n(m.story);
+    return !!t && st.startsWith(t);
+  }
+  // 제목을 비워 두면 첫 문장(최대 22자)을 제목으로 써요
+  function autoTitle(story) {
+    const first = (story.split(/\n|(?<=[.!?。…~])\s/)[0] || story).trim();
+    return first.length > 22 ? first.slice(0, 22) + "…" : first;
   }
   // M10 잠긴 기억 · M10-2 열 수 있음 — 발견 전에는 사진·제목·본문·작성자를 보여 주지 않아요(서버도 보내지 않아요)
   function viewLocked(m) {
@@ -591,8 +602,9 @@
     if (step === "2") {
       const n = dr.text.length;
       return `<section class="screen" aria-label="기억 심기 2단계">${flowHead(2)}<div class="flow-body f-flow">
-      <h1 class="flow-title">여기서 어떤 일이<br>있었나요?<small>짧아도 괜찮아요. 120자까지 쓸 수 있어요.</small></h1>
+      <h1 class="flow-title">여기서 어떤 일이<br>있었나요?<small>짧아도 괜찮아요. 제목은 비워 두면 첫 문장이 제목이 돼요.</small></h1>
       <div class="compose f-compose"><span class="f-cplace">${I.pin}${esc(dr.place || placeGuess() || "지금 있는 곳")}</span>
+        <input id="titleText" class="f-ctitle" maxlength="30" value="${esc(dr.title || "")}" placeholder="제목 (선택)" aria-label="제목, 선택" autocomplete="off">
         <textarea id="story" maxlength="120" placeholder="이 자리에서 있었던 일을 짧게 남겨 주세요" aria-label="이야기">${esc(dr.text)}</textarea>
         <span class="cnt ${n > 110 ? "warn" : ""}" id="cnt">${n}/120</span></div>
       <div class="prompts f-prompts">${D.prompts.map(p => `<button class="chip" data-act="prompt" data-p="${esc(p)}">${esc(p)}…</button>`).join("")}</div>
@@ -643,15 +655,15 @@
     if (!p) { S.plantErr = "no_location"; location.hash = "#/plant/fail"; return; }
     if (!accOk()) { S.plantErr = "low_accuracy"; location.hash = "#/plant/fail"; return; }
     location.hash = "#/plant/doing";
-    const story = dr.text.trim(), firstLine = story.split("\n")[0];
+    const story = dr.text.trim();
     API.plant({
-      title: firstLine.length > 22 ? firstLine.slice(0, 22) + "…" : firstLine, story, place: (dr.place || placeGuess() || "이름 없는 장소").trim(), hint: dr.hint.trim(),
+      title: (dr.title || "").trim() || autoTitle(story), story, place: (dr.place || placeGuess() || "이름 없는 장소").trim(), hint: dr.hint.trim(),
       vis: dr.vis, secret: dr.vis === "key" ? dr.secret : undefined, photoBlob: dr.blob, photoDataUrl: dr.photo, pos: { lat: p.lat, lng: p.lng, acc: p.acc }
     }).then(m => {
       S.lastPlanted = remember(Object.assign(m, { state: "mine", mine: true }));
       if (!S.near.some(x => x.id === m.id)) S.near.unshift(m);
       S.garden = null; S.plantErr = null;
-      S.draft = { photo: null, blob: null, text: "", vis: "all", place: "", hint: "", noPhoto: false };
+      S.draft = { photo: null, blob: null, text: "", title: "", vis: "all", place: "", hint: "", noPhoto: false };
       location.hash = "#/plant/done";
     }).catch(e => { console.error(e); if (e.code === "login_required") { location.hash = "#/plant/3"; loginSheet("plant"); return; } if (e.code === "secret_unsupported" || e.code === "bad_secret") { location.hash = "#/plant/3"; toast(e.code === "bad_secret" ? "비밀번호는 4~20자로 정해 주세요" : "비밀번호 기억은 서버 준비가 끝나면 쓸 수 있어요"); return; } S.plantErr = e.code || "net"; location.hash = "#/plant/fail"; });
   }
@@ -1438,6 +1450,7 @@
     }
     if (id === "placeName") { S.draft.place = e.target.value; syncPlantBtn(); }
     if (id === "hintText") S.draft.hint = e.target.value;
+    if (id === "titleText") S.draft.title = e.target.value;
     if (id === "secretText") { S.draft.secret = e.target.value; syncPlantBtn(); }
     if (id === "secretOpen" || id === "secretNew") { const b = document.getElementById(id + "Btn"); if (b) b.disabled = !SECRET_OK(e.target.value); }
   });
