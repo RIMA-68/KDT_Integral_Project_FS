@@ -122,7 +122,14 @@
 
   window.MG_MAP = {
     async create(host, opts) {
-      if (opts.kakaoKey) {
+      // 비교용 스위치: 주소 뒤 ?map=osm → 예전 지도(OpenStreetMap), ?map=kakao → 카카오맵. 이 기기에 기억돼요.
+      let pref = null;
+      try {
+        const q = new URLSearchParams(location.search).get("map");
+        if (q === "osm" || q === "kakao") localStorage.setItem("mg:map", JSON.stringify(q));
+        pref = JSON.parse(localStorage.getItem("mg:map") || "null");
+      } catch (_) { }
+      if (opts.kakaoKey && pref !== "osm") {
         try { return await kakaoAdapter(host, opts); }
         catch (e) { console.warn("[지도] 카카오맵을 불러오지 못해 OpenStreetMap으로 대신 보여 줘요:", e.message); host.innerHTML = ""; }
       }

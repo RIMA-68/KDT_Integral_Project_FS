@@ -8,9 +8,11 @@
 .map-host .pin button{cursor:pointer}
 .map-host .me-label{right:16px}
 .leaflet-control-attribution{font-size:10px;background:rgba(255,255,255,.75)!important}
-/* 밤 테마: 지도 타일만 어둡게(핀·내 위치는 그대로) */
+/* 카카오맵 위 우리 톤: 낮은 크림 종이빛으로 채도를 낮추고 따뜻하게(로고·저작권 표시는 그대로) */
+.map-host img[src*="daumcdn.net/map_"]{filter:sepia(.24) saturate(.72) hue-rotate(-8deg) brightness(1.03) contrast(.92)}
+/* 밤 테마: 지도 타일만 어둡게(핀·내 위치·카카오 로고는 그대로) */
 [data-theme="night"] .map-host .leaflet-tile-pane,
-[data-theme="night"] .map-host img[src*="daumcdn.net/map"]{filter:invert(.9) hue-rotate(195deg) saturate(.55) brightness(.88)}
+[data-theme="night"] .map-host img[src*="daumcdn.net/map_"]{filter:invert(.9) hue-rotate(195deg) saturate(.55) brightness(.88)}
 [data-theme="night"] .home{background:#1d1f38}
 .map-fallback{z-index:1}
 

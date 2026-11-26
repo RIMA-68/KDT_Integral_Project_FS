@@ -80,7 +80,9 @@
     if (n < 14) return "지난주";
     return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
   }
-  const visLabel = v => v === "me" ? "나만 보기" : "모두에게 공개";
+  const visLabel = v => v === "me" ? "나만 보기" : v === "key" ? "비밀번호를 아는 사람만" : "모두에게 공개";
+  const visIc = v => v === "me" ? I.lock : v === "key" ? I.key : I.users;
+  const SECRET_OK = v => typeof v === "string" && v.length >= 4 && v.length <= 20;
   const dirOf = m => {
     const b = GEO.bearing(pos(), m);
     const names = ["북쪽", "북동쪽", "동쪽", "남동쪽", "남쪽", "남서쪽", "서쪽", "북서쪽"];
@@ -109,6 +111,8 @@
     share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6h14v-6"/></svg>',
     heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5S3.5 15.3 3.5 9.3A4.4 4.4 0 0 1 12 7.1a4.4 4.4 0 0 1 8.5 2.2c0 6-8.5 11.2-8.5 11.2Z"/></svg>',
     pin: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>',
+    key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 19 4M16 7l2.5 2.5M14 9l2 2"/></svg>',
+    flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>',
     lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>',
     arrow: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 19 20l-7-4-7 4 7-17Z"/></svg>',
     target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
@@ -399,7 +403,7 @@
       : `<button class="btn btn-outline" data-act="open" data-id="${m.id}">자세히 보기</button>`;
     return `<div class="peek f-peek" role="dialog" aria-label="기억 미리보기">
       <span class="f-seedtile ${st === "dormant" ? "lilac" : "amber"}">${undisc ? BR.seed(st, 86) : m.photo ? `<img src="${esc(m.photo)}" alt="">` : BR.seed("planted", 86)}</span>
-      <div class="f-pk"><b>${undisc ? "아직 발견하지 않은 기억" : esc(m.title)}</b><span class="f-meta">${esc(m.place)}${undisc && m.hint ? " · 힌트 있음" : ""}</span>
+      <div class="f-pk"><b>${undisc ? "아직 발견하지 않은 기억" : esc(m.title)}</b><span class="f-meta">${esc(m.place)}${undisc && m.secret ? " · 비밀번호" : ""}${undisc && m.hint ? " · 힌트 있음" : ""}</span>
         <div class="f-row">${btn}<span class="f-meta">${m.mine ? "" : locTxt}</span></div></div>
       <button class="f-x" data-act="unselect" aria-label="닫기">${I.close}</button></div>`;
   }
@@ -432,15 +436,15 @@
     const replies = m.replies || [];
     const hearts = m.hearts || 0;
     const vis = m.vis || "all";
-    const tags = `${badge("soft", vis === "me" ? I.lock : I.users, visLabel(vis))}${!mine && m.firstDist != null ? badge("coral", I.unlock, `${m.firstDist}m 거리에서 처음 열었어요`) : ""}`;
+    const tags = `${badge("soft", visIc(vis), visLabel(vis))}${!mine && m.firstDist != null ? badge("coral", I.unlock, `${m.firstDist}m 거리에서 처음 열었어요`) : ""}`;
     return `<section class="screen" aria-label="${mine ? "내 기억 상세" : "기억 열람"}">
       <div class="detail-photo">${m.photo ? `<img src="${esc(m.photo)}" alt="${esc(m.title)} 사진">` : `<div class="nophoto">${BR.seed("planted", 180)}</div>`}
         <div class="detail-top"><a class="icon-btn" href="${mine || discovered(m) ? "#/garden" : "#/"}" data-act="back" aria-label="뒤로">${I.back}</a><button class="icon-btn" data-act="share" data-id="${m.id}" aria-label="공유">${I.share}</button></div></div>
       <div class="detail-sheet"><div class="detail-body">
         <div class="when-row">${stamp(m)}<div class="when-info"><span class="place">${I.pin}${esc(m.place)}</span><div class="tags">${tags}</div></div></div>
         <div class="author"><span class="avatar"><img src="${esc(img(mine ? (S.avatar === "me" ? "me" : S.avatar) : m.author.avatar))}" alt=""></span><div><b>${mine ? "내가 심은 기억" : esc(m.author.name)}</b><span>${(t => t === "방금" ? "방금 심음" : esc(t) + "에 심음")(relTime(m.date, m.when))}</span></div></div>
-        ${mine ? `<button class="vis-card f-vis" data-act="vis-open" data-id="${m.id}"><span class="ic">${vis === "me" ? I.lock : I.users}</span><span><small>공개 범위</small><b>${visLabel(vis)}</b></span><span class="chg">변경${I.fwd}</span></button>
-          <p class="fine">${vis === "me" ? "다른 사람에게는 보이지 않아요. 나는 공개 범위와 상관없이 언제든 볼 수 있어요." : "이 장소 가까이 온 사람이 발견할 수 있어요. 나는 공개 범위와 상관없이 언제든 볼 수 있어요."}</p>` : ""}
+        ${mine ? `<button class="vis-card f-vis" data-act="vis-open" data-id="${m.id}"><span class="ic">${visIc(vis)}</span><span><small>공개 범위</small><b>${visLabel(vis)}</b></span><span class="chg">변경${I.fwd}</span></button>
+          <p class="fine">${vis === "me" ? "다른 사람에게는 보이지 않아요." : vis === "key" ? "이 장소에서 비밀번호까지 맞힌 사람만 열 수 있어요." : "이 장소 가까이 온 사람이 발견할 수 있어요."}<br>나는 공개 범위와 상관없이 언제든 볼 수 있어요.</p>` : ""}
         <h1 class="mem-title">${esc(m.title)}</h1>
         <p class="story">${esc(m.story)}</p>
         ${mine && m.hint ? `<div class="hint-card"><span class="ic">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
@@ -448,7 +452,7 @@
         <div class="replies"><h3>답장 <span class="n">${replies.length}</span></h3>
           ${replies.length ? replies.map(r => `<div class="reply f-reply"><span class="avatar"><img src="${esc(img(r.avatar))}" alt=""></span><div><div class="rh"><b>${esc(r.name)}</b><span>${esc(relTime(r.date, r.when))}</span></div><p>${esc(r.text)}</p></div></div>`).join("") : `<p style="font-size:14px;color:var(--color-text-faint)">${mine ? "아직 받은 답장이 없어요." : "아직 답장이 없어요. 이 자리에 온 첫 사람이 되어 볼래요?"}</p>`}
         </div>
-        ${mine ? `<button class="del-link" data-act="del-open" data-id="${m.id}">${I.trash}이 기억 지우기</button>` : ""}</div>
+        ${mine ? `<button class="del-link" data-act="del-open" data-id="${m.id}">${I.trash}이 기억 지우기</button>` : `<button class="del-link rep-link" data-act="report-open" data-id="${m.id}">${I.flag}이 기억 신고하기</button>`}</div>
         <div class="detail-bar f-actbar"><button class="heart-btn" data-act="like" data-id="${m.id}" aria-pressed="${liked}" aria-label="마음 ${hearts}">${I.heart}<span>${hearts}</span></button>
           <button class="btn btn-primary" data-act="reply" data-id="${m.id}">답장 남기기</button></div></div>
     </section>`;
@@ -470,8 +474,10 @@
       <div class="f-info">
         ${m.hint ? `<div class="f-hint"><span class="tag">HINT</span><p>${esc(m.hint)}</p></div>` : ""}
         <div class="f-urow"><div><b>아직 발견하지 않은 기억</b><span>${esc(m.place)}</span></div>${can ? badge("coral", I.unlock, "열 수 있어요") : badge("lilac", I.lock, "잠김")}</div>
+        ${m.secret ? `<div class="f-secretnote"><span class="ic">${I.key}</span><p><b>비밀번호가 걸린 기억이에요</b>심은 사람이 알려 준 비밀번호를 그 장소에서 입력하면 열려요.</p></div>` : ""}
         <p class="f-rule">처음 한 번은 그 장소에서 열 수 있어요. 열고 나면 내 정원에서 어디서든 다시 볼 수 있어요.</p>
         ${lOk ? `<p class="f-acc">${I.crosshair}내 위치 오차 ±${pos().acc}m · 열람 반경 약 ${R}m</p>` : ""}
+        ${m.hint ? `<button class="del-link rep-link" data-act="report-open" data-id="${m.id}">${I.flag}힌트 신고하기</button>` : ""}
       </div></div>
       <div class="f-actbar">${!lOk ? `<button class="btn btn-outline" data-act="focus" data-id="${m.id}">지도</button><button class="btn btn-primary" data-act="${GEO.state === "denied" ? "loc-help" : "loc-retry"}">${GEO.state === "denied" ? "위치 권한 켜는 방법" : "위치 다시 확인하기"}</button>`
         : !aOk ? `<button class="btn btn-outline" data-act="focus" data-id="${m.id}">지도</button><button class="btn btn-primary" data-act="loc-retry">위치 다시 확인하기</button>`
@@ -499,12 +505,16 @@
     }, 70);
   }
   // M11 최초 발견: 서버가 거리·정확도를 확인한 뒤에만 내용을 받아요 → 씨앗이 꽃으로 → 정원 자수 +1
-  function discover(id) {
+  function discover(id, secret) {
     if (S.busy) return;
     if (!member()) { loginSheet("open"); return; }
-    S.busy = true; render();
-    API.open(id, pos()).then(r => {
+    S.busy = true; if (!secret) render();
+    API.open(id, pos(), secret).then(r => {
       S.busy = false;
+      if (r.status === "secret_required") { render(); secretSheet(id); return; }
+      if (r.status === "secret_wrong") { secretSheet(id, `비밀번호가 맞지 않아요. ${r.left}번 더 시도할 수 있어요`); return; }
+      if (r.status === "secret_locked") { closeModal(); render(); toast(`여러 번 틀려서 ${r.retry_min || 10}분 뒤에 다시 시도할 수 있어요`); return; }
+      if (secret) closeModal();
       if (r.memory) { remember(Object.assign(r.memory, { state: r.memory.mine ? "mine" : "discovered" })); S.status[id] = r.status; }
       if (r.status === "discovered" && r.first) { S.found = id; S.foundN = S.garden ? S.garden.collected.length + 1 : null; S.garden = null; syncMap(); }
       else if (r.status === "too_far") toast(`아직 조금 멀어요 · ${r.distance_m}m (반경 ${r.radius_m}m)`);
@@ -579,13 +589,14 @@
     if (step === "3") {
       const lOk = locOk(), aOk = accOk();
       if (!dr.place && placeGuess()) dr.place = placeGuess();
-      const ready = aOk && dr.place.trim().length >= 1;
+      const ready = aOk && dr.place.trim().length >= 1 && (dr.vis !== "key" || SECRET_OK(dr.secret));
       const opt = (v, ic, t, d) => `<button class="option f-opt" data-act="vis" data-v="${v}" aria-pressed="${dr.vis === v}"><span class="oi">${ic}</span><div><b>${t}</b><span>${d}</span></div><span class="radio">${dr.vis === v ? I.check : ""}</span></button>`;
       return `<section class="screen" aria-label="기억 심기 3단계">${flowHead(3)}<div class="flow-body f-flow">
       <h1 class="flow-title">누구와 이 기억을<br>나눌까요?<small>내가 남긴 기억은 공개 범위와 상관없이 내 정원에서 언제든 다시 볼 수 있어요.</small></h1>
       ${aOk ? `<div class="f-plantplace"><span class="ic">${I.pin}</span><div><b>${esc(dr.place || "지금 있는 곳")}</b><span>지금 여기에 심어요 · 내 위치 오차 ±${pos().acc}m</span></div></div>`
         : `<div class="f-plantplace err" role="alert"><span class="ic">${I.locOff}</span><div><b>${lOk ? `위치 정확도가 낮아요 · ±${pos().acc}m` : "현재 위치를 확인할 수 없어요"}</b><span>${lOk ? `오차가 ${S.set.maxAcc}m 안으로 줄면 심을 수 있어요` : "기억은 지금 서 있는 자리에만 심을 수 있어요"}</span></div><button class="btn btn-soft" data-act="${!lOk && GEO.state === "denied" ? "loc-help" : "loc-retry"}">${!lOk && GEO.state === "denied" ? "방법 보기" : "다시 확인"}</button></div>`}
-      <div class="f-opts" role="radiogroup" aria-label="공개 범위">${opt("all", I.users, "모두에게", "이 장소에 가까이 온 누구나 발견할 수 있어요")}${opt("me", I.lock, "나만 보기", "다른 사람에게 공개되지 않는 나만의 기억이에요")}</div>
+      <div class="f-opts" role="radiogroup" aria-label="공개 범위">${opt("all", I.users, "모두에게", "이 장소에 가까이 온 누구나 발견할 수 있어요")}${opt("key", I.key, "비밀번호를 아는 사람만", "이 장소에서 비밀번호까지 맞힌 사람만 열 수 있어요")}${opt("me", I.lock, "나만 보기", "다른 사람에게 공개되지 않는 나만의 기억이에요")}</div>
+      ${dr.vis === "key" ? `<label class="field f-secretfield"><span>비밀번호 <em>4~20자</em></span><input id="secretText" maxlength="20" value="${esc(dr.secret || "")}" placeholder="함께 나눌 사람에게만 알려 줄 말" autocomplete="off" autocapitalize="off" spellcheck="false"><small>비밀번호는 다시 볼 수 없어요. 알려 줄 사람에게 따로 전해 주세요.</small></label>` : ""}
       <p class="f-noteline">${I.info}심은 뒤에도 내 정원에서 언제든 바꿀 수 있어요.</p>
       <label class="field"><span>장소 이름</span><input id="placeName" maxlength="40" value="${esc(dr.place)}" placeholder="예: 망원동 골목 카페 창가" autocomplete="off"></label>
       <label class="field"><span>발견 힌트 <em>선택</em></span><input id="hintText" maxlength="60" value="${esc(dr.hint)}" placeholder="발견 전에 보여 줄 한 줄. 사진·글은 안 보여요" autocomplete="off"></label>
@@ -601,7 +612,7 @@
         : "연결이 불안정해서 확인을 받지 못했어요.<br>쓴 내용은 그대로 남아 있으니 다시 시도해 주세요.";
       return `<section class="screen" aria-label="심기 실패"><header class="flow-head f-flowhead"><a class="icon-btn" href="#/" aria-label="닫기">${I.close}</a></header>
       <div class="f-fail" role="alert"><span class="f-sic err big">${e === "low_accuracy" || e === "no_location" ? I.locOff : I.wifi}</span><h1>아직 심어지지 않았어요</h1><p>${msg}</p>
-      ${dr.text ? `<div class="f-draft">${dr.photo ? `<img src="${dr.photo}" alt="">` : `<span class="noimg">${BR.seed("planted", 40)}</span>`}<div><b>${esc(dr.text.slice(0, 40))}${dr.text.length > 40 ? "…" : ""}</b><span>임시 저장됨 · ${dr.vis === "me" ? "나만 보기" : "모두에게"}</span></div></div>` : ""}</div>
+      ${dr.text ? `<div class="f-draft">${dr.photo ? `<img src="${dr.photo}" alt="">` : `<span class="noimg">${BR.seed("planted", 40)}</span>`}<div><b>${esc(dr.text.slice(0, 40))}${dr.text.length > 40 ? "…" : ""}</b><span>임시 저장됨 · ${dr.vis === "me" ? "나만 보기" : dr.vis === "key" ? "비밀번호" : "모두에게"}</span></div></div>` : ""}</div>
       <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="plant">다시 시도</button><a class="btn btn-ghost" href="#/plant/3">내용 확인하기</a></div></section>`;
     }
     if (step === "done") {
@@ -609,8 +620,8 @@
       if (!m) { location.hash = "#/"; return ""; }
       return `<section class="screen f-done" aria-label="심기 완료"><div class="f-scroll"><div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark">MEMORY PLANTED</span>
         ${ORBIT(70, 52, 250)}${AT(97, 80, 196, BR.seed("planted", 196), "pop")}${LUMI(272, 60, 87)}${HILLS(290)}<span class="f-sprout">${I.garden}</span></div>
-      <div class="f-datecard">${stamp(m)}<div><b>${esc(m.place)}</b>${badge("soft", m.vis === "me" ? I.lock : I.users, visLabel(m.vis))}</div></div>
-      <div class="f-copy"><h1>기억을 심었어요</h1><p>${m.vis === "me" ? "다른 사람에게는 보이지 않아요.<br>내 정원에서 언제든 다시 볼 수 있어요." : "누군가 이 장소 가까이 오면<br>당신의 기억을 발견할 수 있어요."}</p></div></div>
+      <div class="f-datecard">${stamp(m)}<div><b>${esc(m.place)}</b>${badge("soft", visIc(m.vis), visLabel(m.vis))}</div></div>
+      <div class="f-copy"><h1>기억을 심었어요</h1><p>${m.vis === "me" ? "다른 사람에게는 보이지 않아요.<br>내 정원에서 언제든 다시 볼 수 있어요." : m.vis === "key" ? "비밀번호를 아는 사람이 이 장소에 오면<br>당신의 기억을 발견할 수 있어요." : "누군가 이 장소 가까이 오면<br>당신의 기억을 발견할 수 있어요."}</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/" data-act="after-plant">지도에서 보기</a><a class="btn btn-ghost" href="#/garden">내 정원 보기</a></div></section>`;
     }
     return "";
@@ -623,14 +634,14 @@
     const story = dr.text.trim(), firstLine = story.split("\n")[0];
     API.plant({
       title: firstLine.length > 22 ? firstLine.slice(0, 22) + "…" : firstLine, story, place: (dr.place || placeGuess() || "이름 없는 장소").trim(), hint: dr.hint.trim(),
-      vis: dr.vis, photoBlob: dr.blob, photoDataUrl: dr.photo, pos: { lat: p.lat, lng: p.lng, acc: p.acc }
+      vis: dr.vis, secret: dr.vis === "key" ? dr.secret : undefined, photoBlob: dr.blob, photoDataUrl: dr.photo, pos: { lat: p.lat, lng: p.lng, acc: p.acc }
     }).then(m => {
       S.lastPlanted = remember(Object.assign(m, { state: "mine", mine: true }));
       if (!S.near.some(x => x.id === m.id)) S.near.unshift(m);
       S.garden = null; S.plantErr = null;
       S.draft = { photo: null, blob: null, text: "", vis: "all", place: "", hint: "", noPhoto: false };
       location.hash = "#/plant/done";
-    }).catch(e => { console.error(e); if (e.code === "login_required") { location.hash = "#/plant/3"; loginSheet("plant"); return; } S.plantErr = e.code || "net"; location.hash = "#/plant/fail"; });
+    }).catch(e => { console.error(e); if (e.code === "login_required") { location.hash = "#/plant/3"; loginSheet("plant"); return; } if (e.code === "secret_unsupported" || e.code === "bad_secret") { location.hash = "#/plant/3"; toast(e.code === "bad_secret" ? "비밀번호는 4~20자로 정해 주세요" : "비밀번호 기억은 서버 준비가 끝나면 쓸 수 있어요"); return; } S.plantErr = e.code || "net"; location.hash = "#/plant/fail"; });
   }
 
   /* ---------------- GARDEN (M19 · M20 · M21 · M22) ---------------- */
@@ -666,8 +677,8 @@
     const done = f.length === BLOOM_N, PART = ["첫 꽃잎", "둘째 꽃잎", "셋째 꽃잎"];
     const rows = Array.from({ length: BLOOM_N }, (_, k) => {
       const m = f[k];
-      if (!m) return `<li class="fl-row off"><span class="fl-part">${PART[k]}</span><div><b>아직 비어 있어요</b><span>${kind === "mine" ? "다음에 심는 기억이 여기에 수놓여요" : "다음에 발견하는 기억이 여기에 수놓여요"}</span></div></li>`;
-      if (m.gone) return `<li><button class="fl-row gone" data-act="fl-gone"><span class="fl-part">${PART[k]}</span><div><b>더 이상 열람할 수 없는 기억</b><span>흔적만 남아 있어요</span></div></button></li>`;
+      if (!m) return `<li class="fl-row off"><span class="fl-part"><i class="fl-dot empty"></i>${PART[k]}</span><div><b>아직 비어 있어요</b><span>${kind === "mine" ? "다음에 심는 기억이 여기에 수놓여요" : "다음에 발견하는 기억이 여기에 수놓여요"}</span></div></li>`;
+      if (m.gone) return `<li><button class="fl-row gone" data-act="fl-gone"><span class="fl-part"><i class="fl-dot gone"></i>${PART[k]}</span><div><b>더 이상 열람할 수 없는 기억</b><span>흔적만 남아 있어요</span></div></button></li>`;
       const pk = petalOf(m);
       return `<li><button class="fl-row" data-act="fl-open" data-id="${m.id}"><span class="fl-part"><i class="fl-dot" style="background:var(--st-${pk}-petal,${BR.PAL[pk].petal})"></i>${PART[k]}</span><div><b>${esc(m.title)}</b><span>${kind === "mine" ? esc(m.place) : `${esc(m.author ? m.author.name : "정원사")}의 ${petalName(pk)} 실 · ${esc(m.place)}`}</span></div><i class="fl-go" aria-hidden="true">›</i></button></li>`;
     }).join("");
@@ -696,7 +707,7 @@
     const received = mine.reduce((a, m) => a + (m.hearts || 0), 0);
     const grid = gs === "loading" ? [1, 2].map(() => `<span class="polaroid f-tile sk-card" aria-hidden="true"><span class="sk" style="aspect-ratio:1;border-radius:10px"></span><span class="sk" style="height:14px;width:70%"></span></span>`).join("")
       : gs === "error" ? stateBlock("err", I.wifi, "정원을 불러오지 못했어요", "심은 기억과 모은 기억은 그대로 있어요. 연결을 확인하고 다시 시도해 주세요.", `<button class="btn btn-outline f-sbtn" data-act="garden-retry">다시 시도</button>`)
-      : list.length ? list.map(m => `<button class="polaroid f-tile" data-act="open" data-id="${m.id}">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : `<span class="noimg">${BR.seed("planted", 90)}</span>`}<b>${esc(m.title)}</b><span>${esc(m.place)}</span>${m.mine && m.vis === "me" ? `<i class="vis-me">${I.lock}나만 보기</i>` : ""}</button>`).join("")
+      : list.length ? list.map(m => `<button class="polaroid f-tile" data-act="open" data-id="${m.id}">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : `<span class="noimg">${BR.seed("planted", 90)}</span>`}<b>${esc(m.title)}</b><span>${esc(m.place)}</span>${m.mine && m.vis === "me" ? `<i class="vis-me">${I.lock}나만 보기</i>` : m.mine && m.vis === "key" ? `<i class="vis-me">${I.key}비밀번호</i>` : ""}</button>`).join("")
       : tab === "mine" ? stateBlock("soft", I.garden, "아직 심은 기억이 없어요", "좋아하는 장소에서 첫 기억을 심어 보세요. 그 자리에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`)
         : stateBlock("soft", I.map, "아직 모은 기억이 없어요", "지도에서 가까운 기억을 찾아가 열어 보세요.", `<a class="btn btn-primary f-sbtn" href="#/">지도 보기</a>`);
     // 프로필 수정은 이름 아래 '프로필 바꾸기' 버튼 하나로 모아요(사진·이름 옆 연필 버튼 없음)
@@ -783,19 +794,54 @@
     document.documentElement.setAttribute("data-theme", n ? "night" : "day");
     const mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.content = n ? "#17182F" : "#FBF6EE";
   }
+  // 비밀번호 기억 열기: 현장(반경 안)에서 서버가 거리 확인 → 비밀번호 확인
+  function secretSheet(id, err) {
+    openModal(`<div class="secret-sheet"><span class="secret-ic">${I.key}</span><h3>비밀번호가 걸린 기억이에요</h3>
+      <p class="sub">심은 사람이 알려 준 비밀번호를 입력해 주세요.</p>
+      <label class="field"><input id="secretOpen" maxlength="20" placeholder="비밀번호" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="비밀번호" aria-invalid="${!!err}"></label>
+      ${err ? `<p class="secret-err" role="alert">${esc(err)}</p>` : ""}
+      <button class="btn btn-primary btn-block" id="secretOpenBtn" data-act="secret-submit" data-id="${id}" disabled>${I.unlock}기억 열기</button><button class="btn btn-ghost" data-act="close">취소</button></div>`);
+    setTimeout(() => { const i = document.getElementById("secretOpen"); if (i) i.focus(); }, 60);
+  }
+  // 신고: 다른 사람 기억(또는 발견 전 힌트)
+  const REPORT_REASONS = [["spam", "스팸·광고"], ["abuse", "욕설·혐오·괴롭힘"], ["privacy", "개인정보가 드러나요"], ["sexual", "불쾌하거나 위험한 사진·글"], ["other", "그 밖의 이유"]];
+  function reportSheet(id, pick) {
+    openModal(`<h3>이 기억을 신고할까요?</h3><p class="sub">신고하면 이 기억은 나에게 더 이상 보이지 않아요.<br>여러 사람이 신고하면 확인할 때까지 모두에게 숨겨져요.</p>
+      <div class="f-opts rep-opts" role="radiogroup" aria-label="신고 이유">${REPORT_REASONS.map(([k, t]) => `<button class="option f-opt" data-act="report-pick" data-id="${id}" data-v="${k}" aria-pressed="${pick === k}"><div><b>${t}</b></div><span class="radio">${pick === k ? I.check : ""}</span></button>`).join("")}</div>
+      <button class="btn btn-primary btn-block" data-act="report-send" data-id="${id}" data-v="${pick || ""}" ${pick ? "" : "disabled"}>신고하기</button><button class="btn btn-ghost" data-act="close">취소</button>`);
+  }
+  function reportDone(id) {
+    S.near = S.near.filter(m => m.id !== id); delete S.cache[id]; S.status[id] = "unavailable"; S.garden = null; S.selected = null;
+    closeModal(); location.hash = "#/"; syncMap(); toast("신고했어요. 이 기억은 이제 보이지 않아요");
+  }
+  // 비밀번호 새로 정하기(내 기억 공개 범위 → 비밀번호를 아는 사람만)
+  function secretNewSheet(id) {
+    openModal(`<div class="secret-sheet"><span class="secret-ic">${I.key}</span><h3>비밀번호를 정해 주세요</h3>
+      <p class="sub">이 장소에서 비밀번호까지 맞힌 사람만 열 수 있어요.<br>이미 발견한 사람은 그대로 다시 볼 수 있어요.</p>
+      <label class="field"><input id="secretNew" maxlength="20" placeholder="4~20자" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="새 비밀번호"></label>
+      <p class="fine">비밀번호는 다시 볼 수 없어요. 알려 줄 사람에게 따로 전해 주세요.</p>
+      <button class="btn btn-primary btn-block" id="secretNewBtn" data-act="secret-set" data-id="${id}" disabled>이 비밀번호로 바꾸기</button><button class="btn btn-ghost" data-act="close">취소</button></div>`);
+    setTimeout(() => { const i = document.getElementById("secretNew"); if (i) i.focus(); }, 60);
+  }
+  function applyVis(id, v, secret) {
+    const m = byId(id), prev = m ? m.vis || "all" : "all";
+    return API.setVisibility(id, v, secret, prev).then(() => { [byId(id), S.cache[id]].forEach(x => { if (x) x.vis = v; }); if (S.garden) S.garden.mine.forEach(x => { if (x.id === id) x.vis = v; }); closeModal(); render(); toast(v === "me" ? "나만 보기로 바꿨어요" : v === "key" ? "비밀번호를 아는 사람만 열 수 있게 바꿨어요" : "모두에게 공개했어요"); })
+      .catch(err => { console.error(err); closeModal(); toast(err && err.code === "PGRST202" ? "비밀번호 기억은 서버 준비가 끝나면 쓸 수 있어요" : "공개 범위를 바꾸지 못했어요"); });
+  }
   // M32-2 · M32-3 공개 범위 변경(양방향) — 바꾸기 전에 꼭 안내
   function visSheet(id) {
     const m = byId(id); if (!m) return;
     const cur = m.vis || "all";
     openModal(`<h3>공개 범위</h3>
       <button class="option" data-act="vis-pick" data-id="${id}" data-v="all" aria-pressed="${cur === "all"}"><span class="oi">${I.users}</span><div><b>모두에게 공개</b><span>이 장소 가까이 온 사람이 발견할 수 있어요</span></div><span class="radio"></span></button>
+      <button class="option" data-act="vis-pick" data-id="${id}" data-v="key" aria-pressed="${cur === "key"}"><span class="oi">${I.key}</span><div><b>비밀번호를 아는 사람만</b><span>${cur === "key" ? "비밀번호를 새로 바꾸려면 다시 눌러 주세요" : "이 장소에서 비밀번호까지 맞힌 사람만 열 수 있어요"}</span></div><span class="radio"></span></button>
       <button class="option" data-act="vis-pick" data-id="${id}" data-v="me" aria-pressed="${cur === "me"}"><span class="oi">${I.lock}</span><div><b>나만 보기</b><span>나만 볼 수 있어요. 지도에도 보이지 않아요</span></div><span class="radio"></span></button>`);
   }
   function visConfirm(id, v) {
     const toMe = v === "me";
     openModal(`<h3>${toMe ? "나만 보기로 바꿀까요?" : "모두에게 공개할까요?"}</h3>
       <ul class="confirm-list">${toMe ? `<li>새로 발견하는 사람이 없어져요.</li><li>이미 발견한 사람도 다시 볼 수 없어요. 그 사람의 정원에는 누구의 기억인지 알 수 없는 회색 자수 흔적만 남아요.</li><li>공유한 링크로도 열 수 없어요.</li>`
-        : `<li>이 장소 가까이 온 사람이 처음 발견할 수 있게 돼요.</li><li>사진과 이야기는 현장에서 처음 열 때만 보여요. 링크로는 열 수 없어요.</li><li>예전에 이 기억을 발견했던 사람은 다시 볼 수 있게 돼요.</li>`}</ul>
+        : `${(byId(id) || {}).vis === "key" ? "<li>비밀번호가 없어져서 누구나 발견할 수 있어요.</li>" : ""}<li>이 장소 가까이 온 사람이 처음 발견할 수 있게 돼요.</li><li>사진과 이야기는 현장에서 처음 열 때만 보여요. 링크로는 열 수 없어요.</li><li>예전에 이 기억을 발견했던 사람은 다시 볼 수 있게 돼요.</li>`}</ul>
       <button class="btn btn-primary btn-block" data-act="vis-apply" data-id="${id}" data-v="${v}">${toMe ? "나만 보기로 바꾸기" : "공개하기"}</button><button class="btn btn-ghost" data-act="close">취소</button>`);
   }
   function delConfirm(id) {
@@ -1078,7 +1124,7 @@
       render();
     }, force ? 30 : 250);
   }
-  function syncPlantBtn() { const b = document.getElementById("plantBtn"); if (b) b.disabled = !(accOk() && S.draft.place.trim()); }
+  function syncPlantBtn() { const b = document.getElementById("plantBtn"); if (b) b.disabled = !(accOk() && S.draft.place.trim() && (S.draft.vis !== "key" || SECRET_OK(S.draft.secret))); }
 
   GEO.on(() => {
     const p = pos();
@@ -1137,11 +1183,16 @@
       case "theme-open": themeSheet(); break;
       case "theme-set": S.theme = t.dataset.v; store.set("theme", S.theme); applyTheme(); if (route().name === "settings") render(); else themeSheet(); if (MAP) syncMap(); break;
       case "vis-open": visSheet(id); break;
-      case "vis-pick": { const m = byId(id); if (m && (m.vis || "all") !== t.dataset.v) visConfirm(id, t.dataset.v); else closeModal(); break; }
-      case "vis-apply": {
-        const v = t.dataset.v; t.disabled = true;
-        API.setVisibility(id, v).then(() => { [byId(id), S.cache[id]].forEach(m => { if (m) m.vis = v; }); if (S.garden) S.garden.mine.forEach(m => { if (m.id === id) m.vis = v; }); closeModal(); render(); toast(v === "me" ? "나만 보기로 바꿨어요" : "모두에게 공개했어요"); })
-          .catch(err => { console.error(err); closeModal(); toast("공개 범위를 바꾸지 못했어요"); });
+      case "vis-pick": { const m = byId(id), v = t.dataset.v; if (v === "key") secretNewSheet(id); else if (m && (m.vis || "all") !== v) visConfirm(id, v); else closeModal(); break; }
+      case "vis-apply": { t.disabled = true; applyVis(id, t.dataset.v); break; }
+      case "secret-set": { const v = (document.getElementById("secretNew") || {}).value || ""; if (!SECRET_OK(v)) break; t.disabled = true; applyVis(id, "key", v); break; }
+      case "secret-submit": { const v = (document.getElementById("secretOpen") || {}).value || ""; if (!SECRET_OK(v)) break; t.disabled = true; discover(id, v); break; }
+      case "report-open": if (!member()) { loginSheet("open"); break; } reportSheet(id); break;
+      case "report-pick": reportSheet(id, t.dataset.v); break;
+      case "report-send": {
+        if (!t.dataset.v) break; t.disabled = true;
+        API.report(id, t.dataset.v).then(r => { if (r && r.status === "login_required") { closeModal(); loginSheet("open"); return; } reportDone(id); })
+          .catch(err => { console.error(err); closeModal(); toast(err && err.code === "PGRST202" ? "신고 기능은 서버 준비가 끝나면 쓸 수 있어요" : "신고하지 못했어요. 잠시 뒤 다시 시도해 주세요"); });
         break;
       }
       case "del-open": delConfirm(id); break;
@@ -1218,6 +1269,8 @@
     }
     if (id === "placeName") { S.draft.place = e.target.value; syncPlantBtn(); }
     if (id === "hintText") S.draft.hint = e.target.value;
+    if (id === "secretText") { S.draft.secret = e.target.value; syncPlantBtn(); }
+    if (id === "secretOpen" || id === "secretNew") { const b = document.getElementById(id + "Btn"); if (b) b.disabled = !SECRET_OK(e.target.value); }
   });
   $app.addEventListener("change", e => {
     if (e.target.dataset.act === "prof-photo" && e.target.files[0]) { const f = e.target.files[0]; if (!/^image\//.test(f.type)) { toast("사진 파일만 고를 수 있어요"); return; } setProfilePhoto(f); return; }

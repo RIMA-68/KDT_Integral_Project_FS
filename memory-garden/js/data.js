@@ -44,7 +44,7 @@ window.MG_DATA = {
       photo: "assets/img/alley.webp",
       story: "철쭉이 핀 골목에서 고양이가 나를 한참 봤다.\n이름도 모르는데 인사하고 왔다.",
       author: { name: "J", avatar: "char-stripe" },
-      when: "3일 전", date: "2026-11-21T16:05", vis: "all", firstDist: 32, hearts: 41,
+      when: "3일 전", date: "2026-11-21T16:05", vis: "key", secret: "1234", firstDist: 32, hearts: 41,
       hint: "파란 대문 앞에서 누군가 기다리고 있어요",
       replies: []
     },

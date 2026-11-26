@@ -12,7 +12,8 @@
 
   class ApiError extends Error { constructor(code, msg) { super(msg || code); this.code = code; } }
 
-  const visIn = v => v === "private" ? "me" : "all";
+  // 공개 범위: all(모두) · key(비밀번호를 아는 사람만 — 서버에선 public + 비밀번호) · me(나만)
+  const visIn = (v, secret) => v === "private" ? "me" : secret ? "key" : "all";
   const visOut = v => v === "me" ? "private" : "public";
   const authorOf = a => a ? { name: a.nickname || "정원사", avatar: a.avatar === "me" && a.avatar_url ? a.avatar_url : (a.avatar && a.avatar !== "me" ? a.avatar : "char-lavender"), petal: a.petal || null } : { name: "정원사", avatar: "char-lavender", petal: null };
 
@@ -50,7 +51,7 @@
     const full = (j, url) => ({
       id: j.id, mine: !!j.mine, state: j.mine ? "mine" : "discovered", lat: +j.lat, lng: +j.lng,
       title: j.title, story: j.story, place: j.place_name, hint: j.hint || "", photoPath: j.photo_path, photo: url(j.photo_path),
-      vis: visIn(j.visibility), date: j.created_at, author: authorOf(j.author), hearts: j.hearts || 0, liked: !!j.liked,
+      vis: visIn(j.visibility, j.secret), date: j.created_at, author: authorOf(j.author), hearts: j.hearts || 0, liked: !!j.liked,
       firstDist: j.first_dist_m, replies: (j.replies || []).map(r => ({ id: r.id, name: r.nickname || "정원사", avatar: authorOf(r).avatar, text: r.body, date: r.created_at, mine: r.mine })), full: true
     });
 
@@ -153,18 +154,22 @@
         const rows = await call("nearby_memories", { p_lat: pos.lat, p_lng: pos.lng });
         const url = await sign(rows.map(r => r.photo_path));
         return rows.map(r => r.state === "undiscovered"
-          ? { id: r.id, mine: false, state: "undiscovered", lat: r.lat, lng: r.lng, place: r.place_name, hint: r.hint || "" }
-          : { id: r.id, mine: r.state === "mine", state: r.state, lat: r.lat, lng: r.lng, place: r.place_name, hint: r.hint || "", title: r.title, photoPath: r.photo_path, photo: url(r.photo_path), vis: r.state === "mine" ? visIn(r.visibility) : "all", date: r.created_at, author: authorOf({ nickname: r.author_nickname, avatar: r.author_avatar, avatar_url: r.author_avatar_url }) });
+          ? { id: r.id, mine: false, state: "undiscovered", lat: r.lat, lng: r.lng, place: r.place_name, hint: r.hint || "", secret: !!r.secret }
+          : { id: r.id, mine: r.state === "mine", state: r.state, lat: r.lat, lng: r.lng, place: r.place_name, hint: r.hint || "", title: r.title, photoPath: r.photo_path, photo: url(r.photo_path), vis: r.state === "mine" ? visIn(r.visibility, r.secret) : r.secret ? "key" : "all", date: r.created_at, author: authorOf({ nickname: r.author_nickname, avatar: r.author_avatar, avatar_url: r.author_avatar_url }) });
       },
       async detail(id) {
         if (!/^[0-9a-f-]{36}$/i.test(id)) return { status: "unavailable" };
         const r = await call("memory_detail", { p_id: id });
         if (r.status === "mine" || r.status === "discovered") { const url = await sign([r.memory.photo_path]); return { status: r.status, memory: full(r.memory, url) }; }
-        if (r.status === "locked") return { status: "locked", memory: { id: r.memory.id, mine: false, state: "undiscovered", lat: +r.memory.lat, lng: +r.memory.lng, place: r.memory.place_name, hint: r.memory.hint || "" } };
+        if (r.status === "locked") return { status: "locked", memory: { id: r.memory.id, mine: false, state: "undiscovered", lat: +r.memory.lat, lng: +r.memory.lng, place: r.memory.place_name, hint: r.memory.hint || "", secret: !!r.memory.secret } };
         return { status: r.status };
       },
-      async open(id, pos) {
-        const r = await call("open_memory", { p_id: id, p_lat: pos ? pos.lat : null, p_lng: pos ? pos.lng : null, p_accuracy: pos ? pos.acc : null });
+      async open(id, pos, secret) {
+        const args = { p_id: id, p_lat: pos ? pos.lat : null, p_lng: pos ? pos.lng : null, p_accuracy: pos ? pos.acc : null };
+        let r;
+        // 비밀번호 칸이 있는 새 함수 → 서버에 아직 없으면(SQL 실행 전) 예전 함수로
+        try { r = await call("open_memory", Object.assign({ p_secret: secret || null }, args)); }
+        catch (e) { if (e.code === "PGRST202") r = await call("open_memory", args); else throw e; }
         if (r.memory) { const url = await sign([r.memory.photo_path]); r.memory = full(r.memory, url); }
         return r;
       },
@@ -184,7 +189,9 @@
           if (error) throw new ApiError("upload", error.message);
         }
         try {
-          const j = await call("plant_memory", { p_title: d.title, p_story: d.story, p_place: d.place, p_hint: d.hint || null, p_photo_path: path, p_lat: d.pos.lat, p_lng: d.pos.lng, p_accuracy: d.pos.acc, p_visibility: visOut(d.vis) });
+          const args = { p_title: d.title, p_story: d.story, p_place: d.place, p_hint: d.hint || null, p_photo_path: path, p_lat: d.pos.lat, p_lng: d.pos.lng, p_accuracy: d.pos.acc, p_visibility: visOut(d.vis) };
+          if (d.vis === "key") args.p_secret = d.secret;
+          const j = await call("plant_memory", args);
           const url = await sign([j.photo_path]);
           return full(j, url);
         } catch (e) {
@@ -192,10 +199,14 @@
           if (/low accuracy/.test(e.message)) e.code = "low_accuracy";
           if (/too many/.test(e.message)) e.code = "too_many";
           if (/login required/.test(e.message)) e.code = "login_required";
+          if (/bad secret/.test(e.message)) e.code = "bad_secret";
+          if (e.code === "PGRST202") e.code = "secret_unsupported";
           throw e;
         }
       },
-      async setVisibility(id, vis) {
+      async setVisibility(id, vis, secret, prev) {
+        if (vis === "key") return call("set_memory_secret", { p_id: id, p_secret: secret });
+        if (prev === "key") await call("set_memory_secret", { p_id: id, p_secret: null });
         const { error } = await sb.from("memories").update({ visibility: visOut(vis), updated_at: new Date().toISOString() }).eq("id", id);
         if (error) throw new ApiError("update", error.message);
       },
@@ -209,6 +220,8 @@
         const { error } = await sb.from("replies").insert({ memory_id: id, body: text });
         if (error) throw new ApiError("reply", error.message);
       },
+      // 신고: 사유 spam·abuse·privacy·sexual·other
+      async report(id, reason, note) { return call("report_memory", { p_id: id, p_reason: reason, p_note: note || null }); },
       async heart(id, on) {
         const q = on ? sb.from("hearts").insert({ memory_id: id }) : sb.from("hearts").delete().eq("memory_id", id).eq("user_id", uid);
         const { error } = await q;
@@ -234,12 +247,13 @@
       db.memories = db.memories.filter(m => m.owner === "me");
       D.memories.forEach(s => {
         const p = G.offset(anchor, (s.x - D.me.x) * D.scale, -(s.y - D.me.y) * D.scale);
-        db.memories.push({ id: s.id, owner: "other", lat: p.lat, lng: p.lng, title: s.title, story: s.story, place: s.place, hint: s.hint || "", photo: s.photo, vis: s.vis || "all", date: s.date, author: s.author, baseHearts: s.hearts || 0, seedReplies: s.replies || [] });
+        db.memories.push({ id: s.id, owner: "other", lat: p.lat, lng: p.lng, title: s.title, story: s.story, place: s.place, hint: s.hint || "", photo: s.photo, vis: s.vis || "all", secret: s.secret, date: s.date, author: s.author, baseHearts: s.hearts || 0, seedReplies: s.replies || [] });
       });
       ["sunset", "bridge"].forEach(id => { if (!db.discoveries[id]) db.discoveries[id] = { at: new Date().toISOString(), firstDist: (D.memories.find(m => m.id === id) || {}).firstDist || 30 }; });
       persist();
     }
-    const canView = m => m.owner === "me" || (m.vis === "all" && db.discoveries[m.id]);
+    const open = m => (m.vis === "all" || m.vis === "key") && !(db.reported || {})[m.id];
+    const canView = m => m.owner === "me" || (open(m) && db.discoveries[m.id]);
     const fullOf = m => ({
       id: m.id, mine: m.owner === "me", state: m.owner === "me" ? "mine" : "discovered", lat: m.lat, lng: m.lng, title: m.title, story: m.story, place: m.place, hint: m.hint,
       photo: m.photo, vis: m.vis, date: m.date, author: m.owner === "me" ? { name: db.profile.nickname, avatar: db.profile.avatar === "me" && db.profile.avatar_url ? db.profile.avatar_url : db.profile.avatar } : m.author,
@@ -263,9 +277,9 @@
       async nearby(pos) {
         await wait(350);
         if (!db.anchor || G.distance(db.anchor, pos) > S.nearbyKm * 1000) seed(pos);
-        return db.memories.filter(m => m.owner === "me" || m.vis === "all").filter(m => G.distance(pos, m) <= S.nearbyKm * 1000).map(m => {
+        return db.memories.filter(m => m.owner === "me" || open(m)).filter(m => G.distance(pos, m) <= S.nearbyKm * 1000).map(m => {
           if (canView(m)) return fullOf(m);
-          return { id: m.id, mine: false, state: "undiscovered", lat: r4(m.lat), lng: r4(m.lng), place: m.place, hint: m.hint };
+          return { id: m.id, mine: false, state: "undiscovered", lat: r4(m.lat), lng: r4(m.lng), place: m.place, hint: m.hint, secret: m.vis === "key" };
         });
       },
       async detail(id) {
@@ -273,11 +287,11 @@
         const m = db.memories.find(x => x.id === id);
         if (!m) return { status: db.discoveries[id] ? "gone" : "unavailable" };
         if (m.owner === "me") return { status: "mine", memory: fullOf(m) };
-        if (m.vis !== "all") return { status: db.discoveries[id] ? "gone" : "unavailable" };
+        if (!open(m)) return { status: db.discoveries[id] ? "gone" : "unavailable" };
         if (db.discoveries[id]) return { status: "discovered", memory: fullOf(m) };
-        return { status: "locked", memory: { id: m.id, mine: false, state: "undiscovered", lat: r4(m.lat), lng: r4(m.lng), place: m.place, hint: m.hint } };
+        return { status: "locked", memory: { id: m.id, mine: false, state: "undiscovered", lat: r4(m.lat), lng: r4(m.lng), place: m.place, hint: m.hint, secret: m.vis === "key" } };
       },
-      async open(id, pos) {
+      async open(id, pos, secret) {
         await wait(300);
         const d = await this.detail(id);
         if (d.status !== "locked") return d;
@@ -285,6 +299,12 @@
         if (pos.acc > S.maxAcc) return { status: "low_accuracy", max_accuracy_m: S.maxAcc };
         const m = db.memories.find(x => x.id === id), dist = G.distance(pos, m);
         if (dist > S.radius) return { status: "too_far", distance_m: Math.round(dist), radius_m: S.radius };
+        if (m.vis === "key") {
+          const t = (db.tries = db.tries || {}), now = Date.now(), list = (t[id] || []).filter(x => now - x < 600000);
+          if (list.length >= 5) return { status: "secret_locked", retry_min: 10 };
+          if (!secret) return { status: "secret_required" };
+          if (secret !== (m.secret || "1234")) { list.push(now); t[id] = list; persist(); return list.length >= 5 ? { status: "secret_locked", retry_min: 10 } : { status: "secret_wrong", left: 5 - list.length }; }
+        }
         db.discoveries[id] = { at: new Date().toISOString(), firstDist: Math.round(dist) }; persist();
         return { status: "discovered", first: true, memory: fullOf(m) };
       },
@@ -293,7 +313,7 @@
         const mine = db.memories.filter(m => m.owner === "me").sort((a, b) => b.date.localeCompare(a.date)).map(fullOf);
         const collected = Object.entries(db.discoveries).sort((a, b) => a[1].at.localeCompare(b[1].at)).map(([id, d]) => {
           const m = db.memories.find(x => x.id === id);
-          return m && m.vis === "all" ? Object.assign(fullOf(m), { gone: false, at: d.at }) : { gone: true, id: "trace-" + id, at: d.at };
+          return m && open(m) ? Object.assign(fullOf(m), { gone: false, at: d.at }) : { gone: true, id: "trace-" + id, at: d.at };
         });
         return { mine, collected };
       },
@@ -301,11 +321,12 @@
         await wait(900);
         if (navigator.onLine === false) throw new ApiError("offline");
         if (!d.pos || d.pos.acc > S.maxAcc) throw new ApiError("low_accuracy");
-        const m = { id: "mine-" + Date.now(), owner: "me", lat: d.pos.lat, lng: d.pos.lng, title: d.title, story: d.story, place: d.place, hint: d.hint || "", photo: d.photoDataUrl || null, vis: d.vis, date: new Date().toISOString(), baseHearts: 0 };
+        const m = { id: "mine-" + Date.now(), owner: "me", lat: d.pos.lat, lng: d.pos.lng, title: d.title, story: d.story, place: d.place, hint: d.hint || "", photo: d.photoDataUrl || null, vis: d.vis, secret: d.vis === "key" ? d.secret : undefined, date: new Date().toISOString(), baseHearts: 0 };
         db.memories.push(m); persist();
         return fullOf(m);
       },
-      async setVisibility(id, vis) { const m = db.memories.find(x => x.id === id && x.owner === "me"); if (!m) throw new ApiError("update"); m.vis = vis; persist(); },
+      async setVisibility(id, vis, secret) { const m = db.memories.find(x => x.id === id && x.owner === "me"); if (!m) throw new ApiError("update"); m.vis = vis; m.secret = vis === "key" ? secret : undefined; persist(); },
+      async report(id) { const m = db.memories.find(x => x.id === id); if (!m) return { status: "unavailable" }; if (m.owner === "me") return { status: "mine" }; (db.reported = db.reported || {})[id] = 1; persist(); return { status: "ok" }; },
       async remove(id) { db.memories = db.memories.filter(x => !(x.id === id && x.owner === "me")); persist(); },
       async reply(id, text) { const m = db.memories.find(x => x.id === id); if (!m || !canView(m)) throw new ApiError("reply"); (db.replies[id] = db.replies[id] || []).push({ name: db.profile.nickname, avatar: db.profile.avatar === "me" && db.profile.avatar_url ? db.profile.avatar_url : db.profile.avatar, text, date: new Date().toISOString(), mine: true }); persist(); },
       async heart(id, on) { if (on) db.hearts[id] = 1; else delete db.hearts[id]; persist(); },
