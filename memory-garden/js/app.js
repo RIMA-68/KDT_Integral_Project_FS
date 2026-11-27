@@ -48,6 +48,7 @@
   const img = id => !id ? AV_DEFAULT : /^(https?:|data:|blob:)/.test(id) ? id : id === "me" ? (S.portrait || AV_DEFAULT) : id === "cat" ? "assets/img/cat.webp" : /^char-|^photo$/.test(id) ? AV_DEFAULT : `assets/img/${id}.webp`;
   const pos = () => GEO.state === "ok" ? GEO.pos : null;
   const member = () => !S.set.requireLogin || API.member();   // 심기·처음 열기는 로그인한 사람만(서버도 같은 기준)
+  let gtm = null;
   const locOk = () => !!pos();
   const accOk = () => locOk() && pos().acc <= S.set.maxAcc;
   const distOf = m => (pos() && m && m.lat != null) ? Math.round(GEO.distance(pos(), m)) : null;
@@ -320,6 +321,7 @@
     account: ["로그인하고 내 정원 지키기", "지금은 이 기기에만 연결된 임시 정원이에요. 로그인하면 지금까지의 기록이 계정에 그대로 이어져요."]
   };
   function loginSheet(kind) {
+    if (gtm) gtm.setLoginContext(kind || "account");
     const [h, p] = LOGIN_WHY[kind] || LOGIN_WHY.account;
     openModal(`<div class="login-sheet"><img src="${img("lumi-letter")}" alt=""><h3>${h}</h3><p class="av-note" style="margin:0">${p}</p></div>
       ${kakaoBtn()}${emailBtn()}<button class="btn btn-ghost" data-act="close">${kind === "account" ? "닫기" : "둘러보기 계속하기"}</button>
@@ -543,6 +545,7 @@
       if (r.status === "secret_wrong") { secretSheet(id, `비밀번호가 맞지 않아요. ${r.left}번 더 시도할 수 있어요`); return; }
       if (r.status === "secret_locked") { closeModal(); render(); toast(`여러 번 틀려서 ${r.retry_min || 10}분 뒤에 다시 시도할 수 있어요`); return; }
       if (secret) closeModal();
+      if (secret && gtm) gtm.track("click_secret_submit", { result: r.status === "discovered" || (r.memory && r.status !== "secret_wrong" && r.status !== "secret_locked" && r.status !== "secret_required") ? "success" : "fail" });
       if (r.memory) { remember(Object.assign(r.memory, { state: r.memory.mine ? "mine" : "discovered" })); S.status[id] = r.status; }
       if (r.status === "discovered" && r.first) { S.found = id; S.foundN = S.garden ? S.garden.collected.length + 1 : null; S.garden = null; syncMap(); }
       else if (r.status === "too_far") toast(`아직 조금 멀어요 · ${r.distance_m}m (반경 ${r.radius_m}m)`);
@@ -551,7 +554,7 @@
       else if (r.status === "login_required") { render(); loginSheet("open"); return; }
       else if (r.status === "gone" || r.status === "unavailable") { S.status[id] = r.status; toast("이 기억은 지금 열 수 없어요"); }
       render();
-    }).catch(e => { console.error(e); S.busy = false; render(); toast("기억을 열지 못했어요. 연결을 확인해 주세요"); });
+    }).catch(e => { console.error(e); S.busy = false; if (secret && gtm) gtm.track("click_secret_submit", { result: "fail" }); render(); toast("기억을 열지 못했어요. 연결을 확인해 주세요"); });
   }
   function viewFound(m) {
     const t = dateParts(m);
@@ -657,8 +660,8 @@
   }
   function doPlant() {
     const dr = S.draft, p = pos();
-    if (!p) { S.plantErr = "no_location"; location.hash = "#/plant/fail"; return; }
-    if (!accOk()) { S.plantErr = "low_accuracy"; location.hash = "#/plant/fail"; return; }
+    if (!p) { S.plantErr = "no_location"; location.hash = "#/plant/fail"; if (gtm) gtm.track("plant_result", { result: "fail", error_code: "no_location", visibility: dr.vis }); return; }
+    if (!accOk()) { S.plantErr = "low_accuracy"; location.hash = "#/plant/fail"; if (gtm) gtm.track("plant_result", { result: "fail", error_code: "low_accuracy", visibility: dr.vis }); return; }
     location.hash = "#/plant/doing";
     const story = dr.text.trim();
     API.plant({
@@ -670,7 +673,8 @@
       S.garden = null; S.plantErr = null;
       S.draft = { photo: null, blob: null, text: "", title: "", vis: "all", place: "", hint: "", noPhoto: false };
       location.hash = "#/plant/done";
-    }).catch(e => { console.error(e); if (e.code === "login_required") { location.hash = "#/plant/3"; loginSheet("plant"); return; } if (e.code === "secret_unsupported" || e.code === "bad_secret") { location.hash = "#/plant/3"; toast(e.code === "bad_secret" ? "비밀번호는 4~20자로 정해 주세요" : "비밀번호 기억은 서버 준비가 끝나면 쓸 수 있어요"); return; } S.plantErr = e.code || "net"; location.hash = "#/plant/fail"; });
+      if (gtm) gtm.track("plant_result", { result: "success", visibility: m.vis || dr.vis || "all" });
+    }).catch(e => { console.error(e); if (e.code === "login_required") { location.hash = "#/plant/3"; loginSheet("plant"); return; } if (e.code === "secret_unsupported" || e.code === "bad_secret") { location.hash = "#/plant/3"; toast(e.code === "bad_secret" ? "비밀번호는 4~20자로 정해 주세요" : "비밀번호 기억은 서버 준비가 끝나면 쓸 수 있어요"); return; } S.plantErr = e.code || "net"; location.hash = "#/plant/fail"; if (gtm) gtm.track("plant_result", { result: "fail", error_code: S.plantErr, visibility: dr.vis }); });
   }
 
   /* ---------------- GARDEN (M19 · M20 · M21 · M22) ---------------- */
@@ -811,6 +815,7 @@
   }
   function trailGroup(ids) {
     const list = trailList().filter(m => ids.includes(m.id));
+    if (gtm) gtm.track("click_trail_group", { group_count: list.length });
     openModal(`<h3>이 근처에 심은 기억 ${list.length}개</h3><ul class="fl-list">${list.map(m => `<li><button class="fl-row tr-li" data-act="fl-open" data-id="${m.id}"><span class="tr-lph">${m.photo ? `<img src="${esc(m.photo)}" alt="">` : BR.seed("planted", 28)}</span><div><b>${esc(m.title)}</b><span>${esc(m.place || "")} · ${dateParts(m).full}</span></div><i class="fl-go" aria-hidden="true">›</i></button></li>`).join("")}</ul>`);
   }
 
@@ -982,8 +987,8 @@
   }
   function applyVis(id, v, secret) {
     const m = byId(id), prev = m ? m.vis || "all" : "all";
-    return API.setVisibility(id, v, secret, prev).then(() => { [byId(id), S.cache[id]].forEach(x => { if (x) x.vis = v; }); if (S.garden) S.garden.mine.forEach(x => { if (x.id === id) x.vis = v; }); closeModal(); render(); toast(v === "me" ? "나만 보기로 바꿨어요" : v === "key" ? "비밀번호를 아는 사람만 열 수 있게 바꿨어요" : "모두에게 공개했어요"); })
-      .catch(err => { console.error(err); closeModal(); toast(err && err.code === "PGRST202" ? "비밀번호 기억은 서버 준비가 끝나면 쓸 수 있어요" : "공개 범위를 바꾸지 못했어요"); });
+    return API.setVisibility(id, v, secret, prev).then(() => { [byId(id), S.cache[id]].forEach(x => { if (x) x.vis = v; }); if (S.garden) S.garden.mine.forEach(x => { if (x.id === id) x.vis = v; }); if (gtm) gtm.track("visibility_result", { memory_id: id, visibility: v, result: "success" }); closeModal(); render(); toast(v === "me" ? "나만 보기로 바꿨어요" : v === "key" ? "비밀번호를 아는 사람만 열 수 있게 바꿨어요" : "모두에게 공개했어요"); })
+      .catch(err => { console.error(err); if (gtm) gtm.track("visibility_result", { memory_id: id, visibility: v, result: "fail" }); closeModal(); toast(err && err.code === "PGRST202" ? "비밀번호 기억은 서버 준비가 끝나면 쓸 수 있어요" : "공개 범위를 바꾸지 못했어요"); });
   }
   // M32-2 · M32-3 공개 범위 변경(양방향) — 바꾸기 전에 꼭 안내
   function visSheet(id) {
@@ -1170,23 +1175,23 @@
   }
   function avClick(a, t) {
     switch (a) {
-      case "av-back": avLeave(); return true;
-      case "av-discard": closeModal(); AV.draft = AV.base; location.hash = "#/garden"; return true;
-      case "av-save-leave": closeModal(); avSave(); return true;
-      case "av-retry": mountAvatar(); return true;
-      case "av-tab": AV.tab = t.dataset.t; avTabs(); avPanel(); const b = document.getElementById("avBody"); if (b) b.scrollTop = 0; return true;
+      case "av-back": if (gtm) gtm.onAvatar(a, t, avDirty()); avLeave(); return true;
+      case "av-discard": if (gtm) gtm.onAvatar(a, t); closeModal(); AV.draft = AV.base; location.hash = "#/garden"; return true;
+      case "av-save-leave": if (gtm) gtm.onAvatar(a, t); closeModal(); avSave(); return true;
+      case "av-retry": if (gtm) gtm.onAvatar(a, t); mountAvatar(); return true;
+      case "av-tab": if (gtm) gtm.onAvatar(a, t); AV.tab = t.dataset.t; avTabs(); avPanel(); const b = document.getElementById("avBody"); if (b) b.scrollTop = 0; return true;
     }
     if (AV.status !== "ready") return a.startsWith("av-");
     switch (a) {
-      case "av-set": { let v = t.dataset.v; if (t.dataset.k === "blush") v = v === "true"; if (AV.draft[t.dataset.k] === v) return true; avApply(Object.assign({}, AV.draft, { [t.dataset.k]: v })); return true; }
-      case "av-random": avApply(AV.mod.randomLook()); return true;
-      case "av-reset":
+      case "av-set": { let v = t.dataset.v; if (t.dataset.k === "blush") v = v === "true"; if (AV.draft[t.dataset.k] === v) return true; if (gtm) gtm.onAvatar(a, t); avApply(Object.assign({}, AV.draft, { [t.dataset.k]: v })); return true; }
+      case "av-random": if (gtm) gtm.onAvatar(a, t); avApply(AV.mod.randomLook()); return true;
+      case "av-reset": if (gtm) gtm.onAvatar(a, t);
         openModal(`<h3>처음부터 다시 만들까요?</h3><p class="av-note" style="margin:0">기본 모습에서 새로 꾸며요. 저장하기 전까지 지금 캐릭터는 그대로이고, 되돌리기로 언제든 돌아올 수 있어요.</p>
           <button class="btn btn-primary btn-block" data-act="av-reset-go">처음부터 다시 만들기</button><button class="btn btn-ghost" data-act="close">계속 수정하기</button>`);
         return true;
-      case "av-reset-go": closeModal(); avApply(AV.mod.normalizeLook(null)); AV.tab = "face"; avTabs(); avPanel(); toast("기본 모습으로 바꿨어요. 되돌리기로 돌아갈 수 있어요"); return true;
-      case "av-undo": if (AV.hist.length) { AV.draft = AV.hist.pop(); AV.stage.setLook(AV.draft); avPanel(); avSync(); } return true;
-      case "av-save": avSave(); return true;
+      case "av-reset-go": if (gtm) gtm.onAvatar(a, t); closeModal(); avApply(AV.mod.normalizeLook(null)); AV.tab = "face"; avTabs(); avPanel(); toast("기본 모습으로 바꿨어요. 되돌리기로 돌아갈 수 있어요"); return true;
+      case "av-undo": if (AV.hist.length) { if (gtm) gtm.onAvatar(a, t); AV.draft = AV.hist.pop(); AV.stage.setLook(AV.draft); avPanel(); avSync(); } return true;
+      case "av-save": if (gtm) gtm.onAvatar(a, t); avSave(); return true;
     }
     return false;
   }
@@ -1217,12 +1222,13 @@
   function openModal(html, opts = {}) {
     closeModal();
     const s = document.createElement("div"); s.className = "scrim" + (opts.alert ? " is-alert" : ""); s.dataset.act = "scrim";
+    if (gtm) gtm.setModal(html);
     s.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${opts.alert ? "" : `<div class="sheet-handle" aria-hidden="true"></div>`}${html}</div>`;
     $app.appendChild(s);
     const f = s.querySelector("textarea,button"); if (f) setTimeout(() => f.focus(), 50);
   }
   // 모달이 떠 있는 동안 미뤄 둔 화면 갱신(위치 변화 등)은 닫을 때 반영해요
-  function closeModal() { const open = document.querySelectorAll(".scrim"); open.forEach(n => n.remove()); if (open.length && typeof softRender === "function") softRender(); }
+  function closeModal() { const open = document.querySelectorAll(".scrim"); open.forEach(n => n.remove()); if (open.length && gtm) gtm.clearModal(); if (open.length && typeof softRender === "function") softRender(); }
 
   /* ---------------- boot / error screens ---------------- */
   function viewBoot() {
@@ -1278,6 +1284,7 @@
     }
     sig = signature();
     syncPanel();
+    if (gtm) gtm.onRender();
   }
   // 위치가 바뀔 때: 화면에 보이는 값이 실제로 달라졌을 때만, 입력·모달 중이 아닐 때만 다시 그려요.
   function signature() {
@@ -1308,11 +1315,20 @@
   });
 
   /* ---------------- events ---------------- */
+  gtm = window.MG_GTM({
+    state: () => S, geo: () => GEO, member, byId, canOpen, distOf, discovered, isGone, locOk, accOk, pos, dataState,
+    notifOn, avFirst, trailSpots, trailList, secretOk: SECRET_OK,
+    provider: () => typeof API.memberProvider === "function" ? API.memberProvider() : null,
+    wasSheetDrag: () => sheetDragged, trailReady: () => !!TR.map
+  });
   const goBack = (fallback) => { if (S.nav > 1) history.back(); else location.hash = fallback || "#/"; };
   $app.addEventListener("click", e => {
-    const t = e.target.closest("[data-act]"); if (!t) return;
+    const link = e.target.closest("a[href^='#']");
+    if (link && gtm) gtm.onLink(link);
+    const t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
     const a = t.dataset.act, id = t.dataset.id;
     if (a.startsWith("av-") && avClick(a, t)) return;
+    if (gtm) gtm.onClick(a, t);
     switch (a) {
       case "pin": { lastPinTap = Date.now(); S.selected = id; if (S.sheetMode === "full") S.sheetMode = "peek"; render(); const m = byId(id); if (m) focusOn(m); break; }
       case "unselect": S.selected = null; render(); break;
@@ -1341,11 +1357,11 @@
       case "send-reply": {
         const v = ((document.getElementById("replyText") || {}).value || "").trim(); if (v.length < 1) { toast("한 글자 이상 써 주세요"); break; }
         t.disabled = true;
-        API.reply(id, v).then(() => API.detail(id)).then(r => { if (r.memory) remember(Object.assign(r.memory, { state: r.memory.mine ? "mine" : "discovered" })); closeModal(); render(); toast("답장을 남겼어요"); })
-          .catch(err => { console.error(err); t.disabled = false; toast("답장을 보내지 못했어요. 다시 시도해 주세요"); });
+        API.reply(id, v).then(() => API.detail(id)).then(r => { if (gtm) gtm.track("reply_result", { memory_id: id, result: "success" }); if (r.memory) remember(Object.assign(r.memory, { state: r.memory.mine ? "mine" : "discovered" })); closeModal(); render(); toast("답장을 남겼어요"); })
+          .catch(err => { console.error(err); if (gtm) gtm.track("reply_result", { memory_id: id, result: "fail" }); t.disabled = false; toast("답장을 보내지 못했어요. 다시 시도해 주세요"); });
         break;
       }
-      case "scrim": if (e.target === t && scrimDown === t && !t.classList.contains("is-alert")) closeModal(); break;
+      case "scrim": if (e.target === t && scrimDown === t && !t.classList.contains("is-alert")) { if (gtm) gtm.noteScrim(t); closeModal(); } break;
       case "walk": walkTo(byId(id)); break;
       case "discover": { const m = byId(id); if (m && canOpen(m)) discover(id); break; }
       case "found-done": S.found = null; render(); break;
@@ -1382,15 +1398,15 @@
       case "report-pick": reportSheet(id, t.dataset.v); break;
       case "report-send": {
         if (!t.dataset.v) break; t.disabled = true;
-        API.report(id, t.dataset.v).then(r => { if (r && r.status === "login_required") { closeModal(); loginSheet("open"); return; } reportDone(id); })
-          .catch(err => { console.error(err); closeModal(); toast(err && err.code === "PGRST202" ? "신고 기능은 서버 준비가 끝나면 쓸 수 있어요" : "신고하지 못했어요. 잠시 뒤 다시 시도해 주세요"); });
+        API.report(id, t.dataset.v).then(r => { if (r && r.status === "login_required") { if (gtm) gtm.track("click_report_send", { memory_id: id, reason: t.dataset.v, result: "fail" }); closeModal(); loginSheet("open"); return; } if (gtm) gtm.track("click_report_send", { memory_id: id, reason: t.dataset.v, result: "success" }); reportDone(id); })
+          .catch(err => { console.error(err); if (gtm) gtm.track("click_report_send", { memory_id: id, reason: t.dataset.v, result: "fail" }); closeModal(); toast(err && err.code === "PGRST202" ? "신고 기능은 서버 준비가 끝나면 쓸 수 있어요" : "신고하지 못했어요. 잠시 뒤 다시 시도해 주세요"); });
         break;
       }
       case "del-open": delConfirm(id); break;
       case "del-apply": {
         t.disabled = true;
-        API.remove(id).then(() => { S.near = S.near.filter(m => m.id !== id); delete S.cache[id]; S.status[id] = "unavailable"; S.garden = null; closeModal(); location.hash = "#/garden"; toast("기억을 지웠어요"); syncMap(); })
-          .catch(err => { console.error(err); closeModal(); toast("기억을 지우지 못했어요"); });
+        API.remove(id).then(() => { if (gtm) gtm.track("delete_result", { memory_id: id, result: "success" }); S.near = S.near.filter(m => m.id !== id); delete S.cache[id]; S.status[id] = "unavailable"; S.garden = null; closeModal(); location.hash = "#/garden"; toast("기억을 지웠어요"); syncMap(); })
+          .catch(err => { console.error(err); if (gtm) gtm.track("delete_result", { memory_id: id, result: "fail" }); closeModal(); toast("기억을 지우지 못했어요"); });
         break;
       }
       case "nick": openModal(`<h3>정원 이름</h3><label class="field"><span>닉네임 · 12자까지</span><input id="nickInput" maxlength="12" value="${esc(S.profile.nickname)}" autocomplete="off"></label><p class="reassure">내가 심은 기억을 발견한 사람에게 이 이름이 보여요.</p><button class="btn btn-primary btn-block" data-act="nick-save">저장</button>`); break;
@@ -1464,14 +1480,15 @@
     if (id === "secretText") { S.draft.secret = e.target.value; syncPlantBtn(); }
     if (id === "secretOpen" || id === "secretNew") { const b = document.getElementById(id + "Btn"); if (b) b.disabled = !SECRET_OK(e.target.value); }
   });
+  $app.addEventListener("focusout", e => { if (gtm && e.target && e.target.id) gtm.onBlur(e.target); });
   $app.addEventListener("change", e => {
-    if (e.target.dataset.act === "prof-photo" && e.target.files[0]) { const f = e.target.files[0]; if (!/^image\//.test(f.type)) { toast("사진 파일만 고를 수 있어요"); return; } setProfilePhoto(f); return; }
+    if (e.target.dataset.act === "prof-photo" && e.target.files[0]) { const f = e.target.files[0]; if (!/^image\//.test(f.type)) { toast("사진 파일만 고를 수 있어요"); return; } if (gtm) gtm.track("select_profile_photo"); setProfilePhoto(f); return; }
     if (e.target.dataset.act === "file" && e.target.files[0]) {
       const f = e.target.files[0]; e.target.value = "";
       if (!/^image\//.test(f.type) && !/\.(heic|heif)$/i.test(f.name)) { toast("사진 파일만 올릴 수 있어요"); return; }
       // 그 자리에서 찍은 사진만: 카메라로 막 찍은 파일은 만든 시각이 지금이에요. 10분보다 오래된 파일(앨범 사진)은 받지 않아요.
       if (f.lastModified && Date.now() - f.lastModified > FRESH_MS) { toast("지금 이 자리에서 찍은 사진만 남길 수 있어요. 카메라로 다시 찍어 주세요"); return; }
-      downscale(f).then(r => { S.draft.photo = r.url; S.draft.blob = r.blob; S.draft.noPhoto = false; render(); })
+      downscale(f).then(r => { if (gtm) gtm.track("select_plant_photo", { action: S.draft.photo ? "retake" : "take" }); S.draft.photo = r.url; S.draft.blob = r.blob; S.draft.noPhoto = false; render(); })
         .catch(() => toast("이 사진은 읽지 못했어요. 다른 사진(JPG·PNG)을 골라 주세요"));
     }
   });
@@ -1530,8 +1547,10 @@
       sheetDragged = true; setTimeout(() => { sheetDragged = false; }, 350);
       const h = sheet.getBoundingClientRect().height, order = ["min", "peek", "full"];
       let pick = order.reduce((a, k) => Math.abs(snaps[k] - h) < Math.abs(snaps[a] - h) ? k : a, "peek");
+      const fromMode = S.sheetMode;
       if (pick === S.sheetMode && Math.abs(vy) > 0.5) { const i = order.indexOf(S.sheetMode); pick = order[Math.max(0, Math.min(2, i + (vy > 0 ? -1 : 1)))]; }
       sheet.style.transition = ""; floats.forEach(f => f.style.transition = "");
+      if (gtm) gtm.track("drag_nearby_sheet", { from_mode: fromMode, to_mode: pick });
       S.sheetMode = pick; render();
     };
     window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
@@ -1562,8 +1581,9 @@
     const url = location.href.split("#")[0] + "#/s/" + id;
     // 공유 문구에도 사진·제목·본문을 넣지 않아요(장소명만)
     const data = { title: m ? `${m.place}에 숨은 기억 | 기억 정원` : "기억 정원", text: "가까이 가야 열리는 기억이에요.", url };
-    if (navigator.share) navigator.share(data).catch(() => { });
-    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast("링크를 복사했어요 · 받은 사람은 현장에서만 열 수 있어요"), () => toast("링크를 복사하지 못했어요"));
+    const owner = m && m.mine ? "me" : "other";
+    if (navigator.share) navigator.share(data).then(() => { if (gtm) gtm.track("click_share", { memory_id: id, owner, share_method: "native" }); }, () => { if (gtm) gtm.track("click_share", { memory_id: id, owner, share_method: "cancel" }); });
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => { if (gtm) gtm.track("click_share", { memory_id: id, owner, share_method: "copy" }); toast("링크를 복사했어요 · 받은 사람은 현장에서만 열 수 있어요"); }, () => toast("링크를 복사하지 못했어요"));
     else toast("이 브라우저에서는 공유를 지원하지 않아요");
   }
 
@@ -1608,7 +1628,7 @@
       const sLook = API.look();
       if (sLook) { S.look = sLook; store.set("look", sLook); }
       else if (S.look && prof && prof.avatar === "me") API.saveLook(S.look).catch(e => console.warn("[look sync]", e));
-      S.boot = "ok"; S.loginError = info && info.loginError; S.justLoggedIn = info && info.justLoggedIn;
+      S.boot = "ok"; S.loginError = info && info.loginError; S.justLoggedIn = info && info.justLoggedIn; S.isNew = !!(info && info.isNew);
       // 카카오로 처음 로그인했으면 기본 닉네임 대신 카카오 이름을 써요(정원에서 바꿀 수 있어요)
       const kname = API.member() && API.memberName();
       if (kname && /^정원사 \d{4}$/.test(S.profile.nickname)) { const n = String(kname).slice(0, 12); API.updateProfile({ nickname: n }).then(() => { S.profile.nickname = n; softRender(true); }).catch(() => { }); }
@@ -1616,12 +1636,15 @@
     render();
     if (S.boot !== "ok") return;
     loadNotif(true);
+    let loginMethod = "kakao";
+    try { loginMethod = sessionStorage.getItem("mg:loginMethod") || loginMethod; sessionStorage.removeItem("mg:loginMethod"); } catch (_) { }
     if (S.loginError) {
       const le = S.loginError; S.loginError = null;
+      if (gtm) gtm.track("login_fail", { method: loginMethod, error_code: le.code || "login" });
       if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("lumi-letter")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">해당 계정으로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
         <button class="btn btn-kakao btn-block" data-act="login-switch">${KAKAO_ICON}해당 계정으로 로그인</button><button class="btn btn-outline btn-block" data-act="login-other">다른 카카오 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">지금은 로그인 안 할게요</button>`, { alert: true });
       else toast(/cancel|denied/i.test(le.message) ? "로그인을 취소했어요" : "로그인하지 못했어요. 다시 시도해 주세요");
-    } else if (S.justLoggedIn) toast(typeof API.memberProvider === "function" && API.memberProvider() === "email" ? "이메일로 로그인했어요" : "카카오 계정으로 로그인했어요");
+    } else if (S.justLoggedIn) { if (gtm) gtm.track("login_complete", { method: (typeof API.memberProvider === "function" && API.memberProvider()) || loginMethod, is_new: !!S.isNew }); toast(typeof API.memberProvider === "function" && API.memberProvider() === "email" ? "이메일로 로그인했어요" : "카카오 계정으로 로그인했어요"); }
     // 로그인한 사람에게 이메일이 있으면 수신 동의를 한 번만 물어봐요
     if (!DEMO && API.member() && API.memberEmail()) API.marketing().then(c => { S.mkt = !!(c && c.opt_in); if (!c && !document.querySelector(".scrim")) marketingSheet(); }).catch(() => { });
     // 위치: 이미 허용했거나 이전에 쓰겠다고 한 경우에만 바로 시작(묻지 않고 켜지 않아요)

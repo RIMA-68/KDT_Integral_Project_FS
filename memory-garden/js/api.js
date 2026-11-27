@@ -69,7 +69,9 @@
         uid = session.user.id; user = session.user;
         sb.auth.onAuthStateChange((_e, s) => { if (s && s.user) { uid = s.user.id; user = s.user; } });
         cleanUrl();
-        return { uid, loginError: urlErr, justLoggedIn: hadCode && user.is_anonymous === false };
+        const created = user.created_at ? Date.parse(user.created_at) : 0;
+        const signedIn = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : 0;
+        return { uid, loginError: urlErr, justLoggedIn: hadCode && user.is_anonymous === false, isNew: !!(hadCode && created && signedIn && Math.abs(signedIn - created) < 120000) };
       },
       // 로그인(익명 아님)했는가 — 심기·처음 열기는 서버도 같은 기준으로 막아요
       member() { return !!user && user.is_anonymous === false; },
@@ -77,7 +79,7 @@
       // 익명으로 쓰던 기록을 그대로 카카오 계정에 이어 붙여요. 카카오 화면으로 이동했다가 돌아와요.
       // fresh: 임시 정원이 비어 있으면 이어 붙이지 않고 바로 로그인(새 기기에서 '이미 정원이 있는 계정' 안내·두 번 로그인 없이)
       async loginKakao({ fresh = false } = {}) {
-        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
+        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); sessionStorage.setItem("mg:loginMethod", "kakao"); } catch (_) { }
         const opts = { provider: "kakao", options: { redirectTo: back(), queryParams: KAKAO_PICK } };
         const { error } = user && user.is_anonymous && !fresh ? await sb.auth.linkIdentity(opts) : await sb.auth.signInWithOAuth(opts);
         if (error) throw new ApiError(/manual linking/i.test(error.message) ? "linking_disabled" : "login", error.message);
@@ -86,14 +88,14 @@
       // pick=false: 방금 고른 카카오 계정 그대로(계정 고르기 화면 없이 바로 돌아와요)
       async switchToKakao({ pick = true } = {}) {
         await sb.auth.signOut({ scope: "local" });
-        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
+        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); sessionStorage.setItem("mg:loginMethod", "kakao"); } catch (_) { }
         const { error } = await sb.auth.signInWithOAuth({ provider: "kakao", options: { redirectTo: back(), ...(pick ? { queryParams: KAKAO_PICK } : {}) } });
         if (error) throw new ApiError("login", error.message);
       },
       // 이메일 링크 로그인(비밀번호 없음). 메일의 링크를 이 브라우저에서 누르면 로그인돼요.
       // 임시(익명) 정원이면 그 정원에 이메일을 붙여 기록을 그대로 이어요. 이미 다른 정원이 있는 이메일이면 code "email_exists".
       async loginEmail(email, { fresh = false } = {}) {
-        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); } catch (_) { }
+        try { sessionStorage.setItem("mg:afterLogin", location.hash || "#/"); sessionStorage.setItem("mg:loginMethod", "email"); } catch (_) { }
         if (!fresh && user && user.is_anonymous) {
           const { error } = await sb.auth.updateUser({ email }, { emailRedirectTo: back() });
           if (!error) return { linked: true };
