@@ -381,7 +381,7 @@ body{background:var(--color-bg)}
 .f-sech i{flex:1;height:1px;background:var(--color-line)}
 .f-sech span{flex:none;font-size:13px;color:var(--color-text-sub)}
 .f-cloth{position:relative;height:124px;border-radius:14px;background:var(--f-cloth);box-shadow:inset 0 1px 4px rgba(90,64,48,.14);padding:8px}
-.f-cloth::before{content:"";position:absolute;inset:8px;border-radius:10px;border:2.1px dashed rgba(255,116,96,.55);pointer-events:none}
+.f-cloth::before{content:"";position:absolute;inset:8px;border-radius:10px;border:2.1px dashed var(--cloth-dash,rgba(255,116,96,.55));pointer-events:none}
 .f-cloth-in{position:relative;height:100%;display:flex;align-items:center;gap:20px;padding:0 14px;overflow-x:auto;scrollbar-width:none}
 .f-cloth-in::-webkit-scrollbar{display:none}
 .f-cloth-in .st{flex:none;width:78px;height:90px;display:grid;place-items:center}
@@ -466,7 +466,7 @@ body{background:var(--color-bg)}
 .chip-pin .ic svg{display:block}
 .chip-pin b{font-weight:700}
 .chip-pin .tail{position:absolute;left:50%;bottom:-6px;width:10px;height:7px;margin-left:-5px;background:inherit;clip-path:polygon(0 0,100% 0,50% 100%)}
-.chip-pin.is-available button{background:var(--f-amber-thumb);box-shadow:0 0 0 1.5px #E9CA88,0 3px 8px rgba(138,97,0,.2);color:var(--f-amber)}
+.chip-pin.is-available button{background:var(--f-amber-thumb);box-shadow:0 0 0 1.5px var(--avail-ring,#E9CA88),0 3px 8px var(--avail-sh,rgba(138,97,0,.2));color:var(--f-amber)}
 .chip-pin.is-available .ic{background:#fff}
 .chip-pin.is-mine button{background:var(--pin-mine);color:#fff;box-shadow:0 3px 8px var(--pin-mine-sh,rgba(233,84,63,.3))}
 .chip-pin.is-mine .ic{background:rgba(255,255,255,.3)}
@@ -475,7 +475,7 @@ body{background:var(--color-bg)}
 .chip-pin.active .ic{width:28px;height:28px;background:#fff}
 .chip-pin.is-available .mg-pin{animation:none}
 .chip-pin.is-available button{animation:chipPulse 2.4s ease-in-out infinite}
-@keyframes chipPulse{50%{box-shadow:0 0 0 1.5px #E9CA88,0 0 0 6px rgba(233,202,136,.3),0 3px 8px rgba(138,97,0,.2)}}
+@keyframes chipPulse{50%{box-shadow:0 0 0 1.5px var(--avail-ring,#E9CA88),0 0 0 6px var(--avail-glow,rgba(233,202,136,.3)),0 3px 8px var(--avail-sh,rgba(138,97,0,.2))}}
 :root[data-theme="night"] .chip-pin.is-available button{background:#3A3550;box-shadow:0 0 0 1.5px #E9CA88;color:#E9CA88}
 :root[data-theme="night"] .chip-pin.is-available .ic{background:#2C3053}
 :root[data-theme="night"] .chip-pin.active button{background:var(--color-primary);color:var(--color-on-primary)}
@@ -794,3 +794,15 @@ body{word-break:keep-all;overflow-wrap:break-word}
 /* 낮: 코랄 궤도 점선을 라벤더로, 도트 들판 초록은 조금 더 또렷하게 */
 :root:not([data-theme="night"]) .f-orbit{filter:hue-rotate(250deg) saturate(.75)}
 :root:not([data-theme="night"]){--dm-1:#BED4B0;--dm-2:#8DB07C}
+
+/* 2026-11-27 리마: 남은 주황·노랑 정리 — '열 수 있음'·힌트·씨앗 빛은 루미 날개의 하늘색으로 (낮만) */
+:root:not([data-theme="night"]){
+  --f-amber:#2F6DB5; --f-amber-bg:#EAF2FC; --f-amber-thumb:#EEF5FD; --f-hint:#2F6DB5;
+  --state-available:#2F6DB5; --state-available-bg:#EEF5FD;
+  --avail-ring:#9CC2EC; --avail-sh:rgba(47,109,181,.18); --avail-glow:rgba(156,194,236,.35);
+  --sd-gold:#B7C6EE; --sd-glow1:#DCEAFF; --sd-glow2:#EEF5FF; --sd-1:#F7FAFF; --sd-2:#C6DAF4; --sd-3:#86AEE0;
+  --sd-pin1:#9CC2EC; --sd-pin2:#5E95D6; --sd-spark:#7FAEE6;
+  --cloth-dash:rgba(142,128,245,.5);
+}
+.f-sic.lumi{margin-bottom:14px}
+.f-sprout{color:#7FA36A}

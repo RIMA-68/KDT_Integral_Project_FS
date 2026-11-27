@@ -149,6 +149,7 @@
 
   /* ---------------- Figma MG3·9 공통 조각 (배경·궤도·언덕) ---------------- */
   const AMB = h => `<div class="f-amb" style="height:${h}px" aria-hidden="true"></div>`;
+  const HILLS_SOFT = top => `<img class="f-hills is-soft" src="assets/brand/hills-soft.svg" alt="" aria-hidden="true" style="top:${top}px">`;
   const HILLS = top => `<img class="f-hills" src="assets/brand/hills.svg" alt="" aria-hidden="true" style="top:${top}px">`;
   const ORBIT = (x, y, w) => `<img class="f-orbit" src="assets/brand/orbit.svg" alt="" aria-hidden="true" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">`;
   const AT = (x, y, w, html, cls) => `<span class="f-at ${cls || ""}" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">${html}</span>`;
@@ -647,7 +648,7 @@
       const m = S.lastPlanted;
       if (!m) { location.hash = "#/"; return ""; }
       return `<section class="screen f-done" aria-label="심기 완료"><div class="f-scroll"><div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark">MEMORY PLANTED</span>
-        ${ORBIT(70, 52, 250)}${AT(97, 80, 196, BR.seed("planted", 196), "pop")}${LUMI(268, 52, 96, "lumi-write")}${MEADOW(282, 5)}<span class="f-sprout">${I.garden}</span></div>
+        ${ORBIT(70, 52, 250)}${AT(97, 80, 196, BR.seed("planted", 196), "pop")}${LUMI(268, 52, 96, "lumi-write")}${HILLS_SOFT(290)}<span class="f-sprout">${I.garden}</span></div>
       <div class="f-datecard">${stamp(m)}<div><b>${esc(m.place)}</b>${badge("soft", visIc(m.vis), visLabel(m.vis))}</div></div>
       <div class="f-copy"><h1>기억을 심었어요</h1><p>${m.vis === "me" ? "다른 사람에게는 보이지 않아요.<br>내 정원에서 언제든 다시 볼 수 있어요." : m.vis === "key" ? "비밀번호를 아는 사람이 이 장소에 오면<br>당신의 기억을 발견할 수 있어요." : "누군가 이 장소 가까이 오면<br>당신의 기억을 발견할 수 있어요."}</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/" data-act="after-plant">지도에서 보기</a><a class="btn btn-ghost" href="#/garden">내 정원 보기</a></div></section>`;
@@ -1192,8 +1193,8 @@
     if (step === "location") return `<section class="screen f-welcome" aria-label="위치 권한 안내"><div class="f-scroll">
       <div class="f-stage" style="height:430px">${AMB(440)}${ORBIT(70, 24, 250)}
         <span class="f-me" style="left:125px;top:79px"><i></i></span><span class="f-pill" style="left:143px;top:53px">열람 반경 약 ${S.set.radius}m</span>
-        ${AT(208, 82, 72, BR.seed("available", 72))}${LUMI(286, 186, 92, "lumi-map")}${AT(28, 160, 60, BR.seed("planted", 60))}
-        ${MEADOW(268, 11)}${SPARK(52, 44, 14)}${SPARK(336, 140, 12)}${SPARK(360, 30, 10)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
+        ${AT(208, 82, 72, BR.seed("available", 72))}${AT(28, 160, 60, BR.seed("planted", 60))}
+        ${LUMI(286, 186, 92, "lumi-map")}${HILLS_SOFT(280)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
       <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
       <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
         <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.<br>위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>
@@ -1201,7 +1202,7 @@
     return `<section class="screen f-welcome" aria-label="시작"><div class="f-scroll">
       <div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark" style="top:28px">MEMORY GARDEN</span>
         ${ORBIT(45, 22, 300)}${ORBIT(85, 62, 220)}${AT(97, 74, 196, BR.seed("available", 196), "breathe")}${AT(26, 52, 88, BR.seed("planted", 88))}${AT(282, 216, 76, BR.seed("dormant", 76))}
-        ${MEADOW(268, 7)}${SPARK(330, 70, 14)}${SPARK(24, 170, 10)}${SPARK(250, 32, 10)}${LUMI(14, 200, 122, "lumi-wave")}</div>
+        ${HILLS_SOFT(280)}${LUMI(14, 200, 122, "lumi-wave")}</div>
       <div class="f-intro"><span class="f-kicker">우주에서 온 기록수집가 · LUMI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
   }

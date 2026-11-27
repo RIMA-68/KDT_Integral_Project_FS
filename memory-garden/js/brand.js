@@ -48,7 +48,7 @@
     let i = "";
     for (let k = 0; k < 5; k++) i += `<g transform="translate(12 12.6) rotate(${k * 72})"><path d="M0 0 L-4.6 -4.4 L-3.2 -9.6 L0 -10.6 Z" fill="#E9B8BB"/><path d="M0 0 L0 -10.6 L3.2 -9.6 L4.6 -4.4 Z" fill="#D99AA0"/></g>`;
     let d = ""; for (let k = 0; k < 10; k++) { const a = (-90 + k * 36) * Math.PI / 180, rr = k % 2 ? 1.6 : 3.6; d += (k ? "L" : "M") + (12 + Math.cos(a) * rr).toFixed(2) + " " + (12.6 + Math.sin(a) * rr).toFixed(2); }
-    return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" aria-hidden="true">${i}<circle cx="12" cy="12.6" r="3.4" fill="#C9984F"/><path d="${d}Z" fill="#E9CA88"/></svg>`;
+    return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" aria-hidden="true">${i}<circle cx="12" cy="12.6" r="3.4" fill="#C9984F"/><path d="${d}Z" fill="var(--sd-gold,#E9CA88)"/></svg>`;
   }
 
   /* ---------- 기억의 씨앗 (구슬 + 씨앗) ---------- */
@@ -57,15 +57,15 @@
     const orbit = { dormant: .3, available: .6, planted: .45 }[state] || .3;
     const ring = { dormant: .5, available: 1, planted: 1 }[state] || .5;
     let core;
-    if (state === "available") core = `<ellipse cx="99.6" cy="121.4" rx="33.6" ry="29.4" fill="url(#${d})"/><path d="M100.3 103C111.8 111.4 115 124 110.8 134.5C106.6 142.9 94 142.9 89.8 134.5C85.6 124 88.7 111.4 100.3 103Z" fill="url(#${c})"/><path d="M99.2 109.8C96 119.3 96 129.8 99.2 137.1" stroke="#fff" stroke-opacity=".6" stroke-width="1.7" stroke-linecap="round"/><path d="M101.3 104.5C101.3 92 106.3 83.3 113.8 78.3" stroke="#BFD6AE" stroke-width="2.5" stroke-linecap="round"/><path d="M102.5 91.8C93.8 86.8 87.5 89.3 85 93C91.3 95.5 96.3 95.5 102.5 91.8Z" fill="#A9BDA0" fill-opacity=".9"/><path d="M112.3 69C113 74.5 113 74.5 118.5 75.3C113 76 113 76 112.3 81.5C111.5 76 111.5 76 106 75.3C111.5 74.5 111.5 74.5 112.3 69Z" fill="#FFF3D0"/><path d="M64 79C64.8 83.3 64.8 83.3 69 84C64.8 84.8 64.8 84.8 64 89C63.3 84.8 63.3 84.8 59 84C63.3 83.3 63.3 83.3 64 79Z" fill="#FFF3D0"/><path d="M136 128C136.6 131.4 136.6 131.4 140 132C136.6 132.6 136.6 132.6 136 136C135.4 132.6 135.4 132.6 132 132C135.4 131.4 135.4 131.4 136 128Z" fill="#FFF3D0"/>`;
+    if (state === "available") core = `<ellipse cx="99.6" cy="121.4" rx="33.6" ry="29.4" fill="url(#${d})"/><path d="M100.3 103C111.8 111.4 115 124 110.8 134.5C106.6 142.9 94 142.9 89.8 134.5C85.6 124 88.7 111.4 100.3 103Z" fill="url(#${c})"/><path d="M99.2 109.8C96 119.3 96 129.8 99.2 137.1" stroke="#fff" stroke-opacity=".6" stroke-width="1.7" stroke-linecap="round"/><path d="M101.3 104.5C101.3 92 106.3 83.3 113.8 78.3" stroke="#BFD6AE" stroke-width="2.5" stroke-linecap="round"/><path d="M102.5 91.8C93.8 86.8 87.5 89.3 85 93C91.3 95.5 96.3 95.5 102.5 91.8Z" fill="#A9BDA0" fill-opacity=".9"/><path d="M112.3 69C113 74.5 113 74.5 118.5 75.3C113 76 113 76 112.3 81.5C111.5 76 111.5 76 106 75.3C111.5 74.5 111.5 74.5 112.3 69Z" fill="var(--sd-glow2,#FFF3D0)"/><path d="M64 79C64.8 83.3 64.8 83.3 69 84C64.8 84.8 64.8 84.8 64 89C63.3 84.8 63.3 84.8 59 84C63.3 83.3 63.3 83.3 64 79Z" fill="var(--sd-glow2,#FFF3D0)"/><path d="M136 128C136.6 131.4 136.6 131.4 140 132C136.6 132.6 136.6 132.6 136 136C135.4 132.6 135.4 132.6 132 132C135.4 131.4 135.4 131.4 136 128Z" fill="var(--sd-glow2,#FFF3D0)"/>`;
     else if (state === "planted") core = `<ellipse cx="100" cy="120" rx="32" ry="28" fill="url(#${d})"/><path d="M99.7 102C110.7 110 113.7 122 109.7 132C105.7 140 93.7 140 89.7 132C85.7 122 88.7 110 99.7 102Z" fill="url(#${c})"/><path d="M99 108.8C96 117.8 96 127.8 99 134.8" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" stroke-linecap="round"/>`;
     else core = `<path d="M99.5 104C109.4 111.2 112.1 122 108.5 131C104.9 138.2 94.1 138.2 90.5 131C86.9 122 89.6 111.2 99.5 104Z" fill="var(--seed-core,#CDC4DC)"/><path d="M98.7 110.7C96 118.8 96 127.8 98.7 134.1" stroke="#fff" stroke-opacity=".6" stroke-width="1.44" stroke-linecap="round"/>`;
-    const seedGrad = state === "planted" ? `<linearGradient id="${c}" x1="0" y1="102" x2="0" y2="138" gradientUnits="userSpaceOnUse"><stop stop-color="var(--seed-mine-1,#FFB8AA)"/><stop offset="1" stop-color="var(--seed-mine-2,#FF6B57)"/></linearGradient>` : `<linearGradient id="${c}" x1="0" y1="103" x2="0" y2="141" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF8E4"/><stop offset=".55" stop-color="#F3D9A0"/><stop offset="1" stop-color="#D9AE66"/></linearGradient>`;
+    const seedGrad = state === "planted" ? `<linearGradient id="${c}" x1="0" y1="102" x2="0" y2="138" gradientUnits="userSpaceOnUse"><stop stop-color="var(--seed-mine-1,#FFB8AA)"/><stop offset="1" stop-color="var(--seed-mine-2,#FF6B57)"/></linearGradient>` : `<linearGradient id="${c}" x1="0" y1="103" x2="0" y2="141" gradientUnits="userSpaceOnUse"><stop stop-color="var(--sd-1,#FFF8E4)"/><stop offset=".55" stop-color="var(--sd-2,#F3D9A0)"/><stop offset="1" stop-color="var(--sd-3,#D9AE66)"/></linearGradient>`;
     return `<svg class="mg-seed is-${state}" width="${s}" height="${s}" viewBox="0 0 200 200" fill="none" aria-hidden="true"><defs>
       <radialGradient id="${a}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(100 104) scale(92)"><stop offset=".62" stop-color="var(--seed-halo,#FFE3D3)" stop-opacity=".9"/><stop offset="1" stop-color="var(--seed-halo,#FFE3D3)" stop-opacity="0"/></radialGradient>
       <radialGradient id="${b}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(81.76 73.6) scale(121.6)"><stop stop-color="#fff" stop-opacity=".95"/><stop offset=".55" stop-color="#F6F1FA" stop-opacity=".6"/><stop offset="1" stop-color="#C9BFE3" stop-opacity=".75"/></radialGradient>
-      ${seedGrad}<radialGradient id="${d}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(100 120) scale(33 29)"><stop stop-color="#FFE9B0" stop-opacity=".95"/><stop offset="1" stop-color="#E9CA88" stop-opacity="0"/></radialGradient></defs>
-      <path d="M188.3 122.5C191.5 135.3 152.4 156.1 100.9 169C49.5 181.8 5.2 181.8 2 168.9C-1.2 156.1 37.9 135.2 89.3 122.4C140.8 109.6 185.1 109.6 188.3 122.5Z" stroke="#E9CA88" stroke-opacity="${orbit}" stroke-width="1.6"/>
+      ${seedGrad}<radialGradient id="${d}" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(100 120) scale(33 29)"><stop stop-color="var(--sd-glow1,#FFE9B0)" stop-opacity=".95"/><stop offset="1" stop-color="var(--sd-gold,#E9CA88)" stop-opacity="0"/></radialGradient></defs>
+      <path d="M188.3 122.5C191.5 135.3 152.4 156.1 100.9 169C49.5 181.8 5.2 181.8 2 168.9C-1.2 156.1 37.9 135.2 89.3 122.4C140.8 109.6 185.1 109.6 188.3 122.5Z" stroke="var(--sd-gold,#E9CA88)" stroke-opacity="${orbit}" stroke-width="1.6"/>
       <circle cx="100" cy="104" r="92" fill="url(#${a})"/>
       <circle cx="100" cy="104" r="76" fill="url(#${b})" ${state === "dormant" ? 'opacity=".85"' : ""}/>
       ${core}
@@ -73,13 +73,13 @@
       <circle cx="100.75" cy="104.75" r="76" stroke="#fff" stroke-opacity=".85" stroke-width="1.5"/>
       <path d="M72.8 91.1C83.4 84.4 89.9 75.5 87.3 71.3C84.6 67 73.8 68.9 63.1 75.6C52.4 82.3 45.9 91.2 48.6 95.4C51.3 99.7 62.1 97.8 72.8 91.1Z" fill="#fff" fill-opacity=".9"/>
       <path d="M51.5 140.5C60.7 153.8 74.8 163 90.7 166.1C106.6 169.2 123 166 136.6 157.2" stroke="#F1B9AD" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>
-      <path d="M7.9 182.3C9.4 188.5 20.7 192 39.3 192C57.8 192 82.2 188.6 106.9 182.4C131.6 176.3 154.6 167.9 171 159.2C187.4 150.4 195.7 142.1 194.2 135.9" stroke="#E9CA88" stroke-opacity="${ring}" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M182 67C183.1 73 183.1 73 189 74C183.1 75.1 183.1 75.1 182 81C181 75.1 181 75.1 175 74C181 73 181 73 182 67Z" fill="#E9CA88" fill-opacity="${state === "dormant" ? .5 : 1}"/></svg>`;
+      <path d="M7.9 182.3C9.4 188.5 20.7 192 39.3 192C57.8 192 82.2 188.6 106.9 182.4C131.6 176.3 154.6 167.9 171 159.2C187.4 150.4 195.7 142.1 194.2 135.9" stroke="var(--sd-gold,#E9CA88)" stroke-opacity="${ring}" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M182 67C183.1 73 183.1 73 189 74C183.1 75.1 183.1 75.1 182 81C181 75.1 181 75.1 175 74C181 73 181 73 182 67Z" fill="var(--sd-gold,#E9CA88)" fill-opacity="${state === "dormant" ? .5 : 1}"/></svg>`;
   }
   // 발견한 기억: 같은 유리 구슬 안에 사진이 담긴 형태 (Discovered Orb v3 · Settled / First Bloom)
   function photoOrb(src, s = 200, bloom = false) {
     return `<div class="mg-orb${bloom ? " bloom" : ""}" style="--orb:${s}px">${bloom ? `<span class="mg-orb-glow">${glow(s * 1.3)}</span>` : ""}
-      <svg class="mg-orb-ring" viewBox="0 0 200 200" fill="none" aria-hidden="true"><path d="M7.9 182.3C9.4 188.5 20.7 192 39.3 192C57.8 192 82.2 188.6 106.9 182.4C131.6 176.3 154.6 167.9 171 159.2C187.4 150.4 195.7 142.1 194.2 135.9" stroke="#E9CA88" stroke-width="1.8" stroke-linecap="round"/><path d="M188.3 122.5C191.5 135.3 152.4 156.1 100.9 169C49.5 181.8 5.2 181.8 2 168.9C-1.2 156.1 37.9 135.2 89.3 122.4C140.8 109.6 185.1 109.6 188.3 122.5Z" stroke="#E9CA88" stroke-opacity=".5" stroke-width="1.6"/></svg>
+      <svg class="mg-orb-ring" viewBox="0 0 200 200" fill="none" aria-hidden="true"><path d="M7.9 182.3C9.4 188.5 20.7 192 39.3 192C57.8 192 82.2 188.6 106.9 182.4C131.6 176.3 154.6 167.9 171 159.2C187.4 150.4 195.7 142.1 194.2 135.9" stroke="var(--sd-gold,#E9CA88)" stroke-width="1.8" stroke-linecap="round"/><path d="M188.3 122.5C191.5 135.3 152.4 156.1 100.9 169C49.5 181.8 5.2 181.8 2 168.9C-1.2 156.1 37.9 135.2 89.3 122.4C140.8 109.6 185.1 109.6 188.3 122.5Z" stroke="var(--sd-gold,#E9CA88)" stroke-opacity=".5" stroke-width="1.6"/></svg>
       <span class="mg-orb-photo">${src ? `<img src="${src}" alt="">` : ""}<i></i></span>
       <span class="mg-orb-flower">${flower(Math.round(s * .36))}</span></div>`;
   }
@@ -97,12 +97,12 @@
   };
   // 지도 핀 v4 · 칩 핀 + 씨앗 구슬 (2026-11-24 리마 확정): 구슬 → 씨앗 → 개화 → 자수 메타포를 작은 핀에서도 유지.
   // 잠김 = 씨앗 구슬, 열 수 있음 = 씨앗 구슬 + 작은 반짝임, 내 기억 = 코랄(밤 아이리스) 씨앗 구슬, 발견함 = 단순화한 Frosted Facet 꽃.
-  const PIN_ORB = { dormant: ["#B5ADD0", "#A79FC6"], available: ["#E2B866", "#D19A45"], mine: ["var(--pin-mine,#FF6B57)", "var(--pin-mine,#FF6B57)"] };
+  const PIN_ORB = { dormant: ["#B5ADD0", "#A79FC6"], available: ["var(--sd-pin1,#E2B866)", "var(--sd-pin2,#D19A45)"], mine: ["var(--pin-mine,#FF6B57)", "var(--pin-mine,#FF6B57)"] };
   const pinStar = (x, y, r, c) => { const k = r * .24; return `<path d="M${x} ${y - r}Q${x + k} ${y - k} ${x + r} ${y}Q${x + k} ${y + k} ${x} ${y + r}Q${x - k} ${y + k} ${x - r} ${y}Q${x - k} ${y - k} ${x} ${y - r}Z" fill="${c}"/>`; };
   const seedPin = (state, w = 18) => {
     if (state === "discovered") return pinFlower(w).replace("<svg ", `<svg class="mg-pin is-${state}" `);
     const [ring, seedC] = PIN_ORB[state] || PIN_ORB.dormant;
-    const spark = state === "available" ? pinStar(18.6, 3.4, 3.2, "#E9A93A") + '<circle cx="15.2" cy="1.6" r=".9" fill="#E9A93A"/>' : "";
+    const spark = state === "available" ? pinStar(18.6, 3.4, 3.2, "var(--sd-spark,#E9A93A)") + '<circle cx="15.2" cy="1.6" r=".9" fill="var(--sd-spark,#E9A93A)"/>' : "";
     return `<svg class="mg-pin is-${state}" width="${w}" height="${w}" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="11" cy="11.5" r="8.6" fill="#FFFFFF" stroke="${ring}" stroke-width="1.4"/><path d="M11 6.4C13.9 8.4 14.7 11.6 13.7 14.1C12.8 16 9.2 16 8.3 14.1C7.3 11.6 8.1 8.4 11 6.4Z" fill="${seedC}"/><path d="M10.1 8.9C9.5 10.6 9.5 12.4 10 13.7" stroke="#fff" stroke-opacity=".8" stroke-width="1" stroke-linecap="round"/><path d="M5.6 9.6C6.1 8.2 7.1 7.2 8.3 6.6" stroke="${ring}" stroke-opacity=".45" stroke-width="1.1" stroke-linecap="round"/>${spark}</svg>`;
   };
 
