@@ -845,7 +845,7 @@
   }
   function setProfilePhoto(file) {
     squarePhoto(file).then(url => {
-      S.portrait = url; S.avatar = "me"; store.set("avatar", "me"); store.set("portrait", url);
+      S.portrait = url; S.avatar = "me"; store.set("avatar", "me"); store.set("portrait", url); store.set("portraitV", "photo");
       closeModal(); render(); toast("프로필 사진을 바꿨어요");
       return API.uploadAvatar(url).then(u => { S.profile.avatar = "me"; S.profile.avatar_url = u; S.portrait = u; store.set("portrait", u); });
     }).catch(e => { console.warn("[profile photo]", e); toast("이 사진은 쓸 수 없어요. 다른 사진(JPG·PNG)을 골라 주세요"); });
@@ -1136,7 +1136,9 @@
   function avSync() {
     const u = document.getElementById("avUndo"), s = document.getElementById("avSave");
     if (u) u.disabled = !AV.hist.length;
-    if (s) { const can = avFirst() || avDirty(); s.disabled = !can; s.textContent = can ? "이 모습으로 저장" : "지금 모습으로 저장되어 있어요"; }
+    // 그림 합성 방식이 바뀌면(RENDER_V) 예전에 저장한 캐릭터 사진은 그대로 남아 있어요. 그때는 같은 모습이어도 다시 저장할 수 있게 해요.
+    const stale = !!(S.look && AV.mod && AV.mod.RENDER_V && store.get("portraitV", null) !== AV.mod.RENDER_V);
+    if (s) { const can = avFirst() || avDirty() || stale; s.disabled = !can; s.textContent = !can ? "지금 모습으로 저장되어 있어요" : stale && !avDirty() ? "새 그림으로 다시 저장" : "이 모습으로 저장"; }
   }
   function avApply(next) {
     AV.hist.push(AV.draft); if (AV.hist.length > 40) AV.hist.shift();
@@ -1151,6 +1153,7 @@
       try { url = AV.mod.snapshot(AV.draft, "portrait", 272, 520); }
       catch (e) { avSync(); toast("캐릭터 사진을 만들지 못했어요. 다시 눌러 주세요"); return; }
       const ok = store.set("look", AV.draft) & store.set("portrait", url) & store.set("avatar", "me");
+      store.set("portraitV", AV.mod.RENDER_V || null);
       S.look = Object.assign({}, AV.draft); S.portrait = url; S.avatar = "me"; AV.base = Object.assign({}, AV.draft);
       // 다른 사람이 내 기억을 발견했을 때 보일 작성자 그림(공개 버킷). 실패해도 이 기기에서는 그대로 보여요.
       API.uploadAvatar(url).then(u => { S.profile.avatar = "me"; S.profile.avatar_url = u; }).catch(e => console.warn("[avatar upload]", e));
@@ -1419,7 +1422,7 @@
       case "logout-open": openModal(`<h3>로그아웃할까요?</h3><p class="av-note" style="margin:0">정원은 계정에 그대로 남아 있어요.<br>다시 로그인하면 이어서 볼 수 있어요.</p>
         <button class="btn btn-primary btn-block" data-act="logout">로그아웃</button><button class="btn btn-ghost" data-act="close">취소</button>`); break;
       case "login-switch": API.switchToKakao({ pick: false }).catch(() => toast("로그인을 시작하지 못했어요")); break;
-      case "logout": API.logout().then(() => { try { localStorage.removeItem("mg:avatar"); localStorage.removeItem("mg:look"); localStorage.removeItem("mg:portrait"); } catch (_) { } location.hash = "#/"; location.reload(); }); break;
+      case "logout": API.logout().then(() => { try { localStorage.removeItem("mg:avatar"); localStorage.removeItem("mg:look"); localStorage.removeItem("mg:portrait"); localStorage.removeItem("mg:portraitV"); } catch (_) { } location.hash = "#/"; location.reload(); }); break;
       case "nick-save": {
         const v = ((document.getElementById("nickInput") || {}).value || "").trim(); if (!v) { toast("한 글자 이상 써 주세요"); break; }
         API.updateProfile({ nickname: v }).then(() => { S.profile.nickname = v; closeModal(); render(); toast("이름을 바꿨어요"); }).catch(() => toast("이름을 바꾸지 못했어요"));

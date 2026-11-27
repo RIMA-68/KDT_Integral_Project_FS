@@ -1,3 +1,4 @@
+import { repairHair, cleanFaceEdges, TEMPLE_PADS } from "./avatar-repairs.js";
 // 내 캐릭터 꾸미기 — 리마가 그린 원본 캐릭터 그림에서 잘라 낸 파츠를 2D로 겹쳐 그려요.
 // 모든 파츠는 같은 420×900 정면 프레임 위의 투명 레이어예요(assets/avatar/*.webp).
 // 색을 바꿀 때는 원본 픽셀의 밝기 차이(니트 결, 음영)를 그대로 두고 색만 입혀요.
@@ -118,11 +119,16 @@ export function origColor(look, key) {
 
 /* ---------- 이미지 불러오기 ---------- */
 const IMG = {};
+const REPAIRED = {};
+const makeCanvas = (w,h) => { const c=document.createElement("canvas"); c.width=w; c.height=h; return c; };
+function source(name) { return REPAIRED[name] || (REPAIRED[name] = cleanFaceEdges(name, repairHair(name, IMG[name], makeCanvas, Path2D), makeCanvas)); }
 let loading = null;
 export function supported() {
   try { const c = document.createElement("canvas"); return !!(c.getContext && c.getContext("2d")); } catch (e) { return false; }
 }
-const ASSET_V = "20261126b";
+const ASSET_V = "20261127-compositor-v1";
+// 저장된 캐릭터 사진이 어느 합성 방식으로 만들어졌는지 표시해요. 합성 규칙을 바꾸면 함께 올려요.
+export const RENDER_V = ASSET_V;
 export function load() {
   if (loading) return loading;
   const base = new URL("../assets/avatar/", import.meta.url);
@@ -140,10 +146,10 @@ export function load() {
 const TINT = new Map();
 function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
 function tinted(name, color) {
-  if (!color || color === "orig") return IMG[name];
+  if (!color || color === "orig") return source(name);
   const key = name + color;
   if (TINT.has(key)) return TINT.get(key);
-  const [x, y, w, h, lumMean] = LAYERS[name], im = IMG[name];
+  const [x, y, w, h, lumMean] = LAYERS[name], im = source(name);
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const g = c.getContext("2d"); g.drawImage(im, 0, 0);
   const d = g.getImageData(0, 0, w, h), p = d.data, t = hex(color);
@@ -165,13 +171,14 @@ function tinted(name, color) {
 function stack(look) {
   const L = normalizeLook(look), out = [];
   const hair = pick("hair", L.hair), top = pick("top", L.top), bottom = pick("bottom", L.bottom), shoes = pick("shoes", L.shoes);
-  if (bottom.legs) out.push(["legs", L.skin]);
+  out.push(["legs", L.skin]); // continuous legs remain behind every bottom/shoe combination
   out.push([shoes.layer, L.shoeColor]);
   if (!bottom.over) out.push([bottom.layer, L.bottomColor]);
-  out.push(["neck", L.skin], [top.layer, L.topColor]);
+  out.push(["neck", L.skin]);
   if (top.hands) out.push([top.hands, L.skin]);
+  out.push([top.layer, L.topColor]);
   if (bottom.over) out.push([bottom.layer, L.bottomColor]); // 멜빵은 상의 위로 지나가요
-  out.push(["face", L.skin], [pick("eyes", L.eyes).layer], [pick("mouth", L.mouth).layer]);
+  out.push(["temple_pads", L.skin], ["face", L.skin], [pick("eyes", L.eyes).layer], [pick("mouth", L.mouth).layer]);
   if (L.blush) out.push(["blush_g"]);
   hair.layers.forEach(n => out.push([n, L.hairColor]));
   out.push(["ears", L.skin]);
@@ -180,6 +187,11 @@ function stack(look) {
 // 프레임 좌표의 사각형(src)을 ctx의 (dx, dy, scale) 위치에 그려요
 function paint(ctx, look, sx, sy, s, dx, dy) {
   for (const [n, col] of stack(look)) {
+    if (n === "temple_pads") {
+      ctx.save(); ctx.translate(dx - sx*s, dy - sy*s); ctx.scale(s,s);
+      for (const pad of TEMPLE_PADS) { ctx.fillStyle = col && col !== "orig" ? col : pad.color; ctx.fill(new Path2D(pad.path)); }
+      ctx.restore(); continue;
+    }
     const [x, y] = LAYERS[n], src = tinted(n, col);
     ctx.drawImage(src, dx + (x - sx) * s, dy + (y - sy) * s, src.width * s, src.height * s);
   }
