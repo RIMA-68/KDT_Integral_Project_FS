@@ -147,5 +147,45 @@
     return `<svg class="mg-stitch" width="${s}" height="${h}" viewBox="0 0 200 ${((rows - 1) * cell).toFixed(1)}" fill="none" aria-hidden="true">${i}</svg>`;
   }
 
-  window.MG_BRAND = { PETALS, PAL, seed, photoOrb, seedPin, flower, glow, pinFlower, stitch, C };
+
+  /* ---------- 점자 도트 들판 (2026-11-27 온보딩 · 아스키/점자 아트 느낌) ----------
+     언덕 윤곽을 점자처럼 두 줄 점으로 수놓고, 아래로 갈수록 점이 성겨져 바탕에 스며들어요(잘린 끝선이 없어요).
+     색은 CSS 변수(--dm-1, --dm-2)라 낮·밤·팔레트를 따라가요. */
+  function dotMeadow(opts = {}) {
+    const W = opts.w || 390, H = opts.h || 170, S = 4.6, R = 1.2;
+    let seedN = opts.seed || 7; const rnd = () => (seedN = (seedN * 16807) % 2147483647) / 2147483647;
+    const back = x => 34 + 12 * Math.sin(x / 62 + .6) + 5 * Math.sin(x / 23);
+    const front = x => 66 + 9 * Math.sin(x / 78 + 2.1) + 4 * Math.sin(x / 31 + 1);
+    const dots = { b: [], f: [], p: [] };
+    const cols = Math.ceil(W / S) + 1, rows = Math.ceil(H / S) + 1;
+    for (let c = 0; c < cols; c++) {
+      const x = c * S + (c % 2 ? 0 : 0);
+      const yb = Math.round(back(x) / S), yf = Math.round(front(x) / S);
+      for (let r = 0; r < rows; r++) {
+        const y = r * S;
+        let layer = null;
+        if (r >= yf) { const d = r - yf; if (d < 2 ? rnd() > .12 : rnd() < .42 * Math.exp(-(d - 2) / 6.5)) layer = "f"; }
+        else if (r >= yb) { const d = r - yb; if (d < 2 ? rnd() > .18 : rnd() < .2 * Math.exp(-(d - 2) / 4)) layer = "b"; }
+        if (layer) dots[layer].push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R}"/>`);
+      }
+    }
+    // 점 꽃: 점 줄기 + 꽃잎 고리 6점 + 가운데 한 점
+    const fl = opts.flowers || [[48, "bloom"], [100, "lav"], [158, "butter"], [262, "blue"], [312, "coral"], [356, "lav"]];
+    const petals = fl.map(([fx, k], i) => {
+      const base = Math.round(front(fx) / S) * S + S, top = base - S * (5 + (i % 3));
+      let o = "";
+      for (let y = base; y > top; y -= S) o += `<circle cx="${fx}" cy="${y}" r="${R}" class="dm-stem"/>`;
+      o += `<circle cx="${fx + S}" cy="${top + S * 2}" r="${R}" class="dm-stem"/>`;
+      const col = (PAL[k] || PAL.bloom).petal;
+      for (let a = 0; a < 6; a++) o += `<circle cx="${(fx + Math.cos(a * Math.PI / 3) * S * 1.15).toFixed(1)}" cy="${(top - S + Math.sin(a * Math.PI / 3) * S * 1.15).toFixed(1)}" r="${R * 1.25}" fill="${col}"/>`;
+      return o + `<circle cx="${fx}" cy="${top - S}" r="${R}" fill="#E9CA88"/>`;
+    }).join("");
+    return `<svg class="mg-dotmeadow" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><g class="dm-b">${dots.b.join("")}</g><g class="dm-f">${dots.f.join("")}</g>${petals}</svg>`;
+  }
+  // 점자 반짝이 ⊹ (가운데 + 네 방향 점)
+  function dotSpark(size = 14) {
+    const c = size / 2, s = size / 4, r = size / 14;
+    return `<svg class="mg-dotspark" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${r * 1.3}"/><circle cx="${c}" cy="${c - s * 1.6}" r="${r}"/><circle cx="${c}" cy="${c + s * 1.6}" r="${r}"/><circle cx="${c - s * 1.6}" cy="${c}" r="${r}"/><circle cx="${c + s * 1.6}" cy="${c}" r="${r}"/></svg>`;
+  }
+  window.MG_BRAND = { PETALS, PAL, seed, photoOrb, seedPin, flower, glow, pinFlower, stitch, dotMeadow, dotSpark, C };
 })();

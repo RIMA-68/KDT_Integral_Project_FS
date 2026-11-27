@@ -152,6 +152,8 @@
   const HILLS = top => `<img class="f-hills" src="assets/brand/hills.svg" alt="" aria-hidden="true" style="top:${top}px">`;
   const ORBIT = (x, y, w) => `<img class="f-orbit" src="assets/brand/orbit.svg" alt="" aria-hidden="true" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">`;
   const AT = (x, y, w, html, cls) => `<span class="f-at ${cls || ""}" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">${html}</span>`;
+  const MEADOW = (top, seed) => `<span class="f-dmeadow" style="top:${top}px">${BR.dotMeadow({ seed })}</span>`;
+  const SPARK = (x, y, s) => `<span class="f-dspark" style="left:${x}px;top:${y}px">${BR.dotSpark(s)}</span>`;
   const LUMI = (x, y, w) => `<img class="f-lumi" src="${img("cat")}" alt="" style="left:${x}px;top:${y}px;width:${w}px">`;
   const stamp = m => { const t = dateParts(m); return `<span class="f-stamp" aria-label="${t.full} ${t.hm}"><i>${t.y}</i><b>${t.md}</b><em>${t.wd} · ${t.hm}</em></span>`; };
   const badge = (cls, ic, txt) => `<span class="f-badge ${cls}">${ic || ""}${txt}</span>`;
@@ -743,7 +745,7 @@
       ? `<span class="f-av"><img src="${img("me")}" alt="내 프로필"></span>`
       : `<span class="f-av f-av-none"><img src="${AV_DEFAULT}" alt=""></span>`;
     return `<section class="screen f-garden" aria-label="내 정원"><div class="scroll" id="gardenScroll">
-      <header class="f-ghead">${AMB(250)}${HILLS(60)}${av}
+      <header class="f-ghead">${AMB(250)}<img class="f-hills" src="assets/brand/hills-garden.svg" alt="" aria-hidden="true" style="top:60px">${av}
         <div class="f-prof"><h1>${esc(S.profile.nickname)}의 정원</h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p><button class="f-profbtn" data-act="profile-open">${I.edit}${S.avatar === "me" ? "프로필 바꾸기" : "프로필 만들기"}</button></div>
         ${bellBtn("f-glass f-gbell")}<a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
         <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>발견한 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>
@@ -1189,7 +1191,7 @@
       <div class="f-stage" style="height:430px">${AMB(440)}${ORBIT(70, 24, 250)}
         <span class="f-me" style="left:125px;top:79px"><i></i></span><span class="f-pill" style="left:143px;top:53px">열람 반경 약 ${S.set.radius}m</span>
         ${AT(208, 82, 72, BR.seed("available", 72))}${AT(300, 204, 68, BR.seed("dormant", 68))}${AT(28, 160, 60, BR.seed("planted", 60))}
-        ${HILLS(280)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
+        ${MEADOW(268, 11)}${SPARK(52, 44, 14)}${SPARK(336, 140, 12)}${SPARK(360, 30, 10)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
       <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
       <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
         <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.<br>위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>
@@ -1197,7 +1199,7 @@
     return `<section class="screen f-welcome" aria-label="시작"><div class="f-scroll">
       <div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark" style="top:28px">MEMORY GARDEN</span>
         ${ORBIT(45, 22, 300)}${ORBIT(85, 62, 220)}${AT(97, 74, 196, BR.seed("available", 196), "breathe")}${AT(26, 52, 88, BR.seed("planted", 88))}${AT(282, 216, 76, BR.seed("dormant", 76))}
-        ${HILLS(280)}${LUMI(16, 215, 115)}</div>
+        ${MEADOW(268, 7)}${SPARK(330, 70, 14)}${SPARK(24, 170, 10)}${SPARK(250, 32, 10)}${LUMI(16, 215, 115)}</div>
       <div class="f-intro"><span class="f-kicker">우주에서 온 기록수집가 · LUMI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
   }
