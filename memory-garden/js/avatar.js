@@ -11,6 +11,8 @@ const LAYERS = {
   blush_g: [111, 267, 206, 31, 156.7, "#c38e84"],
   bottom_b: [87, 535, 247, 276, 81.2, "#4f524f"], bottom_g: [100, 535, 226, 110, 69.5, "#49424c"], bottom_s: [110, 535, 200, 134, 172.8, "#c2a695"],
   braids_g: [46, 273, 319, 259, 126.3, "#8c7876"], ears: [42, 216, 333, 69, 187.9, "#dcb19d"],
+  // 포니테일은 원래 얼굴이 넓은 캐릭터라 공용 얼굴 옆에 틈이 생겨요. 같은 귀 그림을 좌우로 나눠 9px씩 안쪽에 붙여요.
+  ears_pl: [51, 216, 168, 69, 187.9, "#dcb19d"], ears_pr: [201, 216, 165, 69, 187.9, "#dcb19d"],
   eyes_b: [111, 223, 207, 59, 64.3, "#493d3c"], eyes_g: [108, 209, 209, 73, 69.5, "#4f4141"], eyes_s: [105, 184, 211, 98, 73.4, "#474b47"],
   face: [91, 80, 241, 254, 211.0, "#ecc9c0"],
   hair_b: [34, 12, 342, 312, 74.2, "#524647"], hair_g: [38, 22, 333, 260, 139.4, "#998585"], hair_s: [34, 12, 347, 339, 123.5, "#7d7b75"],
@@ -20,7 +22,7 @@ const LAYERS = {
   shoes_b: [98, 751, 231, 60, 80.9, "#554e51"], shoes_g: [99, 627, 216, 183, 150.1, "#a79085"], shoes_s: [107, 610, 222, 201, 127.3, "#8a7a79"],
   top_b: [77, 309, 266, 278, 100.8, "#6b6066"], top_g: [66, 311, 293, 276, 139.6, "#988391"], top_s: [51, 321, 323, 278, 130.9, "#88817c"],
   // 2026-11-24 신규 파츠 12종: 리마가 만든 원본 그림(Figma MG3·5 신규 파츠 카탈로그)에서 그대로 잘라 낸 것
-  hair_wave: [21, 26, 372, 298, 130.4, "#927b7e"], hair_pony: [50, 23, 357, 298, 71.9, "#4f4446"], hair_curly: [27, 20, 361, 251, 120.8, "#7d776f"],
+  hair_wave: [21, 26, 372, 298, 130.4, "#927b7e"], hair_pony: [50, 23, 357, 298, 71.4, "#4e4446"], hair_curly: [27, 20, 361, 251, 120.8, "#7d776f"],
   top_vest: [62, 307, 293, 270, 154.0, "#ab9393"], top_sweat: [76, 320, 269, 253, 97.0, "#6b5c5b"], top_check: [51, 318, 319, 266, 137.6, "#93867e"],
   bottom_denim: [95, 563, 229, 200, 111.4, "#706d74"], bottom_susp: [101, 328, 219, 377, 134.7, "#978175"], bottom_long: [64, 570, 295, 187, 109.2, "#796868"],
   shoes_mary: [110, 731, 196, 79, 127.8, "#907973"], shoes_high: [105, 709, 211, 102, 153.4, "#a8948a"], shoes_fur: [108, 719, 206, 91, 136.6, "#998378"]
@@ -42,7 +44,7 @@ export const PARTS = {
     { id: "spiky", name: "삐죽 앞머리", layers: ["hair_b"] },
     { id: "soft", name: "흐트러진 숏컷", layers: ["hair_s"] },
     { id: "wave", name: "웨이브 단발", layers: ["hair_wave"] },
-    { id: "pony", name: "포니테일", layers: ["hair_pony"] },
+    { id: "pony", name: "포니테일", layers: ["hair_pony"], ears: ["ears_pl", "ears_pr"] },
     { id: "curly", name: "짧은 곱슬", layers: ["hair_curly"] }
   ],
   eyes: [
@@ -122,7 +124,7 @@ let loading = null;
 export function supported() {
   try { const c = document.createElement("canvas"); return !!(c.getContext && c.getContext("2d")); } catch (e) { return false; }
 }
-const ASSET_V = "20261126b";
+const ASSET_V = "20261127a";
 export function load() {
   if (loading) return loading;
   const base = new URL("../assets/avatar/", import.meta.url);
@@ -174,7 +176,7 @@ function stack(look) {
   out.push(["face", L.skin], [pick("eyes", L.eyes).layer], [pick("mouth", L.mouth).layer]);
   if (L.blush) out.push(["blush_g"]);
   hair.layers.forEach(n => out.push([n, L.hairColor]));
-  out.push(["ears", L.skin]);
+  (hair.ears || ["ears"]).forEach(n => out.push([n, L.skin]));
   return out;
 }
 // 프레임 좌표의 사각형(src)을 ctx의 (dx, dy, scale) 위치에 그려요
