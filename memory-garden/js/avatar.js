@@ -108,7 +108,7 @@ export function randomLook() {
     bottom: r(PARTS.bottom).id, bottomColor: col("bottom"), shoes: r(PARTS.shoes).id, shoeColor: col("shoe")
   };
 }
-// 색 칩 "원래 색"에 보여 줄 실제 색(지금 고른 파츠의 원본 평균 색)
+// 색 칩 "기본 색"에 보여 줄 실제 색(지금 고른 파츠의 원본 평균 색)
 export function origColor(look, key) {
   const L = normalizeLook(look);
   if (key === "skin") return LAYERS.face[5];

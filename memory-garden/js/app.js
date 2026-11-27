@@ -1086,7 +1086,7 @@
   function avSw(k, list, label) {
     return `<div class="av-sws" role="group" aria-label="${label}">${list.map((c, i) => {
       const orig = c === "orig", sw = orig ? AV.mod.origColor(AV.draft, k) : c;
-      return `<button class="av-sw${orig ? " av-sw-orig" : ""}" data-act="av-set" data-k="${k}" data-v="${c}" style="--sw:${sw}" aria-pressed="${AV.draft[k].toLowerCase() === c.toLowerCase()}" aria-label="${orig ? `${label} 원래 색` : `${label} ${i}`}"><i></i></button>`;
+      return `<button class="av-sw${orig ? " av-sw-orig" : ""}" data-act="av-set" data-k="${k}" data-v="${c}" style="--sw:${sw}" aria-pressed="${AV.draft[k].toLowerCase() === c.toLowerCase()}" aria-label="${orig ? `${label} 기본 색` : `${label} ${i}`}"><i></i></button>`;
     }).join("")}</div>`;
   }
   const avName = (k, id) => (AV.mod.PARTS[k].find(p => p.id === id) || {}).name || "";
