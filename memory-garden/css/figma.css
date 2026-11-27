@@ -771,7 +771,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
    아이보리 바탕(모리 털색·기억의 온기) + 라벤더 주색(밤 아이리스와 같은 계열, 아이리스=전령·붓꽃 '기쁜 소식')
    + 버터 노랑(씨앗 빛·열 수 있음). 밤 테마는 그대로예요. 흰 글자/주색 대비 4.5:1 */
 :root:not([data-theme="night"]){
-  --color-bg:#FAF7F2; --color-surface:#FFFEFB; --color-surface-sunk:#F1ECEA; --color-line:#E3DCE1;
+  --color-bg:#FAF7F2; --color-surface:#FFFEFB; --color-surface-sunk:#EFEDF5; --color-line:#E3DCE1;
   --color-text:#2E2A3D; --color-text-sub:#6A6478; --color-text-faint:#9A93A6;
   --color-primary:#7363E6; --color-primary-press:#5F4FD6; --color-primary-soft:#F1EEFF; --color-on-primary:#FFFFFF;
   --color-accent-soft:#ECEAFB;
@@ -801,7 +801,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
   --state-available:#2F6DB5; --state-available-bg:#EEF5FD;
   --avail-ring:#9CC2EC; --avail-sh:rgba(47,109,181,.18); --avail-glow:rgba(156,194,236,.35);
   --sd-gold:#B7C6EE; --sd-glow1:#DCEAFF; --sd-glow2:#EEF5FF; --sd-1:#F7FAFF; --sd-2:#C6DAF4; --sd-3:#86AEE0;
-  --sd-pin1:#9CC2EC; --sd-pin2:#5E95D6; --sd-spark:#7FAEE6;
+  --sd-pin1:#9CC2EC; --sd-pin2:#5E95D6; --sd-spark:#7FAEE6; --sd-smile:#B3A4F0;
   --cloth-dash:rgba(142,128,245,.5);
 }
 .f-sic.lumi{margin-bottom:22px}

@@ -149,7 +149,7 @@
 
   /* ---------------- Figma MG3·9 공통 조각 (배경·궤도·언덕) ---------------- */
   const AMB = h => `<div class="f-amb" style="height:${h}px" aria-hidden="true"></div>`;
-  const HILLS_SOFT = top => `<img class="f-hills is-soft" src="assets/brand/hills-soft.svg" alt="" aria-hidden="true" style="top:${top}px">`;
+  const HILLS_SOFT = top => `<img class="f-hills is-soft" src="assets/brand/hills-soft.svg?v=20261127c" alt="" aria-hidden="true" style="top:${top}px">`;
   const HILLS = top => `<img class="f-hills" src="assets/brand/hills.svg" alt="" aria-hidden="true" style="top:${top}px">`;
   const ORBIT = (x, y, w) => `<img class="f-orbit" src="assets/brand/orbit.svg" alt="" aria-hidden="true" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">`;
   const AT = (x, y, w, html, cls) => `<span class="f-at ${cls || ""}" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">${html}</span>`;
@@ -748,7 +748,7 @@
       ? `<span class="f-av"><img src="${img("me")}" alt="내 프로필"></span>`
       : `<span class="f-av f-av-none"><img src="${AV_DEFAULT}" alt=""></span>`;
     return `<section class="screen f-garden" aria-label="내 정원"><div class="scroll" id="gardenScroll">
-      <header class="f-ghead">${AMB(250)}<img class="f-hills" src="assets/brand/hills-garden.svg" alt="" aria-hidden="true" style="top:60px">${av}
+      <header class="f-ghead">${AMB(250)}<img class="f-hills" src="assets/brand/hills-garden.svg?v=20261127c" alt="" aria-hidden="true" style="top:60px">${av}
         <div class="f-prof"><h1>${esc(S.profile.nickname)}의 정원</h1><p>${S.region ? esc(S.region) + "에서 " : ""}기억을 모으는 중</p><button class="f-profbtn" data-act="profile-open">${I.edit}${S.avatar === "me" ? "프로필 바꾸기" : "프로필 만들기"}</button></div>
         ${bellBtn("f-glass f-gbell")}<a class="f-glass f-themebtn" href="#/settings" aria-label="설정">${I.gear}</a>
         <div class="f-stats"><div><b>${mine.length}</b><span>심은 기억</span></div><div><b>${col.length}</b><span>발견한 기억</span></div><div><b>${received}</b><span>받은 마음</span></div></div></header>

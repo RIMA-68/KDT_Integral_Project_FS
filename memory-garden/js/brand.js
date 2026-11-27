@@ -72,7 +72,7 @@
       ${state === "dormant" ? `<circle cx="100" cy="104" r="76" fill="#fff" fill-opacity=".35"/>` : ""}
       <circle cx="100.75" cy="104.75" r="76" stroke="#fff" stroke-opacity=".85" stroke-width="1.5"/>
       <path d="M72.8 91.1C83.4 84.4 89.9 75.5 87.3 71.3C84.6 67 73.8 68.9 63.1 75.6C52.4 82.3 45.9 91.2 48.6 95.4C51.3 99.7 62.1 97.8 72.8 91.1Z" fill="#fff" fill-opacity=".9"/>
-      <path d="M51.5 140.5C60.7 153.8 74.8 163 90.7 166.1C106.6 169.2 123 166 136.6 157.2" stroke="#F1B9AD" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>
+      <path d="M51.5 140.5C60.7 153.8 74.8 163 90.7 166.1C106.6 169.2 123 166 136.6 157.2" stroke="var(--sd-smile,#F1B9AD)" stroke-opacity=".75" stroke-width="3" stroke-linecap="round"/>
       <path d="M7.9 182.3C9.4 188.5 20.7 192 39.3 192C57.8 192 82.2 188.6 106.9 182.4C131.6 176.3 154.6 167.9 171 159.2C187.4 150.4 195.7 142.1 194.2 135.9" stroke="var(--sd-gold,#E9CA88)" stroke-opacity="${ring}" stroke-width="1.8" stroke-linecap="round"/>
       <path d="M182 67C183.1 73 183.1 73 189 74C183.1 75.1 183.1 75.1 182 81C181 75.1 181 75.1 175 74C181 73 181 73 182 67Z" fill="var(--sd-gold,#E9CA88)" fill-opacity="${state === "dormant" ? .5 : 1}"/></svg>`;
   }
