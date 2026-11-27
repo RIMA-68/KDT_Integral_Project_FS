@@ -154,10 +154,12 @@
   const AT = (x, y, w, html, cls) => `<span class="f-at ${cls || ""}" style="left:${x}px;top:${y}px;width:${w}px;height:${w}px">${html}</span>`;
   const MEADOW = (top, seed) => `<span class="f-dmeadow" style="top:${top}px">${BR.dotMeadow({ seed })}</span>`;
   const SPARK = (x, y, s) => `<span class="f-dspark" style="left:${x}px;top:${y}px">${BR.dotSpark(s)}</span>`;
-  const LUMI = (x, y, w) => `<img class="f-lumi" src="${img("cat")}" alt="" style="left:${x}px;top:${y}px;width:${w}px">`;
+  const LUMI = (x, y, w, pose) => `<img class="f-lumi${pose ? " is-pose" : ""}" src="${img(pose || "cat")}" alt="" style="left:${x}px;top:${y}px;width:${w}px">`;
+  // 루미 포즈(2026-11-27 리마 제작): lumi-front 정면 · lumi-wave 인사 · lumi-map 지도와 반짝임 · lumi-photo 추억 사진 · lumi-letter 별 봉투 · lumi-write 노트에 기록
+  const LUMIP = pose => `<img class="f-lumipose" src="${img(pose)}" alt="">`;
   const stamp = m => { const t = dateParts(m); return `<span class="f-stamp" aria-label="${t.full} ${t.hm}"><i>${t.y}</i><b>${t.md}</b><em>${t.wd} · ${t.hm}</em></span>`; };
   const badge = (cls, ic, txt) => `<span class="f-badge ${cls}">${ic || ""}${txt}</span>`;
-  const stateBlock = (tone, ic, h, p, btn) => `<div class="f-state" ${tone === "err" ? 'role="alert"' : ""}><span class="f-sic ${tone}">${ic}</span><h3>${h}</h3><p>${p}</p>${btn || ""}</div>`;
+  const stateBlock = (tone, ic, h, p, btn) => `<div class="f-state" ${tone === "err" ? 'role="alert"' : ""}>${/^lumi-/.test(tone) ? `<span class="f-sic lumi">${LUMIP(tone)}</span>` : `<span class="f-sic ${tone}">${ic}</span>`}<h3>${h}</h3><p>${p}</p>${btn || ""}</div>`;
 
   /* ---------------- real map (persistent) ---------------- */
   // 지도는 화면을 다시 그릴 때마다 새로 만들지 않고, 한 번 만든 걸 자리만 옮겨 붙여요.
@@ -299,14 +301,14 @@
     setTimeout(() => { const i = document.getElementById("emailInput"); if (i) i.focus(); }, 60);
   }
   function emailSent(email) {
-    openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>메일함을 확인해 주세요</h3><p class="av-note" style="margin:0"><b>${esc(email)}</b>(으)로 로그인 링크를 보냈어요.<br>링크를 누르면 이 화면으로 돌아와 로그인돼요.</p></div>
+    openModal(`<div class="login-sheet"><img src="${img("lumi-letter")}" alt=""><h3>메일함을 확인해 주세요</h3><p class="av-note" style="margin:0"><b>${esc(email)}</b>(으)로 로그인 링크를 보냈어요.<br>링크를 누르면 이 화면으로 돌아와 로그인돼요.</p></div>
       <button class="btn btn-outline btn-block" data-act="email-open" data-v="${esc(email)}">주소 다시 입력하기</button><button class="btn btn-ghost" data-act="close">닫기</button>
       <p class="reassure">메일은 영어로 와요.<br>보낸 사람 <b>Supabase Auth</b>, 제목 "Your sign-in link" 또는 "Confirm…" 메일이에요.<br>메일 안의 <b>Sign in</b>(또는 Confirm) 링크를 눌러 주세요.<br>메일이 안 보이면 스팸함도 확인해 주세요.<br>링크는 이 브라우저에서 열어야 해요.</p>`);
   }
   function sendEmailLink(email, fresh) {
     API.loginEmail(email, { fresh }).then(() => emailSent(email)).catch(e => {
       console.error(e);
-      if (e.code === "email_exists") openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 이메일이에요</h3><p class="av-note" style="margin:0">해당 이메일로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
+      if (e.code === "email_exists") openModal(`<div class="login-sheet"><img src="${img("lumi-letter")}" alt=""><h3>이미 정원이 있는 이메일이에요</h3><p class="av-note" style="margin:0">해당 이메일로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
         <button class="btn btn-primary btn-block" data-act="email-fresh" data-v="${esc(email)}">해당 이메일로 로그인</button><button class="btn btn-ghost" data-act="close">지금은 로그인 안 할게요</button>`, { alert: true });
       else toast(e.code === "rate" ? "잠시 뒤에 다시 보내 주세요" : "링크를 보내지 못했어요. 주소를 확인해 주세요");
     });
@@ -318,19 +320,19 @@
   };
   function loginSheet(kind) {
     const [h, p] = LOGIN_WHY[kind] || LOGIN_WHY.account;
-    openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>${h}</h3><p class="av-note" style="margin:0">${p}</p></div>
+    openModal(`<div class="login-sheet"><img src="${img("lumi-letter")}" alt=""><h3>${h}</h3><p class="av-note" style="margin:0">${p}</p></div>
       ${kakaoBtn()}${emailBtn()}<button class="btn btn-ghost" data-act="close">${kind === "account" ? "닫기" : "둘러보기 계속하기"}</button>
       <p class="reassure">지도와 근처 기억 둘러보기는 로그인 없이도 할 수 있어요.</p>`);
   }
   function viewLoginGate() {
     const [h, p] = LOGIN_WHY.plant;
-    return `<section class="screen" aria-label="로그인 필요">${flowHead(1)}<div class="center-state login-gate"><img src="${img("cat")}" alt="" style="width:132px"><h2>${h}</h2><p>${p}</p>
+    return `<section class="screen" aria-label="로그인 필요">${flowHead(1)}<div class="center-state login-gate"><img src="${img("lumi-front")}" alt="" style="width:132px"><h2>${h}</h2><p>${p}</p>
       <div style="display:flex;flex-direction:column;gap:6px;width:100%;max-width:320px;margin-top:8px">${kakaoBtn()}${emailBtn()}<a class="btn btn-ghost" href="#/">지도 둘러보기</a></div></div></section>`;
   }
   // 광고성 정보 수신 동의: 로그인 동의와 별개, 선택. 처음 로그인한 뒤 한 번만 물어봐요.
   function marketingSheet() {
     const email = API.memberEmail();
-    openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>새 기억 소식을 이메일로 받아 볼래요?</h3><p class="av-note" style="margin:0">근처에 새로 심긴 기억, 이벤트 소식을 가끔 보내 드려요. 받지 않아도 서비스는 똑같이 쓸 수 있어요.</p></div>
+    openModal(`<div class="login-sheet"><img src="${img("lumi-letter")}" alt=""><h3>새 기억 소식을 이메일로 받아 볼래요?</h3><p class="av-note" style="margin:0">근처에 새로 심긴 기억, 이벤트 소식을 가끔 보내 드려요. 받지 않아도 서비스는 똑같이 쓸 수 있어요.</p></div>
       <dl class="consent-box"><div><dt>받는 곳</dt><dd>${esc(email)}</dd></div><div><dt>목적</dt><dd>서비스 소식·이벤트 등 광고성 정보 안내</dd></div><div><dt>보관</dt><dd>동의를 철회할 때까지</dd></div></dl>
       <button class="btn btn-primary btn-block" data-act="mkt-set" data-v="1">(선택) 동의하고 받기</button><button class="btn btn-ghost" data-act="mkt-set" data-v="0">받지 않을게요</button>
       <p class="reassure">내 정원 → 설정에서 언제든 바꿀 수 있어요.</p>`);
@@ -359,7 +361,7 @@
     let body;
     if (ds === "loading") body = [1, 2, 3].map(() => `<div class="f-skel" aria-hidden="true"><span class="t"></span><span class="l"><i></i><i></i></span><span class="r"></span></div>`).join("");
     else if (ds === "error") body = stateBlock("err", I.wifi, "기억을 불러오지 못했어요", "근처에 기억이 없다는 뜻은 아니에요. 연결을 확인하고 다시 시도해 주세요.", `<button class="btn btn-outline f-sbtn" data-act="retry">다시 시도</button>`);
-    else if (ds === "empty") body = stateBlock("soft", I.garden, "이 근처엔 아직 심어진 기억이 없어요", "여기에 첫 기억을 심어 보세요.<br>다음에 이곳에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`);
+    else if (ds === "empty") body = stateBlock("lumi-map", I.garden, "이 근처엔 아직 심어진 기억이 없어요", "여기에 첫 기억을 심어 보세요.<br>다음에 이곳에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`);
     else body = list.length ? list.map(memoryCard).join("") : stateBlock("soft", I.lock, S.filter === "open" ? "지금 열 수 있는 기억이 없어요" : "잠긴 기억이 없어요", "필터를 바꿔 보세요.", "");
 
     let catLine;
@@ -428,7 +430,7 @@
   function viewMemory(id) {
     const st = S.status[id];
     if (st === "gone") return viewGone();
-    if (st === "unavailable") return `<section class="screen"><div class="center-state"><img src="${img("cat")}" alt="" style="width:120px"><h2>기억을 찾을 수 없어요</h2><p>지워졌거나 볼 수 없는 기억이에요.</p><a class="btn btn-primary" href="#/">지도로 돌아가기</a></div></section>`;
+    if (st === "unavailable") return `<section class="screen"><div class="center-state"><img src="${img("lumi-map")}" alt="" style="width:120px"><h2>기억을 찾을 수 없어요</h2><p>지워졌거나 볼 수 없는 기억이에요.</p><a class="btn btn-primary" href="#/">지도로 돌아가기</a></div></section>`;
     if (st === "error") return errorScreen(id);
     const m = byId(id);
     if (S.found === id && m && m.full) return viewFound(m);
@@ -553,7 +555,7 @@
   function viewFound(m) {
     const t = dateParts(m);
     return `<section class="screen f-found" aria-label="기억 발견">${AMB(844)}<button class="f-skip" data-act="found-done" data-id="${m.id}">건너뛰기</button>
-      <div class="f-scroll"><div class="f-stage" style="height:430px">${ORBIT(38, 96, 315)}${AT(65, 112, 260, BR.photoOrb(m.photo, 260, true), "pop")}${LUMI(227, 326, 105)}</div>
+      <div class="f-scroll"><div class="f-stage" style="height:430px">${ORBIT(38, 96, 315)}${AT(65, 112, 260, BR.photoOrb(m.photo, 260, true), "pop")}${LUMI(232, 318, 108, "lumi-photo")}</div>
       <div class="f-copy"><span class="f-kick">MEMORY FOUND</span><h1>새로운 기억이 피어났어요</h1><p class="t">「${esc(m.title)}」</p><p class="d">${t.full} · ${esc(m.place)}</p>
         ${badge("ok", I.check, S.foundN == null ? "모은 기억에 담겼어요 · 정원 자수 한 땀" : S.foundN % BLOOM_N === 0 ? "정원에 꽃 한 송이가 완성됐어요" : `정원 자수 한 땀 · 꽃 완성까지 ${BLOOM_N - S.foundN % BLOOM_N}번 남았어요`)}</div></div>
       <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="found-done" data-id="${m.id}">기억 열어보기</button></div></section>`;
@@ -645,7 +647,7 @@
       const m = S.lastPlanted;
       if (!m) { location.hash = "#/"; return ""; }
       return `<section class="screen f-done" aria-label="심기 완료"><div class="f-scroll"><div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark">MEMORY PLANTED</span>
-        ${ORBIT(70, 52, 250)}${AT(97, 80, 196, BR.seed("planted", 196), "pop")}${LUMI(272, 60, 87)}${HILLS(290)}<span class="f-sprout">${I.garden}</span></div>
+        ${ORBIT(70, 52, 250)}${AT(97, 80, 196, BR.seed("planted", 196), "pop")}${LUMI(268, 52, 96, "lumi-write")}${MEADOW(282, 5)}<span class="f-sprout">${I.garden}</span></div>
       <div class="f-datecard">${stamp(m)}<div><b>${esc(m.place)}</b>${badge("soft", visIc(m.vis), visLabel(m.vis))}</div></div>
       <div class="f-copy"><h1>기억을 심었어요</h1><p>${m.vis === "me" ? "다른 사람에게는 보이지 않아요.<br>내 정원에서 언제든 다시 볼 수 있어요." : m.vis === "key" ? "비밀번호를 아는 사람이 이 장소에 오면<br>당신의 기억을 발견할 수 있어요." : "누군가 이 장소 가까이 오면<br>당신의 기억을 발견할 수 있어요."}</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/" data-act="after-plant">지도에서 보기</a><a class="btn btn-ghost" href="#/garden">내 정원 보기</a></div></section>`;
@@ -738,8 +740,8 @@
     const grid = gs === "loading" ? [1, 2].map(() => `<span class="polaroid f-tile sk-card" aria-hidden="true"><span class="sk" style="aspect-ratio:1;border-radius:10px"></span><span class="sk" style="height:14px;width:70%"></span></span>`).join("")
       : gs === "error" ? stateBlock("err", I.wifi, "정원을 불러오지 못했어요", "심은 기억과 모은 기억은 그대로 있어요. 연결을 확인하고 다시 시도해 주세요.", `<button class="btn btn-outline f-sbtn" data-act="garden-retry">다시 시도</button>`)
       : list.length ? list.map(m => `<button class="polaroid f-tile" data-act="open" data-id="${m.id}">${m.photo ? `<img src="${esc(m.photo)}" alt="" loading="lazy">` : `<span class="noimg">${BR.seed("planted", 90)}</span>`}<b>${esc(m.title)}</b><span>${esc(m.place)}</span>${m.mine && m.vis === "me" ? `<i class="vis-me">${I.lock}나만 보기</i>` : m.mine && m.vis === "key" ? `<i class="vis-me">${I.key}비밀번호</i>` : ""}</button>`).join("")
-      : tab === "mine" ? stateBlock("soft", I.garden, "아직 심은 기억이 없어요", "좋아하는 장소에서 첫 기억을 심어 보세요. 그 자리에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`)
-        : stateBlock("soft", I.map, "아직 모은 기억이 없어요", "지도에서 가까운 기억을 찾아가 열어 보세요.", `<a class="btn btn-primary f-sbtn" href="#/">지도 보기</a>`);
+      : tab === "mine" ? stateBlock("lumi-photo", I.garden, "아직 심은 기억이 없어요", "좋아하는 장소에서 첫 기억을 심어 보세요. 그 자리에 온 누군가가 발견할 거예요.", `<a class="btn btn-primary f-sbtn" href="#/plant/1">첫 기억 심기</a>`)
+        : stateBlock("lumi-map", I.map, "아직 모은 기억이 없어요", "지도에서 가까운 기억을 찾아가 열어 보세요.", `<a class="btn btn-primary f-sbtn" href="#/">지도 보기</a>`);
     // 프로필 수정은 이름 아래 '프로필 바꾸기' 버튼 하나로 모아요(사진·이름 옆 연필 버튼 없음)
     const av = S.avatar === "me"
       ? `<span class="f-av"><img src="${img("me")}" alt="내 프로필"></span>`
@@ -812,7 +814,7 @@
   }
 
   // M31 화면 테마 — 하나만 고를 수 있고, 바꿔도 화면·위치·글·캐릭터·자수는 그대로
-  const THEMES = [["system", "phone", "시스템 설정 따르기", "기기의 라이트/다크 설정에 맞춰요"], ["day", "sun", "낮 테마 · Dusk Paper", "항상 낮 화면으로 봐요"], ["night", "moon", "밤 테마 · Night Garden", "항상 밤 화면으로 봐요"], ["auto", "clock", "시간대에 따라 자동", "해 질 녘엔 밤, 해 뜰 녘엔 낮으로 바뀌어요"]];
+  const THEMES = [["system", "phone", "시스템 설정 따르기", "기기의 라이트/다크 설정에 맞춰요"], ["day", "sun", "낮 테마 · Lavender Milk", "항상 낮 화면으로 봐요"], ["night", "moon", "밤 테마 · Night Garden", "항상 밤 화면으로 봐요"], ["auto", "clock", "시간대에 따라 자동", "해 질 녘엔 밤, 해 뜰 녘엔 낮으로 바뀌어요"]];
   function themeSheet() {
     openModal(`<h3>화면 테마</h3><div class="theme-opts f-themeopts" role="radiogroup" aria-label="화면 테마">${THEMES.map(([k, ic, t, d]) => `<button class="option" role="radio" data-act="theme-set" data-v="${k}" aria-checked="${S.theme === k}" aria-pressed="${S.theme === k}"><span class="oi">${I[ic]}</span><div><b>${t}</b><span>${d}</span></div><span class="radio"></span></button>`).join("")}</div>
       <p class="reassure">하나만 고를 수 있어요. 테마를 바꿔도 보던 화면, 지도 위치, 쓰던 글, 내 캐릭터와 정원 자수는 그대로예요.</p>`);
@@ -899,7 +901,7 @@
     else {
       const items = S.forced === "empty" ? [] : N.items || [];
       const fresh = items.filter(n => !n.read), old = items.filter(n => n.read);
-      body = !items.length ? stateBlock("soft", I.bell, "아직 알림이 없어요", "누군가 내 기억에 답장을 남기거나, 현장에서 담거나,<br>마음을 보내면 여기에 알려 드릴게요.", `<a class="btn btn-outline f-sbtn" href="#/settings">알림 설정</a>`)
+      body = !items.length ? stateBlock("lumi-letter", I.bell, "아직 알림이 없어요", "누군가 내 기억에 답장을 남기거나, 현장에서 담거나,<br>마음을 보내면 여기에 알려 드릴게요.", `<a class="btn btn-outline f-sbtn" href="#/settings">알림 설정</a>`)
         : (fresh.length ? `<h2 class="nt-h">새 알림</h2><ul class="nt-list">${fresh.map(notifRow).join("")}</ul>` : "") + (old.length ? `<h2 class="nt-h">지난 알림</h2><ul class="nt-list">${old.map(notifRow).join("")}</ul>` : "")
           + `<p class="set-note nt-foot">담기와 마음은 누가 했는지 보이지 않아요.<br>알림 종류는 <a href="#/settings">설정</a>에서 끄고 켤 수 있어요.</p>`;
     }
@@ -1094,7 +1096,7 @@
     const grid = (k, focus) => `<div class="av-grid">${P[k].map(p => avTile(k, p, focus)).join("")}</div>`;
     let h = "";
     if (t === "face") {
-      h = (avFirst() ? `<div class="av-intro"><img src="${img("cat")}" alt=""><div><b>나만의 캐릭터를 만들어 볼까요?</b><p>얼굴부터 신발까지 하나씩 골라 보세요. 막히면 위의 주사위로 섞어 봐도 돼요.</p></div></div>` : "")
+      h = (avFirst() ? `<div class="av-intro"><img src="${img("lumi-wave")}" alt=""><div><b>나만의 캐릭터를 만들어 볼까요?</b><p>얼굴부터 신발까지 하나씩 골라 보세요. 막히면 위의 주사위로 섞어 봐도 돼요.</p></div></div>` : "")
         + sec("피부색", "", avSw("skin", m.PAL.skin, "피부색"))
         + sec("눈", avName("eyes", L.eyes), `<div class="av-grid">${P.eyes.map(p => avTile("eyes", p, "face")).join("")}</div>`)
         + sec("입", avName("mouth", L.mouth), `<div class="av-grid">${P.mouth.map(p => avTile("mouth", p, "face")).join("")}</div>`)
@@ -1190,7 +1192,7 @@
     if (step === "location") return `<section class="screen f-welcome" aria-label="위치 권한 안내"><div class="f-scroll">
       <div class="f-stage" style="height:430px">${AMB(440)}${ORBIT(70, 24, 250)}
         <span class="f-me" style="left:125px;top:79px"><i></i></span><span class="f-pill" style="left:143px;top:53px">열람 반경 약 ${S.set.radius}m</span>
-        ${AT(208, 82, 72, BR.seed("available", 72))}${AT(300, 204, 68, BR.seed("dormant", 68))}${AT(28, 160, 60, BR.seed("planted", 60))}
+        ${AT(208, 82, 72, BR.seed("available", 72))}${LUMI(286, 186, 92, "lumi-map")}${AT(28, 160, 60, BR.seed("planted", 60))}
         ${MEADOW(268, 11)}${SPARK(52, 44, 14)}${SPARK(336, 140, 12)}${SPARK(360, 30, 10)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
       <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
       <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
@@ -1199,7 +1201,7 @@
     return `<section class="screen f-welcome" aria-label="시작"><div class="f-scroll">
       <div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark" style="top:28px">MEMORY GARDEN</span>
         ${ORBIT(45, 22, 300)}${ORBIT(85, 62, 220)}${AT(97, 74, 196, BR.seed("available", 196), "breathe")}${AT(26, 52, 88, BR.seed("planted", 88))}${AT(282, 216, 76, BR.seed("dormant", 76))}
-        ${MEADOW(268, 7)}${SPARK(330, 70, 14)}${SPARK(24, 170, 10)}${SPARK(250, 32, 10)}${LUMI(16, 215, 115)}</div>
+        ${MEADOW(268, 7)}${SPARK(330, 70, 14)}${SPARK(24, 170, 10)}${SPARK(250, 32, 10)}${LUMI(14, 200, 122, "lumi-wave")}</div>
       <div class="f-intro"><span class="f-kicker">우주에서 온 기록수집가 · LUMI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
   }
@@ -1218,7 +1220,7 @@
 
   /* ---------------- boot / error screens ---------------- */
   function viewBoot() {
-    if (S.boot === "loading") return `<section class="screen" aria-busy="true"><div class="center-state"><img src="${img("cat")}" alt="" style="width:120px"><p>기억 정원을 여는 중…</p></div></section>`;
+    if (S.boot === "loading") return `<section class="screen" aria-busy="true"><div class="center-state"><img src="${img("lumi-front")}" alt="" style="width:120px"><p>기억 정원을 여는 중…</p></div></section>`;
     const anon = S.bootErr === "anon_disabled";
     return `<section class="screen"><div class="center-state" role="alert"><span class="icon" style="width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:var(--color-danger-soft);color:var(--color-danger)">${I.wifi}</span>
       <h2>기억 정원에 연결하지 못했어요</h2><p>${anon ? "서버에서 익명 로그인이 꺼져 있어요.<br>관리자: Supabase → Authentication → Sign In / Providers → Allow anonymous sign-ins 를 켜 주세요." : "인터넷 연결을 확인하고 다시 시도해 주세요."}</p>
@@ -1610,7 +1612,7 @@
     loadNotif(true);
     if (S.loginError) {
       const le = S.loginError; S.loginError = null;
-      if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("cat")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">해당 계정으로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
+      if (/already|exists/i.test(le.code + le.message)) openModal(`<div class="login-sheet"><img src="${img("lumi-letter")}" alt=""><h3>이미 정원이 있는 카카오 계정이에요</h3><p class="av-note" style="margin:0">해당 계정으로 로그인하면 원래 정원을 볼 수 있어요.<br>이 기기에서 로그인 없이 남긴 기록은 옮겨지지 않아요.</p></div>
         <button class="btn btn-kakao btn-block" data-act="login-switch">${KAKAO_ICON}해당 계정으로 로그인</button><button class="btn btn-outline btn-block" data-act="login-other">다른 카카오 계정으로 로그인</button><button class="btn btn-ghost" data-act="close">지금은 로그인 안 할게요</button>`, { alert: true });
       else toast(/cancel|denied/i.test(le.message) ? "로그인을 취소했어요" : "로그인하지 못했어요. 다시 시도해 주세요");
     } else if (S.justLoggedIn) toast(typeof API.memberProvider === "function" && API.memberProvider() === "email" ? "이메일로 로그인했어요" : "카카오 계정으로 로그인했어요");

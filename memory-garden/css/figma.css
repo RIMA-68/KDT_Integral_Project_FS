@@ -48,9 +48,9 @@ body{background:var(--color-bg)}
 .f-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;display:flex;flex-direction:column}
 .f-scroll::-webkit-scrollbar{display:none}
 .f-stage{position:relative;flex:none;width:390px;left:50%;margin-left:-195px;overflow:visible}
-.f-amb{position:absolute;left:0;right:0;top:0;background:url("../assets/brand/petals.svg?v=20261127") center top/max(390px,100%) auto no-repeat,linear-gradient(180deg,var(--f-sky-1) 0,var(--f-sky-2) 60%,var(--color-bg));pointer-events:none;z-index:0}
+.f-amb{position:absolute;left:0;right:0;top:0;background:url("../assets/brand/petals.svg?v=20261127b") center top/max(390px,100%) auto no-repeat,linear-gradient(180deg,var(--f-sky-1) 0,var(--f-sky-2) 60%,var(--color-bg));pointer-events:none;z-index:0}
 :root[data-theme="night"] .f-amb{background:linear-gradient(180deg,var(--f-sky-1) 0,var(--f-sky-2) 60%,var(--color-bg))}
-:root[data-theme="night"] .f-amb::after{content:"";position:absolute;inset:0;background:url("../assets/brand/petals.svg?v=20261127") center top/max(390px,100%) auto no-repeat;opacity:var(--f-petals)}
+:root[data-theme="night"] .f-amb::after{content:"";position:absolute;inset:0;background:url("../assets/brand/petals.svg?v=20261127b") center top/max(390px,100%) auto no-repeat;opacity:var(--f-petals)}
 .screen>.f-amb{position:absolute}
 .f-hills{position:absolute;left:0;right:0;width:100%;height:150px;object-fit:cover;object-position:center top;pointer-events:none;z-index:1}
 :root[data-theme="night"] .f-hills{filter:brightness(.42) saturate(.7) hue-rotate(200deg)}
@@ -468,7 +468,7 @@ body{background:var(--color-bg)}
 .chip-pin .tail{position:absolute;left:50%;bottom:-6px;width:10px;height:7px;margin-left:-5px;background:inherit;clip-path:polygon(0 0,100% 0,50% 100%)}
 .chip-pin.is-available button{background:var(--f-amber-thumb);box-shadow:0 0 0 1.5px #E9CA88,0 3px 8px rgba(138,97,0,.2);color:var(--f-amber)}
 .chip-pin.is-available .ic{background:#fff}
-.chip-pin.is-mine button{background:#FF6B57;color:#fff;box-shadow:0 3px 8px rgba(233,84,63,.3)}
+.chip-pin.is-mine button{background:var(--pin-mine);color:#fff;box-shadow:0 3px 8px var(--pin-mine-sh,rgba(233,84,63,.3))}
 .chip-pin.is-mine .ic{background:rgba(255,255,255,.3)}
 .chip-pin.is-discovered .ic{background:#FBE3E8}
 .chip-pin.active button{height:38px;font-size:15px;padding-right:14px;background:#302B3C;color:#fff;box-shadow:0 4px 12px rgba(48,43,60,.35);transform:translate(-50%,calc(-100% - 6px)) scale(1.02)}
@@ -656,7 +656,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .modal .rep-opts{margin:6px 0 14px}
 
 /* ---------- 내 발자취 지도 (2026-11-26) ---------- */
-.f-trailcard{display:flex;align-items:center;gap:14px;margin:12px 20px 0;padding:12px 14px;border-radius:16px;background:var(--color-surface);box-shadow:0 0 0 1px var(--color-line),0 4px 12px rgba(90,64,48,.08);color:var(--color-text);text-decoration:none}
+.f-trailcard{display:flex;align-items:center;gap:14px;margin:12px 20px 0;padding:12px 14px;border-radius:16px;background:var(--color-surface);box-shadow:0 0 0 1px var(--color-line),0 4px 12px var(--f-sh-soft,rgba(90,64,48,.08));color:var(--color-text);text-decoration:none}
 .f-trailcard:active{transform:scale(.99)}
 .tc-stack{position:relative;flex:none;width:64px;height:52px}
 .tc-stack img{position:absolute;top:2px;left:calc(var(--i) * 9px);width:44px;height:44px;object-fit:cover;border-radius:9px;border:2px solid var(--color-surface);box-shadow:0 2px 6px rgba(48,43,60,.18);transform:rotate(calc((var(--i) - 1) * 6deg))}
@@ -766,3 +766,31 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .f-dspark:nth-of-type(2n) .mg-dotspark{animation-delay:1.2s}
 @keyframes dspark{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.mg-dotspark{animation:none}}
+
+/* ================= 2026-11-27 리마 확정: 낮 팔레트 '라벤더 밀크' =================
+   아이보리 바탕(루미 털색·기억의 온기) + 라벤더 주색(밤 아이리스와 같은 계열, 아이리스=전령·붓꽃 '기쁜 소식')
+   + 버터 노랑(씨앗 빛·열 수 있음). 밤 테마는 그대로예요. 흰 글자/주색 대비 4.5:1 */
+:root:not([data-theme="night"]){
+  --color-bg:#FAF7F2; --color-surface:#FFFEFB; --color-surface-sunk:#F1ECEA; --color-line:#E3DCE1;
+  --color-text:#2E2A3D; --color-text-sub:#6A6478; --color-text-faint:#9A93A6;
+  --color-primary:#7363E6; --color-primary-press:#5F4FD6; --color-primary-soft:#F1EEFF; --color-on-primary:#FFFFFF;
+  --color-accent-soft:#ECEAFB;
+  --f-outline:#A49CB2; --f-mark:#8E80F5; --f-accent:#5545C4;
+  --f-sky-1:#ECE6FF; --f-sky-2:#F8F3F8; --f-avbg:#EEEAF4; --f-cloth:#FFFEFB;
+  --f-off:#EEEAF0; --f-off-text:#A8A1B4; --f-lilac:#EFECF8; --f-lilac-text:#6658B8;
+  --f-s:0 2px 8px rgba(62,52,96,.10); --f-m:0 6px 20px rgba(62,52,96,.11); --f-l:0 12px 36px rgba(62,52,96,.12); --f-sh-soft:rgba(62,52,96,.07);
+  /* 예전 토큰(v3·tokens.css)도 같은 색으로 */
+  --coral-600:#5F4FD6; --coral-500:#7363E6; --coral-100:#E7E2FF; --coral-50:#F4F1FF;
+  --sky-1:#ECE6FF; --sky-2:#F8F3F8; --text-accent:#5545C4; --fabric-line:#CFC6EA; --seed-halo:#EEE8FF;
+  --pin-mine:#7363E6; --pin-mine-sh:rgba(115,99,230,.3);
+  --seed-mine-1:#D7CFFF; --seed-mine-2:#7363E6;
+  --dm-spark:#B7A9F7;
+}
+
+/* 루미 포즈 */
+.f-lumi.is-pose{filter:drop-shadow(0 6px 10px rgba(62,52,96,.12))}
+.f-sic.lumi{width:104px;height:104px;background:none!important;border-radius:0;overflow:visible}
+.f-lumipose{width:100%;height:100%;object-fit:contain}
+/* 낮: 코랄 궤도 점선을 라벤더로, 도트 들판 초록은 조금 더 또렷하게 */
+:root:not([data-theme="night"]) .f-orbit{filter:hue-rotate(250deg) saturate(.75)}
+:root:not([data-theme="night"]){--dm-1:#BED4B0;--dm-2:#8DB07C}
