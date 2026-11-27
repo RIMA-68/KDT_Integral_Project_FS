@@ -1195,16 +1195,16 @@
     if (step === "location") return `<section class="screen f-welcome" aria-label="위치 권한 안내"><div class="f-scroll">
       ${hero(400, `${ORBIT(70, 14, 250)}
         <span class="f-me" style="left:125px;top:69px"><i></i></span><span class="f-pill" style="left:143px;top:43px">열람 반경 약 ${S.set.radius}m</span>
-        ${AT(210, 74, 70, BR.seed("available", 70))}${AT(30, 150, 58, BR.seed("planted", 58))}
-        ${HILLS_SOFT(262)}${LUMI(276, 196, 96, "lumi-map")}<span class="f-pill dot" style="left:98px;top:216px"><i></i>점선 원 = 기억을 열 수 있는 범위</span>`)}
+        ${AT(210, 74, 70, BR.seed("available", 70))}${AT(306, 140, 56, BR.seed("planted", 56))}
+        ${HILLS_SOFT(262)}${LUMI(18, 190, 100, "lumi-map")}<span class="f-pill dot" style="left:150px;top:216px"><i></i>점선 원 = 기억을 열 수 있는 범위</span>`)}
       <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
       <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
         <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.<br>위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>
       <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="allow">위치 허용하고 시작하기</button><button class="btn btn-ghost" data-act="deny">나중에 할게요, 둘러보기만</button></div></section>`;
-    return `<section class="screen f-welcome" aria-label="시작"><div class="f-scroll">
+    return `<section class="screen f-welcome" aria-label="시작"><span class="f-wordmark f-wm-top">MEMORY GARDEN</span><div class="f-scroll">
       ${hero(430, `${ORBIT(45, 20, 300)}${ORBIT(85, 60, 220)}${AT(97, 72, 196, BR.seed("available", 196), "breathe")}
         ${AT(22, 34, 80, BR.seed("planted", 80))}${AT(36, 236, 56, BR.seed("dormant", 56))}
-        ${HILLS_SOFT(286)}${LUMI(258, 210, 112, "lumi-wave")}`, `<span class="f-wordmark">MEMORY GARDEN</span>`)}
+        ${HILLS_SOFT(286)}${LUMI(258, 210, 112, "lumi-wave")}`)}
       <div class="f-intro"><span class="f-kicker">별에서 온 작은 친구 · MORI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
   }

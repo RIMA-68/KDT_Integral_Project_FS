@@ -819,3 +819,27 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .f-welcome .flow-foot{padding-top:8px}
 @media (max-height:720px){.f-welcome .f-hero{min-height:calc(var(--hh) * .78)}.f-hero-in{zoom:.78;width:500px;margin:0 -55px}.f-hero-in>*:not(.f-hills){translate:55px 0}.f-welcome .f-intro h1{font-size:24px;line-height:32px}.f-welcome .f-intro{padding-bottom:16px}}
 .f-welcome .f-hills.is-soft{-webkit-mask-image:linear-gradient(180deg,#000 50%,transparent 94%);mask-image:linear-gradient(180deg,#000 50%,transparent 94%)}
+.f-welcome .f-intro{margin-top:-52px}
+@media (max-height:720px){.f-welcome .f-intro{margin-top:-36px}}
+/* 남는 높이는 위 3 : 아래 1로 나눠요 → 언덕 끝과 문구가 붙고, 위 하늘이 넉넉해요 */
+.f-welcome .f-hero{flex-direction:column;align-items:center;justify-content:flex-start}
+.f-welcome .f-hero::before{content:"";flex:3 1 0}
+.f-welcome .f-hero::after{content:"";flex:1 1 0}
+@media (max-height:720px){.f-welcome .f-intro{margin-top:-20px}}
+.f-welcome .f-hero::after{flex:0 0 0}
+.f-welcome .f-intro{margin-top:-64px}
+@media (max-height:720px){.f-welcome .f-intro{margin-top:-28px}}
+
+/* v3: 그림+문구를 한 묶음으로 화면 가운데(버튼 위 영역)에 두고, 하늘 그라데이션은 화면 전체 배경으로 */
+.f-welcome{background:linear-gradient(180deg,var(--f-sky-1) 0,var(--f-sky-2) 42%,var(--color-bg) 72%)!important}
+.f-welcome .f-scroll{justify-content:center}
+.f-welcome .f-hero{flex:none;min-height:0!important;height:auto;padding-top:0;display:block}
+.f-welcome .f-hero::before,.f-welcome .f-hero::after{content:none}
+.f-welcome .f-hero>.f-amb{background:url("../assets/brand/petals.svg?v=20261127b") center top/max(390px,100%) auto no-repeat!important}
+.f-welcome .f-hero>.f-amb::after{content:none}
+.f-welcome .f-hero-in{margin:0 auto}
+.f-welcome .f-intro{margin-top:-40px}
+.f-welcome .flow-foot{background:transparent}
+.f-wm-top{position:absolute;top:calc(var(--safe-top,0px) + 24px);z-index:4}
+@media (max-height:720px){.f-welcome .f-intro{margin-top:-30px}.f-welcome .f-hero{height:calc(var(--hh) * .78)}}
+.f-welcome .f-intro{margin-top:-26px}
