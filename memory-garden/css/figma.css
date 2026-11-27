@@ -806,3 +806,16 @@ body{word-break:keep-all;overflow-wrap:break-word}
 }
 .f-sic.lumi{margin-bottom:22px}
 .f-sprout{color:#7FA36A}
+
+/* 2026-11-27 온보딩 균형: 히어로가 남는 높이를 채우고, 그림 묶음은 아래에 붙어요. 문구·버튼 간격은 8pt 리듬(12·8·32) */
+.f-welcome .f-hero{flex:1 0 auto;height:auto;min-height:var(--hh);display:flex;align-items:center;justify-content:center;padding-top:calc(var(--safe-top,0px) + 28px)}
+.f-welcome .f-hero>.f-amb{height:100%!important}
+.f-welcome .f-hero .f-wordmark{top:calc(var(--safe-top,0px) + 24px)}
+.f-hero-in{position:relative;flex:none;width:390px}
+.f-welcome .f-intro{gap:0;padding:4px 24px 28px}
+.f-welcome .f-intro .f-kicker{margin-bottom:12px}
+.f-welcome .f-intro h1{margin-bottom:8px}
+.f-welcome .f-purpose{margin:0 20px 12px}
+.f-welcome .flow-foot{padding-top:8px}
+@media (max-height:720px){.f-welcome .f-hero{min-height:calc(var(--hh) * .78)}.f-hero-in{zoom:.78;width:500px;margin:0 -55px}.f-hero-in>*:not(.f-hills){translate:55px 0}.f-welcome .f-intro h1{font-size:24px;line-height:32px}.f-welcome .f-intro{padding-bottom:16px}}
+.f-welcome .f-hills.is-soft{-webkit-mask-image:linear-gradient(180deg,#000 50%,transparent 94%);mask-image:linear-gradient(180deg,#000 50%,transparent 94%)}

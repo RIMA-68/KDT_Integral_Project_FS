@@ -1190,20 +1190,22 @@
 
   /* ---------------- WELCOME ---------------- */
   function viewWelcome(step) {
+    // 2026-11-27 레이아웃: 히어로가 남는 높이를 채우고 그림 묶음은 그 안 가운데에 놓여요 → 문구는 늘 버튼 바로 위(엄지 영역)에 고정 간격으로 놓여요
+    const hero = (h, inner, top = "") => `<div class="f-stage f-hero" style="--hh:${h}px">${AMB(h)}${top}<div class="f-hero-in" style="height:${h}px">${inner}</div></div>`;
     if (step === "location") return `<section class="screen f-welcome" aria-label="위치 권한 안내"><div class="f-scroll">
-      <div class="f-stage" style="height:430px">${AMB(440)}${ORBIT(70, 24, 250)}
-        <span class="f-me" style="left:125px;top:79px"><i></i></span><span class="f-pill" style="left:143px;top:53px">열람 반경 약 ${S.set.radius}m</span>
-        ${AT(208, 82, 72, BR.seed("available", 72))}${AT(28, 160, 60, BR.seed("planted", 60))}
-        ${LUMI(286, 186, 92, "lumi-map")}${HILLS_SOFT(280)}<span class="f-pill dot" style="left:98px;top:227px"><i></i>점선 원 = 기억을 열 수 있는 범위</span></div>
+      ${hero(400, `${ORBIT(70, 14, 250)}
+        <span class="f-me" style="left:125px;top:69px"><i></i></span><span class="f-pill" style="left:143px;top:43px">열람 반경 약 ${S.set.radius}m</span>
+        ${AT(210, 74, 70, BR.seed("available", 70))}${AT(30, 150, 58, BR.seed("planted", 58))}
+        ${HILLS_SOFT(262)}${LUMI(276, 196, 96, "lumi-map")}<span class="f-pill dot" style="left:98px;top:216px"><i></i>점선 원 = 기억을 열 수 있는 범위</span>`)}
       <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
       <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
         <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.<br>위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>
       <div class="flow-foot"><button class="btn btn-primary btn-block" data-act="allow">위치 허용하고 시작하기</button><button class="btn btn-ghost" data-act="deny">나중에 할게요, 둘러보기만</button></div></section>`;
     return `<section class="screen f-welcome" aria-label="시작"><div class="f-scroll">
-      <div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark" style="top:28px">MEMORY GARDEN</span>
-        ${ORBIT(45, 22, 300)}${ORBIT(85, 62, 220)}${AT(97, 74, 196, BR.seed("available", 196), "breathe")}${AT(26, 52, 88, BR.seed("planted", 88))}${AT(282, 216, 76, BR.seed("dormant", 76))}
-        ${HILLS_SOFT(280)}${LUMI(14, 200, 122, "lumi-wave")}</div>
-      <div class="f-intro"><span class="f-kicker">기억을 연구하러 온 작은 여행자 · MORI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
+      ${hero(430, `${ORBIT(45, 20, 300)}${ORBIT(85, 60, 220)}${AT(97, 72, 196, BR.seed("available", 196), "breathe")}
+        ${AT(22, 34, 80, BR.seed("planted", 80))}${AT(36, 236, 56, BR.seed("dormant", 56))}
+        ${HILLS_SOFT(286)}${LUMI(258, 210, 112, "lumi-wave")}`, `<span class="f-wordmark">MEMORY GARDEN</span>`)}
+      <div class="f-intro"><span class="f-kicker">별에서 온 작은 친구 · MORI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
   }
 
