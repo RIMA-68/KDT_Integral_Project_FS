@@ -156,7 +156,7 @@
   const MEADOW = (top, seed) => `<span class="f-dmeadow" style="top:${top}px">${BR.dotMeadow({ seed })}</span>`;
   const SPARK = (x, y, s) => `<span class="f-dspark" style="left:${x}px;top:${y}px">${BR.dotSpark(s)}</span>`;
   const LUMI = (x, y, w, pose) => `<img class="f-lumi${pose ? " is-pose" : ""}" src="${img(pose || "cat")}" alt="" style="left:${x}px;top:${y}px;width:${w}px">`;
-  // 루미 포즈(2026-11-27 리마 제작): lumi-front 정면 · lumi-wave 인사 · lumi-map 지도와 반짝임 · lumi-photo 추억 사진 · lumi-letter 별 봉투 · lumi-write 노트에 기록
+  // 모리 포즈(2026-11-27 리마 제작): lumi-front 정면 · lumi-wave 인사 · lumi-map 지도와 반짝임 · lumi-photo 추억 사진 · lumi-letter 별 봉투 · lumi-write 노트에 기록
   const LUMIP = pose => `<img class="f-lumipose" src="${img(pose)}" alt="">`;
   const stamp = m => { const t = dateParts(m); return `<span class="f-stamp" aria-label="${t.full} ${t.hm}"><i>${t.y}</i><b>${t.md}</b><em>${t.wd} · ${t.hm}</em></span>`; };
   const badge = (cls, ic, txt) => `<span class="f-badge ${cls}">${ic || ""}${txt}</span>`;
@@ -382,11 +382,11 @@
     const sheetTop = mode === "full" ? "72%" : `calc(${base} + ${mode === "min" ? SHEET_MIN : peek}px)`;
     const sheetH = sheetTop;
     const mapBottom = sel ? `calc(${base})` : mode === "min" ? `calc(${base} + ${SHEET_MIN - 24}px)` : sheetH;
-    // 루미 말풍선·내 위치 버튼은 시트 위끝보다 12px 위에 떠서 시트와 겹치지 않아요
+    // 모리 말풍선·내 위치 버튼은 시트 위끝보다 12px 위에 떠서 시트와 겹치지 않아요
     const floatBottom = sel ? `calc(${base} + 152px)` : `calc(${sheetTop} + 12px)`;
     const locateBottom = sel ? `calc(${base} + 156px)` : `calc(${sheetTop} + 12px)`;
     const bannerTop = "calc(var(--safe-top) + 72px)";
-    // 시트를 내리면 루미도 작은 아이콘으로 접혀 지도를 가리지 않아요. 아이콘을 누르면 접힌 채로도 힌트 말풍선이 열려요.
+    // 시트를 내리면 모리도 작은 아이콘으로 접혀 지도를 가리지 않아요. 아이콘을 누르면 접힌 채로도 힌트 말풍선이 열려요.
     if (S.sheetMode !== "min") S.lumiPeek = false;
     const mini = sel || S.lumiHidden || (S.sheetMode === "min" && !S.lumiPeek);
     const chip = (f, label, n) => `<button class="chip" data-act="filter" data-f="${f}" aria-pressed="${S.filter === f}">${S.filter === f ? I.check : ""}${label} <span class="n">${n}</span></button>`;
@@ -400,8 +400,8 @@
         <button class="f-locchip ${locOk() ? "" : "off"}" data-act="loc"><span class="dot"></span>${locOk() ? esc(S.region || "내 위치") : GEO.state === "asking" ? "위치 확인 중" : "위치 꺼짐"}</button>
       </header>
       ${locBanner(bannerTop)}
-      ${mini ? `<button class="f-bubble-min" style="bottom:${floatBottom}" data-act="lumi-show" aria-label="루미의 안내 보기"><img src="${img("cat")}" alt=""><i></i></button>`
-        : `<div class="f-bubble" style="bottom:${floatBottom}" role="status"><span class="f-lumi-c l40"><img src="${img("cat")}" alt="수집가 루미"></span><p><span class="spk">LUMI</span><span class="msg">${catLine}</span></p><button class="f-x" data-act="lumi-hide" aria-label="안내 닫기">${I.close}</button></div>`}
+      ${mini ? `<button class="f-bubble-min" style="bottom:${floatBottom}" data-act="lumi-show" aria-label="모리의 안내 보기"><img src="${img("cat")}" alt=""><i></i></button>`
+        : `<div class="f-bubble" style="bottom:${floatBottom}" role="status"><span class="f-lumi-c l40"><img src="${img("cat")}" alt="수집가 모리"></span><p><span class="spk">MORI</span><span class="msg">${catLine}</span></p><button class="f-x" data-act="lumi-hide" aria-label="안내 닫기">${I.close}</button></div>`}
       <button class="f-locate" style="bottom:${locateBottom}" data-act="recenter" aria-label="내 위치로">${I.target}</button>
       ${sel ? peekHTML(sel) : `<section class="sheet f-sheet is-${mode}" style="height:${sheetH}" aria-label="근처의 기억" data-peek="${peek}">
         <div class="sheet-handle" data-act="sheet" role="button" aria-label="${mode === "full" ? "목록 줄이기" : mode === "min" ? "목록 펼치기" : "목록 크게 보기"} (위아래로 끌어서 조절)" tabindex="0"></div>
@@ -1203,7 +1203,7 @@
       <div class="f-stage" style="height:440px">${AMB(440)}<span class="f-wordmark" style="top:28px">MEMORY GARDEN</span>
         ${ORBIT(45, 22, 300)}${ORBIT(85, 62, 220)}${AT(97, 74, 196, BR.seed("available", 196), "breathe")}${AT(26, 52, 88, BR.seed("planted", 88))}${AT(282, 216, 76, BR.seed("dormant", 76))}
         ${HILLS_SOFT(280)}${LUMI(14, 200, 122, "lumi-wave")}</div>
-      <div class="f-intro"><span class="f-kicker">우주에서 온 기록수집가 · LUMI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
+      <div class="f-intro"><span class="f-kicker">기억을 연구하러 온 작은 여행자 · MORI</span><h1>장소에 기억을 심고,<br><em>누군가의 기억</em>을 발견해요</h1><p>오늘을 이 자리에 심어 두면,<br>여기 온 다음 사람이 열어 볼 수 있어요.</p></div></div>
       <div class="flow-foot"><a class="btn btn-primary btn-block" href="#/welcome/location">시작하기</a></div></section>`;
   }
 

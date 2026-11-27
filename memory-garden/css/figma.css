@@ -1,5 +1,5 @@
 /* 기억 정원 · Figma MG3·9 최종 마스터(낮) / MG3·10(밤) 화면을 그대로 맞춘 스타일 (2026-11-24)
-   Figma 프레임 390 기준 수치. 한글은 Pretendard, 픽셀 영문(워드마크·LUMI·거리·날짜)은 Pixelify Sans. */
+   Figma 프레임 390 기준 수치. 한글은 Pretendard, 픽셀 영문(워드마크·MORI·거리·날짜)은 Pixelify Sans. */
 @font-face{font-family:"Pixelify Sans";src:url("../assets/fonts/PixelifySans-Medium.woff2") format("woff2");font-weight:500;font-display:swap}
 @font-face{font-family:"Pixelify Sans";src:url("../assets/fonts/PixelifySans-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
 
@@ -768,7 +768,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
 @media (prefers-reduced-motion:reduce){.mg-dotspark{animation:none}}
 
 /* ================= 2026-11-27 리마 확정: 낮 팔레트 '라벤더 밀크' =================
-   아이보리 바탕(루미 털색·기억의 온기) + 라벤더 주색(밤 아이리스와 같은 계열, 아이리스=전령·붓꽃 '기쁜 소식')
+   아이보리 바탕(모리 털색·기억의 온기) + 라벤더 주색(밤 아이리스와 같은 계열, 아이리스=전령·붓꽃 '기쁜 소식')
    + 버터 노랑(씨앗 빛·열 수 있음). 밤 테마는 그대로예요. 흰 글자/주색 대비 4.5:1 */
 :root:not([data-theme="night"]){
   --color-bg:#FAF7F2; --color-surface:#FFFEFB; --color-surface-sunk:#F1ECEA; --color-line:#E3DCE1;
@@ -787,7 +787,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
   --dm-spark:#B7A9F7;
 }
 
-/* 루미 포즈 */
+/* 모리 포즈 */
 .f-lumi.is-pose{filter:drop-shadow(0 6px 10px rgba(62,52,96,.12))}
 .f-sic.lumi{width:104px;height:104px;background:none!important;border-radius:0;overflow:visible}
 .f-lumipose{width:100%;height:100%;object-fit:contain}
@@ -795,7 +795,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
 :root:not([data-theme="night"]) .f-orbit{filter:hue-rotate(250deg) saturate(.75)}
 :root:not([data-theme="night"]){--dm-1:#BED4B0;--dm-2:#8DB07C}
 
-/* 2026-11-27 리마: 남은 주황·노랑 정리 — '열 수 있음'·힌트·씨앗 빛은 루미 날개의 하늘색으로 (낮만) */
+/* 2026-11-27 리마: 남은 주황·노랑 정리 — '열 수 있음'·힌트·씨앗 빛은 모리 날개의 하늘색으로 (낮만) */
 :root:not([data-theme="night"]){
   --f-amber:#2F6DB5; --f-amber-bg:#EAF2FC; --f-amber-thumb:#EEF5FD; --f-hint:#2F6DB5;
   --state-available:#2F6DB5; --state-available-bg:#EEF5FD;
@@ -804,5 +804,5 @@ body{word-break:keep-all;overflow-wrap:break-word}
   --sd-pin1:#9CC2EC; --sd-pin2:#5E95D6; --sd-spark:#7FAEE6;
   --cloth-dash:rgba(142,128,245,.5);
 }
-.f-sic.lumi{margin-bottom:14px}
+.f-sic.lumi{margin-bottom:22px}
 .f-sprout{color:#7FA36A}
