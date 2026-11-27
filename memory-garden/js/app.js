@@ -1194,9 +1194,9 @@
     const hero = (h, inner, top = "") => `<div class="f-stage f-hero" style="--hh:${h}px">${AMB(h)}${top}<div class="f-hero-in" style="height:${h}px">${inner}</div></div>`;
     if (step === "location") return `<section class="screen f-welcome" aria-label="위치 권한 안내"><div class="f-scroll">
       ${hero(400, `${ORBIT(70, 14, 250)}
-        <span class="f-me" style="left:125px;top:69px"><i></i></span><span class="f-pill" style="left:143px;top:43px">열람 반경 약 ${S.set.radius}m</span>
+        <span class="f-me" style="left:125px;top:69px"><i></i></span><span class="f-pill f-pill-c" style="top:50px">열람 반경 약 ${S.set.radius}m</span>
         ${AT(210, 74, 70, BR.seed("available", 70))}${AT(306, 140, 56, BR.seed("planted", 56))}
-        ${HILLS_SOFT(262)}${LUMI(18, 190, 100, "lumi-map")}<span class="f-pill dot" style="left:150px;top:216px"><i></i>점선 원 = 기억을 열 수 있는 범위</span>`)}
+        ${HILLS_SOFT(262)}${LUMI(18, 190, 100, "lumi-map")}<span class="f-pill dot f-pill-c" style="top:6px"><i></i>점선 원 = 기억을 열 수 있는 범위</span>`)}
       <div class="f-intro"><h1>가까이 가야<br>열리는 기억이에요</h1><p>다른 사람의 기억은 약 ${S.set.radius}m 안에서 열려요.</p></div>
       <div class="f-purpose"><p>${I.pin}근처 기억까지 거리를 보여줄 때</p><p>${I.unlock}근처에서 기억을 처음 열 때</p><p>${I.garden}지금 이 자리에 기억을 심을 때</p>
         <small>현재 위치는 가까운 기억을 찾고, 열고, 심을 때 사용해요.<br>위치 권한은 설정에서 언제든 끌 수 있어요.</small></div></div>

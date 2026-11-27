@@ -843,3 +843,4 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .f-wm-top{position:absolute;top:calc(var(--safe-top,0px) + 24px);z-index:4}
 @media (max-height:720px){.f-welcome .f-intro{margin-top:-30px}.f-welcome .f-hero{height:calc(var(--hh) * .78)}}
 .f-welcome .f-intro{margin-top:-26px}
+.f-pill.f-pill-c{left:50%!important;transform:translateX(-50%)}
